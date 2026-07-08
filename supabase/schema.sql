@@ -93,6 +93,7 @@ create table public.products (
   unit text not null,
   cost_price numeric(12,2) not null default 0,
   selling_price numeric(12,2) not null default 0,
+  image_url text,
   vat_type vat_type not null default 'VAT 7%',
   minimum_stock numeric(12,2) not null default 0,
   supplier_id uuid references public.suppliers(id) on delete set null,

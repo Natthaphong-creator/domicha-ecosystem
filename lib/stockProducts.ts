@@ -1,4 +1,5 @@
 import { shopProducts, type ShopProduct } from "@/lib/shopCatalog";
+import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 
 const DEFAULT_STOCK_API_URL = "https://script.google.com/macros/s/AKfycbwSkVdHTMdN4jN3sfG8bHXV0KldDjj4oOhwiix9iDIgh5pV0vlE-N_Hb23wkst63N1nFw/exec";
 const FALLBACK_IMAGE = "/products/taiwan-tea.png";
@@ -23,6 +24,12 @@ type PullResponse = {
   data?: StockSnapshot;
   meta?: { updatedAt?: string; version?: string };
   error?: string;
+};
+
+type ProductOverride = {
+  product_name: string;
+  selling_price: number | string | null;
+  image_url: string | null;
 };
 
 export type StockProductsResult = {
@@ -57,13 +64,32 @@ function normalizeImage(value: unknown) {
   return FALLBACK_IMAGE;
 }
 
+function comparableName(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/domicha|โดมิชา/gi, "")
+    .replace(/[^\p{L}\p{N}]+/gu, "")
+    .trim();
+}
+
+function findProductOverride(name: string, overrides: ProductOverride[]) {
+  const normalizedName = comparableName(name);
+  if (!normalizedName) return undefined;
+
+  return overrides.find((product) => comparableName(product.product_name) === normalizedName)
+    || overrides.find((product) => {
+      const productName = comparableName(product.product_name);
+      return productName.includes(normalizedName) || normalizedName.includes(productName);
+    });
+}
+
 function unitFromName(name: string) {
   if (/ไซรัป|syrup|ขวด/i.test(name)) return "ขวด";
   if (/แก้ว|ฝา|หลอด|ถุงหิ้ว|แพ็ก|pack/i.test(name)) return "แพ็ก";
   return "ถุง";
 }
 
-export function transformStockSnapshot(snapshot: StockSnapshot): ShopProduct[] {
+export function transformStockSnapshot(snapshot: StockSnapshot, overrides: ProductOverride[] = []): ShopProduct[] {
   const seen = new Set<string>();
   const products: ShopProduct[] = [];
   const prices = snapshot.item_prices || {};
@@ -76,7 +102,8 @@ export function transformStockSnapshot(snapshot: StockSnapshot): ShopProduct[] {
       const name = String(itemName || "").trim();
       if (!name || seen.has(name)) continue;
       seen.add(name);
-      const price = numberValue(prices[name]);
+      const override = findProductOverride(name, overrides);
+      const price = numberValue(prices[name], numberValue(override?.selling_price));
       const hasStockValue = Object.prototype.hasOwnProperty.call(warehouseStock, name);
       const stock = hasStockValue ? numberValue(warehouseStock[name]) : undefined;
       products.push({
@@ -88,7 +115,7 @@ export function transformStockSnapshot(snapshot: StockSnapshot): ShopProduct[] {
         category: categoryName,
         price,
         unit: unitFromName(name),
-        image: normalizeImage(images[name]),
+        image: normalizeImage(images[name] || override?.image_url),
         badge: stock === 0 ? "หมด" : price <= 0 ? "รอราคา" : undefined,
         stock,
         source: "stock"
@@ -100,7 +127,8 @@ export function transformStockSnapshot(snapshot: StockSnapshot): ShopProduct[] {
     const name = itemName.trim();
     if (!name || seen.has(name)) continue;
     seen.add(name);
-    const price = numberValue(prices[name]);
+    const override = findProductOverride(name, overrides);
+    const price = numberValue(prices[name], numberValue(override?.selling_price));
     const stock = numberValue(warehouseStock[name]);
     products.push({
       id: `stock-${slugify(name)}`,
@@ -109,7 +137,7 @@ export function transformStockSnapshot(snapshot: StockSnapshot): ShopProduct[] {
       category: "สินค้า",
       price,
       unit: unitFromName(name),
-      image: normalizeImage(images[name]),
+      image: normalizeImage(images[name] || override?.image_url),
       badge: stock <= 0 ? "หมด" : undefined,
       stock,
       source: "stock"
@@ -117,6 +145,19 @@ export function transformStockSnapshot(snapshot: StockSnapshot): ShopProduct[] {
   }
 
   return products;
+}
+
+async function fetchProductOverrides(): Promise<ProductOverride[]> {
+  const supabase = getSupabaseAdmin();
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from("products")
+    .select("product_name,selling_price,image_url")
+    .eq("status", "Active");
+
+  if (error || !data) return [];
+  return data as ProductOverride[];
 }
 
 export async function fetchStockProducts(): Promise<StockProductsResult> {
@@ -135,7 +176,8 @@ export async function fetchStockProducts(): Promise<StockProductsResult> {
     const payload = (await response.json()) as PullResponse;
     if (!payload.ok) throw new Error(payload.error || "DomiCha Stock API returned an error");
 
-    const products = transformStockSnapshot(payload.data || {});
+    const overrides = await fetchProductOverrides();
+    const products = transformStockSnapshot(payload.data || {}, overrides);
     if (!products.length) throw new Error("ยังไม่มีรายการสินค้าจาก DomiCha Stock");
 
     return {

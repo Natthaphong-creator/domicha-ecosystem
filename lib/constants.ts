@@ -53,6 +53,7 @@ export const productFields: FormField[] = [
   { name: "unit", label: "หน่วย", type: "text", required: true },
   { name: "cost_price", label: "ราคาทุน", type: "number", required: true },
   { name: "selling_price", label: "ราคาขาย", type: "number", required: true },
+  { name: "image_url", label: "รูปสินค้า", type: "image" },
   {
     name: "vat_type",
     label: "ประเภท VAT",

@@ -4,7 +4,7 @@ export type CustomerType = "Retail" | "Franchisee" | "Corporate";
 export type VatType = "VAT 7%" | "No VAT" | "VAT Included";
 export type QuotationStatus = "Draft" | "Sent" | "Accepted" | "Rejected" | "Expired";
 
-export type FieldType = "text" | "email" | "number" | "textarea" | "select";
+export type FieldType = "text" | "email" | "number" | "textarea" | "select" | "image";
 
 export type FormField = {
   name: string;
@@ -50,6 +50,7 @@ export type Product = {
   unit: string;
   cost_price: number;
   selling_price: number;
+  image_url: string | null;
   vat_type: VatType;
   minimum_stock: number;
   supplier_id: string | null;

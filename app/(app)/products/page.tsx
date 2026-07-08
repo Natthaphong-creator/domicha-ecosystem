@@ -13,6 +13,11 @@ export default function ProductsPage() {
         endpoint="/api/products"
         editBasePath="/products"
         columns={[
+          {
+            key: "image_url",
+            label: "รูป",
+            render: (row) => row.image_url ? <img src={row.image_url} alt={row.product_name} className="h-12 w-12 rounded-xl bg-domicha-milk object-contain p-1" /> : <span className="text-xs text-slate-400">ไม่มีรูป</span>
+          },
           { key: "product_code", label: "รหัส" },
           { key: "product_name", label: "ชื่อสินค้า" },
           { key: "category", label: "หมวดหมู่" },

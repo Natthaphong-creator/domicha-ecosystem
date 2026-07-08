@@ -486,7 +486,7 @@ export default function CustomerShopPage() {
             <div className="mt-5 space-y-3">
               {cartItems.map(({ product, quantity, lineTotal }) => (
                 <article key={product.id} className="flex items-center gap-3 rounded-2xl bg-white p-3 shadow-sm">
-                  <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-orange-50"><Image src={product.image} alt="" fill sizes="64px" className="object-contain p-1" /></div>
+                  <div className="h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-orange-50"><img src={product.image} alt="" className="h-full w-full object-contain p-1" loading="lazy" /></div>
                   <div className="min-w-0 flex-1"><strong className="block truncate text-sm">{product.name}</strong><span className="text-xs text-stone-400">{product.price > 0 ? `${baht(product.price)} / ${product.unit}` : `รอ HQ ยืนยันราคา • ${product.unit}`}</span></div>
                   <div className="text-right">
                     <strong className="block text-sm">{product.price > 0 ? baht(lineTotal) : "รอราคา"}</strong>
