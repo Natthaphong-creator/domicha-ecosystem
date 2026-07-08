@@ -135,7 +135,10 @@ export default function CustomerShopPage() {
           .eq("id", session.user.id)
           .single();
 
-        if (userProfile && ["Admin", "Sales", "Accountant"].includes(String(userProfile.role))) {
+        const userRole = String(userProfile?.role || "");
+        const isBackOfficeUser = Boolean(userProfile) && userRole !== "Franchisee";
+
+        if (isBackOfficeUser && userProfile) {
           const hqProfile: FranchiseeProfile = {
             id: "hq-preview",
             branch_name: "HQ Preview",
