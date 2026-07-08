@@ -136,15 +136,15 @@ export default function CustomerShopPage() {
           .single();
 
         const userRole = String(userProfile?.role || "");
-        const isBackOfficeUser = Boolean(userProfile) && userRole !== "Franchisee";
+        const isKnownFranchiseeWithoutBranch = userRole === "Franchisee";
 
-        if (isBackOfficeUser && userProfile) {
+        if (!isKnownFranchiseeWithoutBranch) {
           const hqProfile: FranchiseeProfile = {
             id: "hq-preview",
             branch_name: "HQ Preview",
-            owner_name: userProfile.full_name || "DomiCha HQ",
+            owner_name: userProfile?.full_name || session.user.email || "DomiCha HQ",
             phone: "-",
-            email: userProfile.email || session.user.email || "",
+            email: userProfile?.email || session.user.email || "",
             shipping_address: "",
             status: "Active",
             payment_terms: "โหมดดูตัวอย่าง",
