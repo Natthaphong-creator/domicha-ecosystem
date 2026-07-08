@@ -7,6 +7,7 @@ import {
   BarChart3,
   Boxes,
   ChevronDown,
+  ClipboardList,
   CircleDollarSign,
   Crown,
   FileBarChart,
@@ -40,6 +41,7 @@ const navGroups = [
     items: [
       { href: "/shop", label: "พอร์ทัลแฟรนไชส์ซี", icon: Store },
       { href: "/franchisees", label: "แฟรนไชส์ซี", icon: UserRoundCog },
+      { href: "/orders", label: "ใบสั่งซื้อ", icon: ClipboardList },
       { href: "/documents", label: "เอกสารขาย", icon: FileText },
       { href: "/sales/new", label: "บันทึกการขาย", icon: CircleDollarSign },
       { href: "/quotations", label: "ใบเสนอราคา", icon: ReceiptText },
@@ -208,7 +210,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <nav className="mobile-safe-nav fixed inset-x-3 bottom-3 z-30 grid grid-cols-5 rounded-2xl border border-orange-200/70 bg-[#fffaf0]/95 p-1.5 shadow-2xl backdrop-blur-xl lg:hidden" aria-label="เมนูด่วน">
         {[
           { href: "/dashboard", label: "ภาพรวม", icon: BarChart3 },
-          { href: "/documents", label: "งานขาย", icon: FileText },
+          { href: "/orders", label: "ออเดอร์", icon: ClipboardList },
           { href: "/expenses", label: "รายจ่าย", icon: WalletCards },
           { href: "/products", label: "สินค้า", icon: PackageOpen },
           { href: "/customers", label: "ลูกค้า", icon: Store }

@@ -1,4 +1,4 @@
-export type UserRole = "Admin" | "Sales" | "Accountant";
+export type UserRole = "Admin" | "Sales" | "Accountant" | "Franchisee";
 export type Status = "Active" | "Inactive";
 export type CustomerType = "Retail" | "Franchisee" | "Corporate";
 export type VatType = "VAT 7%" | "No VAT" | "VAT Included";
@@ -84,4 +84,49 @@ export type Quotation = {
   created_at: string;
   customers?: { customer_name: string } | null;
   quotation_items?: QuotationItem[];
+};
+
+export type FranchiseeOrderStatus = "Received" | "Confirmed" | "Packing" | "Shipped" | "Completed" | "Cancelled";
+export type PaymentStatus = "Pending" | "Paid" | "Overdue" | "Cancelled";
+
+export type FranchiseeOrderItem = {
+  id: string;
+  product_id: string;
+  product_name: string;
+  unit: string;
+  quantity: number;
+  unit_price: number;
+  line_total: number;
+  created_at?: string;
+};
+
+export type FranchiseeOrder = {
+  id: string;
+  order_number: string;
+  franchisee_id: string;
+  user_id: string;
+  branch_id: string | null;
+  delivery_method: "delivery" | "pickup" | string;
+  shipping_address: string | null;
+  payment_method: "transfer" | "cod" | string;
+  order_status: FranchiseeOrderStatus;
+  payment_status: PaymentStatus;
+  subtotal: number;
+  delivery_fee: number;
+  grand_total: number;
+  note: string | null;
+  line_request_id: string | null;
+  created_at: string;
+  updated_at: string;
+  franchisee_profiles?: {
+    branch_name: string;
+    owner_name: string;
+    phone: string;
+    email: string;
+    province: string | null;
+    shipping_address: string | null;
+    tax_id: string | null;
+    payment_terms: string | null;
+  } | null;
+  franchisee_order_items?: FranchiseeOrderItem[];
 };
