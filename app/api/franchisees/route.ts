@@ -48,6 +48,21 @@ function cleanBranchCode(value: string) {
     .slice(0, 32);
 }
 
+async function findAuthUserIdByEmail(admin: ReturnType<typeof getSupabaseAdmin>, email: string) {
+  if (!admin) return null;
+
+  for (let page = 1; page <= 10; page += 1) {
+    const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 100 });
+    if (error) throw error;
+
+    const found = data.users.find((user) => user.email?.toLowerCase() === email);
+    if (found) return found.id;
+    if (data.users.length < 100) break;
+  }
+
+  return null;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const auth = await requireUserRole(request, ["Admin", "Sales", "Accountant"]);
@@ -105,8 +120,47 @@ export async function POST(request: NextRequest) {
     if (!branchCode) return NextResponse.json({ error: "กรุณาระบุรหัสสาขา" }, { status: 400 });
     if (!phone) return NextResponse.json({ error: "กรุณาระบุเบอร์โทร" }, { status: 400 });
 
-    const { data: userData, error: createUserError } = await admin.auth.admin.createUser({
-      email,
+    const { data: existingPublicUser, error: existingPublicUserError } = await admin
+      .from("users")
+      .select("id,email,role")
+      .eq("email", email)
+      .maybeSingle();
+    if (existingPublicUserError) throw existingPublicUserError;
+
+    if (existingPublicUser && existingPublicUser.role !== "Franchisee") {
+      return NextResponse.json({ error: "อีเมลนี้ถูกใช้กับบัญชีหลังบ้านแล้ว กรุณาใช้อีเมลอื่นสำหรับแฟรนไชส์ซี" }, { status: 409 });
+    }
+
+    let userId = existingPublicUser?.id || "";
+
+    if (!userId) {
+      const { data: userData, error: createUserError } = await admin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: {
+          full_name: ownerName,
+          role: "Franchisee",
+          branch_name: branchName
+        }
+      });
+
+      if (createUserError || !userData.user) {
+        const duplicateUserId = createUserError?.message.toLowerCase().includes("already")
+          ? await findAuthUserIdByEmail(admin, email)
+          : null;
+
+        if (!duplicateUserId) {
+          return NextResponse.json({ error: createUserError?.message || "สร้างบัญชีแฟรนไชส์ซีไม่สำเร็จ" }, { status: 400 });
+        }
+
+        userId = duplicateUserId;
+      } else {
+        userId = userData.user.id;
+      }
+    }
+
+    const { error: updateAuthUserError } = await admin.auth.admin.updateUserById(userId, {
       password,
       email_confirm: true,
       user_metadata: {
@@ -115,12 +169,7 @@ export async function POST(request: NextRequest) {
         branch_name: branchName
       }
     });
-
-    if (createUserError || !userData.user) {
-      return NextResponse.json({ error: createUserError?.message || "สร้างบัญชีแฟรนไชส์ซีไม่สำเร็จ" }, { status: 400 });
-    }
-
-    const userId = userData.user.id;
+    if (updateAuthUserError) throw updateAuthUserError;
 
     const { error: userUpsertError } = await admin.from("users").upsert({
       id: userId,
