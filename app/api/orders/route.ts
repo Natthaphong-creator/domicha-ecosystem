@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { shopProductMap } from "@/lib/shopCatalog";
+import { fetchStockProducts } from "@/lib/stockProducts";
 import { requireUserRole } from "@/lib/supabaseServer";
 
 export const runtime = "nodejs";
@@ -211,10 +211,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "ยังไม่มีสินค้าในคำสั่งซื้อ" }, { status: 400 });
   }
 
+  const catalog = await fetchStockProducts();
+  const productMap = new Map(catalog.products.map((product) => [product.id, product]));
+
   const normalizedItems = payload.items.map((item) => {
-    const product = shopProductMap.get(cleanText(item.productId, 60));
+    const product = productMap.get(cleanText(item.productId, 160));
     const quantity = Math.floor(Number(item.quantity));
-    if (!product || !Number.isFinite(quantity) || quantity < 1 || quantity > 99) return null;
+    if (!product || !Number.isFinite(quantity) || quantity < 1 || quantity > 99 || product.stock === 0) return null;
     return { product, quantity, lineTotal: product.price * quantity };
   });
   if (normalizedItems.some((item) => !item)) {

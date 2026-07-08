@@ -21,10 +21,16 @@ import {
   Truck,
   X
 } from "lucide-react";
-import { shopProducts } from "@/lib/shopCatalog";
+import { shopProducts, type ShopProduct } from "@/lib/shopCatalog";
 import { supabase } from "@/lib/supabaseClient";
 
 type Cart = Record<string, number>;
+type StockProductsResponse = {
+  products: ShopProduct[];
+  source: "stock" | "fallback";
+  updatedAt: string | null;
+  error?: string;
+};
 type CheckoutForm = {
   customerName: string;
   phone: string;
@@ -46,7 +52,6 @@ type FranchiseeProfile = {
   credit_limit: number;
 };
 
-const categories = ["ทั้งหมด", "ชา", "ผงเครื่องดื่ม", "ไซรัป"] as const;
 const initialForm: CheckoutForm = {
   customerName: "",
   phone: "",
@@ -65,11 +70,24 @@ function baht(value: number) {
   }).format(value);
 }
 
+function ProductImage({ product }: { product: ShopProduct }) {
+  if (product.image.startsWith("/") && !product.image.startsWith("//")) {
+    return <Image src={product.image} alt={product.name} fill sizes="(max-width: 640px) 50vw, 33vw" className="object-contain p-3 transition duration-500 group-hover:scale-105 sm:p-5" />;
+  }
+
+  return <img src={product.image} alt={product.name} className="h-full w-full object-contain p-3 transition duration-500 group-hover:scale-105 sm:p-5" loading="lazy" />;
+}
+
 export default function CustomerShopPage() {
   const router = useRouter();
   const supabaseConfigured = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
   const [query, setQuery] = useState("");
-  const [category, setCategory] = useState<(typeof categories)[number]>("ทั้งหมด");
+  const [category, setCategory] = useState("ทั้งหมด");
+  const [products, setProducts] = useState<ShopProduct[]>(shopProducts);
+  const [catalogLoading, setCatalogLoading] = useState(true);
+  const [catalogSource, setCatalogSource] = useState<"stock" | "fallback">("fallback");
+  const [catalogUpdatedAt, setCatalogUpdatedAt] = useState<string | null>(null);
+  const [catalogNotice, setCatalogNotice] = useState("");
   const [cart, setCart] = useState<Cart>({});
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
@@ -140,29 +158,66 @@ export default function CustomerShopPage() {
     };
   }, [router, supabaseConfigured]);
 
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadProducts() {
+      setCatalogLoading(true);
+      try {
+        const response = await fetch("/api/stock-products", { cache: "no-store" });
+        const payload = (await response.json()) as StockProductsResponse;
+        if (!response.ok) throw new Error(payload.error || "โหลดรายการสินค้าไม่สำเร็จ");
+        if (!mounted) return;
+        setProducts(payload.products.length ? payload.products : shopProducts);
+        setCatalogSource(payload.source);
+        setCatalogUpdatedAt(payload.updatedAt);
+        setCatalogNotice(payload.source === "stock" ? "" : payload.error || "ใช้รายการสินค้าสำรอง");
+      } catch (loadError) {
+        if (!mounted) return;
+        setProducts(shopProducts);
+        setCatalogSource("fallback");
+        setCatalogNotice(loadError instanceof Error ? loadError.message : "ใช้รายการสินค้าสำรอง");
+      } finally {
+        if (mounted) setCatalogLoading(false);
+      }
+    }
+
+    loadProducts();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const categories = useMemo(() => ["ทั้งหมด", ...Array.from(new Set(products.map((product) => product.category).filter(Boolean)))], [products]);
+
   const filteredProducts = useMemo(() => {
     const normalized = query.trim().toLowerCase();
-    return shopProducts.filter((product) =>
+    return products.filter((product) =>
       (category === "ทั้งหมด" || product.category === category) &&
       (!normalized || `${product.name} ${product.description}`.toLowerCase().includes(normalized))
     );
-  }, [category, query]);
+  }, [category, products, query]);
 
-  const cartItems = useMemo(() => shopProducts
+  const cartItems = useMemo(() => products
     .filter((product) => cart[product.id])
     .map((product) => ({
       product,
       quantity: cart[product.id],
       lineTotal: product.price * cart[product.id]
-    })), [cart]);
+    })), [cart, products]);
   const itemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const subtotal = cartItems.reduce((sum, item) => sum + item.lineTotal, 0);
   const deliveryFee = form.deliveryMethod === "delivery" && subtotal < 5_000 ? 80 : 0;
   const total = subtotal + deliveryFee;
 
   function changeQuantity(productId: string, amount: number) {
+    const product = products.find((item) => item.id === productId);
+    if (!product || product.stock === 0) return;
+
     setCart((current) => {
-      const nextQuantity = Math.max(0, Math.min(99, (current[productId] || 0) + amount));
+      const maxQuantity = typeof product.stock === "number" && product.stock > 0 ? Math.min(99, Math.floor(product.stock)) : 99;
+      const nextQuantity = Math.max(0, Math.min(maxQuantity, (current[productId] || 0) + amount));
       if (!nextQuantity) {
         const next = { ...current };
         delete next[productId];
@@ -283,6 +338,7 @@ export default function CustomerShopPage() {
             <div className="mt-6 flex flex-wrap gap-3 text-xs text-stone-300">
               <span className="flex items-center gap-1.5"><Truck className="h-4 w-4 text-orange-400" /> ฟรีค่าส่งเมื่อครบ 5,000 บาท</span>
               <span className="flex items-center gap-1.5"><ShieldCheck className="h-4 w-4 text-emerald-400" /> สินค้าจากศูนย์ DomiCha</span>
+              <span className="flex items-center gap-1.5"><PackageCheck className="h-4 w-4 text-sky-300" /> {catalogSource === "stock" ? "เชื่อมกับ DomiCha Stock" : "ใช้สินค้าสำรอง"}</span>
             </div>
           </div>
         </section>
@@ -306,17 +362,27 @@ export default function CustomerShopPage() {
             <div>
               <p className="text-xs font-bold uppercase tracking-[.18em] text-orange-600">Our products</p>
               <h2 className="mt-1 text-2xl font-black tracking-tight">เลือกวัตถุดิบ</h2>
+              <p className="mt-1 text-xs text-stone-400">
+                {catalogLoading ? "กำลังโหลดสินค้าจาก DomiCha Stock..." : catalogSource === "stock" ? `ข้อมูลจาก DomiCha Stock${catalogUpdatedAt ? ` • อัปเดต ${new Date(catalogUpdatedAt).toLocaleString("th-TH")}` : ""}` : `ใช้สินค้าสำรอง${catalogNotice ? ` • ${catalogNotice}` : ""}`}
+              </p>
             </div>
             <span className="text-sm text-stone-400">{filteredProducts.length} รายการ</span>
           </div>
+          {catalogNotice && catalogSource === "fallback" ? (
+            <p className="mb-4 rounded-2xl border border-amber-100 bg-amber-50 p-3 text-sm text-amber-800">
+              ยังดึง DomiCha Stock ไม่ได้ชั่วคราว ระบบจึงใช้รายการสินค้าสำรองก่อน
+            </p>
+          ) : null}
           <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
             {filteredProducts.map((product) => {
               const quantity = cart[product.id] || 0;
+              const outOfStock = product.stock === 0;
               return (
-                <article key={product.id} className="group overflow-hidden rounded-[24px] border border-white/80 bg-white/80 shadow-[0_12px_40px_rgba(75,43,20,.07)] backdrop-blur sm:rounded-[28px]">
+                <article key={product.id} className={`group overflow-hidden rounded-[24px] border border-white/80 bg-white/80 shadow-[0_12px_40px_rgba(75,43,20,.07)] backdrop-blur sm:rounded-[28px] ${outOfStock ? "opacity-60" : ""}`}>
                   <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-orange-50 via-[#fffaf4] to-amber-100/60">
-                    <Image src={product.image} alt={product.name} fill sizes="(max-width: 640px) 50vw, 33vw" className="object-contain p-3 transition duration-500 group-hover:scale-105 sm:p-5" />
+                    <ProductImage product={product} />
                     {product.badge ? <span className="absolute left-3 top-3 rounded-full bg-stone-950 px-2.5 py-1 text-[10px] font-bold text-white">{product.badge}</span> : null}
+                    {typeof product.stock === "number" ? <span className="absolute bottom-3 right-3 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-bold text-stone-600 shadow-sm">คลัง {product.stock.toLocaleString("th-TH")}</span> : null}
                   </div>
                   <div className="p-3.5 sm:p-5">
                     <p className="text-[10px] font-bold uppercase tracking-[.14em] text-orange-600">{product.category}</p>
@@ -327,7 +393,9 @@ export default function CustomerShopPage() {
                         <strong className="block text-base sm:text-lg">{baht(product.price)}</strong>
                         <span className="text-[11px] text-stone-400">ต่อ {product.unit}</span>
                       </div>
-                      {quantity ? (
+                      {outOfStock ? (
+                        <button disabled className="h-10 rounded-2xl bg-stone-200 px-3 text-xs font-bold text-stone-500">หมด</button>
+                      ) : quantity ? (
                         <div className="flex items-center gap-1 rounded-2xl bg-stone-950 p-1 text-white">
                           <button onClick={() => changeQuantity(product.id, -1)} className="grid h-8 w-8 place-items-center rounded-xl hover:bg-white/10" aria-label={`ลด ${product.name}`}><Minus className="h-3.5 w-3.5" /></button>
                           <strong className="min-w-5 text-center text-sm">{quantity}</strong>
