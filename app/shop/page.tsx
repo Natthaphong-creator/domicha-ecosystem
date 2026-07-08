@@ -50,6 +50,7 @@ type FranchiseeProfile = {
   status: "Pending" | "Active" | "Suspended";
   payment_terms: string;
   credit_limit: number;
+  preview?: boolean;
 };
 
 const initialForm: CheckoutForm = {
@@ -97,6 +98,7 @@ export default function CustomerShopPage() {
   const [success, setSuccess] = useState<{ orderNumber: string; lineNotified: boolean } | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [profile, setProfile] = useState<FranchiseeProfile | null>(null);
+  const [previewMode, setPreviewMode] = useState(false);
   const [accessError, setAccessError] = useState("");
 
   useEffect(() => {
@@ -127,6 +129,38 @@ export default function CustomerShopPage() {
       if (!mounted) return;
 
       if (profileError || !data) {
+        const { data: userProfile } = await supabase
+          .from("users")
+          .select("full_name,email,role")
+          .eq("id", session.user.id)
+          .single();
+
+        if (userProfile && ["Admin", "Sales", "Accountant"].includes(String(userProfile.role))) {
+          const hqProfile: FranchiseeProfile = {
+            id: "hq-preview",
+            branch_name: "HQ Preview",
+            owner_name: userProfile.full_name || "DomiCha HQ",
+            phone: "-",
+            email: userProfile.email || session.user.email || "",
+            shipping_address: "",
+            status: "Active",
+            payment_terms: "โหมดดูตัวอย่าง",
+            credit_limit: 0,
+            preview: true
+          };
+          setPreviewMode(true);
+          setProfile(hqProfile);
+          setForm((current) => ({
+            ...current,
+            customerName: hqProfile.owner_name,
+            phone: hqProfile.phone,
+            branchName: hqProfile.branch_name,
+            address: ""
+          }));
+          setAuthLoading(false);
+          return;
+        }
+
         setAccessError("บัญชีนี้ยังไม่ได้ถูกเพิ่มเป็นแฟรนไชส์ซีโดย HQ");
         setAuthLoading(false);
         return;
@@ -140,6 +174,7 @@ export default function CustomerShopPage() {
         return;
       }
 
+      setPreviewMode(false);
       setProfile(franchisee);
       setForm((current) => ({
         ...current,
@@ -239,6 +274,10 @@ export default function CustomerShopPage() {
       setError("กรุณาเข้าสู่ระบบด้วยบัญชีแฟรนไชส์ซีก่อนสั่งซื้อ");
       return;
     }
+    if (profile.preview || previewMode) {
+      setError("โหมดเจ้าของใช้ดูตัวอย่างหน้าร้านเท่านั้น หากต้องการทดสอบสั่งซื้อ กรุณาเข้าสู่ระบบด้วยบัญชีแฟรนไชส์ซี");
+      return;
+    }
     setSubmitting(true);
     setError("");
     try {
@@ -315,8 +354,8 @@ export default function CustomerShopPage() {
         <div className="mx-auto flex h-[76px] max-w-7xl items-center gap-3 px-4 sm:px-6">
           <Image src="/icons/domicha-original-logo.png" alt="Domi Cha" width={58} height={58} className="h-[58px] w-[58px] object-contain" priority />
           <div className="min-w-0">
-            <strong className="block text-[17px] tracking-tight">DomiCha Franchise</strong>
-            <span className="block truncate text-xs text-stone-500">{profile?.branch_name || "พอร์ทัลสั่งซื้อวัตถุดิบ"}</span>
+            <strong className="block text-[17px] tracking-tight">{previewMode ? "DomiCha Shop Preview" : "DomiCha Franchise"}</strong>
+            <span className="block truncate text-xs text-stone-500">{previewMode ? "โหมดเจ้าของดูหน้าร้าน" : profile?.branch_name || "พอร์ทัลสั่งซื้อวัตถุดิบ"}</span>
           </div>
           <button onClick={() => setCartOpen(true)} className="relative ml-auto grid h-11 w-11 place-items-center rounded-2xl bg-stone-950 text-white shadow-lg shadow-stone-950/15" aria-label="เปิดตะกร้า">
             <ShoppingBag className="h-5 w-5" />
@@ -329,17 +368,24 @@ export default function CustomerShopPage() {
         <section className="shop-hero mt-5 overflow-hidden rounded-[30px] bg-stone-950 px-5 py-7 text-white shadow-2xl shadow-orange-950/10 sm:px-10 sm:py-11">
           <div className="relative z-10 max-w-2xl">
             <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1.5 text-xs font-semibold text-orange-200">
-              <Sparkles className="h-3.5 w-3.5" /> Private Franchisee Portal
+              <Sparkles className="h-3.5 w-3.5" /> {previewMode ? "HQ Shop Preview" : "Private Franchisee Portal"}
             </span>
             <h1 className="mt-5 text-3xl font-black leading-tight tracking-[-.03em] sm:text-5xl">
-              สั่งวัตถุดิบสำหรับสาขา<br /><span className="text-orange-400">เฉพาะแฟรนไชส์ซี DomiCha</span>
+              {previewMode ? "ดูหน้าร้านสำหรับแฟรนไชส์ซี" : "สั่งวัตถุดิบสำหรับสาขา"}<br /><span className="text-orange-400">{previewMode ? "ในมุมมองเจ้าของ/HQ" : "เฉพาะแฟรนไชส์ซี DomiCha"}</span>
             </h1>
-            <p className="mt-4 max-w-xl text-sm leading-6 text-stone-300 sm:text-base">เข้าสู่ระบบด้วยบัญชีที่ HQ สร้างให้ เลือกสินค้า และส่งออเดอร์ถึงทีม DomiCha ผ่าน LINE OA ได้ในไม่กี่ขั้นตอน</p>
+            <p className="mt-4 max-w-xl text-sm leading-6 text-stone-300 sm:text-base">
+              {previewMode ? "หน้านี้เป็นโหมดดูตัวอย่างสำหรับเจ้าของ สามารถดูสินค้า ราคา สต๊อก และหน้าตาตะกร้าได้ แต่ไม่ส่งคำสั่งซื้อจริง" : "เข้าสู่ระบบด้วยบัญชีที่ HQ สร้างให้ เลือกสินค้า และส่งออเดอร์ถึงทีม DomiCha ผ่าน LINE OA ได้ในไม่กี่ขั้นตอน"}
+            </p>
             <div className="mt-6 flex flex-wrap gap-3 text-xs text-stone-300">
               <span className="flex items-center gap-1.5"><Truck className="h-4 w-4 text-orange-400" /> ฟรีค่าส่งเมื่อครบ 5,000 บาท</span>
               <span className="flex items-center gap-1.5"><ShieldCheck className="h-4 w-4 text-emerald-400" /> สินค้าจากศูนย์ DomiCha</span>
               <span className="flex items-center gap-1.5"><PackageCheck className="h-4 w-4 text-sky-300" /> {catalogSource === "stock" ? "เชื่อมกับ DomiCha Stock" : "ใช้สินค้าสำรอง"}</span>
             </div>
+            {previewMode ? (
+              <div className="mt-6 rounded-2xl border border-orange-300/20 bg-orange-500/10 p-4 text-sm leading-6 text-orange-100">
+                โหมดนี้สำหรับเจ้าของดูหน้าร้านเท่านั้น หากต้องการทดสอบส่งออเดอร์จริง ให้สร้างบัญชีแฟรนไชส์ซีแล้วล็อกอินด้วยบัญชีนั้น
+              </div>
+            ) : null}
           </div>
         </section>
 
@@ -448,7 +494,9 @@ export default function CustomerShopPage() {
               <div className="flex justify-between text-stone-500"><span>ยอดสินค้า</span><strong className="text-stone-950">{baht(subtotal)}</strong></div>
               <p className="mt-2 text-xs text-orange-700">{subtotal >= 5_000 ? "🎉 ออเดอร์นี้ได้รับสิทธิ์จัดส่งฟรี" : `สั่งเพิ่มอีก ${baht(5_000 - subtotal)} เพื่อรับสิทธิ์จัดส่งฟรี`}</p>
             </div>
-            <button onClick={openCheckout} className="mt-4 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-orange-500 font-bold text-white shadow-lg shadow-orange-500/25">ดำเนินการสั่งซื้อ <ChevronRight className="h-5 w-5" /></button>
+            <button onClick={openCheckout} className="mt-4 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-orange-500 font-bold text-white shadow-lg shadow-orange-500/25">
+              {previewMode ? "ดูหน้าฟอร์มยืนยัน" : "ดำเนินการสั่งซื้อ"} <ChevronRight className="h-5 w-5" />
+            </button>
           </section>
         </div>
       ) : null}
@@ -473,6 +521,12 @@ export default function CustomerShopPage() {
                 <label className="block">ชื่อสาขา / ร้าน<input required readOnly value={form.branchName} className="mt-1.5 h-12 rounded-2xl bg-stone-50 text-stone-500" placeholder="เช่น DomiCha บางแสน" /></label>
               </div>
             </section>
+
+            {previewMode ? (
+              <p className="mt-4 rounded-2xl border border-orange-100 bg-orange-50 p-4 text-sm leading-6 text-orange-800">
+                คุณกำลังดูในโหมดเจ้าของ ระบบจะไม่ส่งคำสั่งซื้อจริงจากบัญชีนี้
+              </p>
+            ) : null}
 
             <section className="mt-5 space-y-4 rounded-[28px] border border-white bg-white/80 p-5 shadow-sm sm:p-6">
               <h2 className="font-bold">การรับสินค้า</h2>
@@ -500,7 +554,7 @@ export default function CustomerShopPage() {
 
             {error ? <p className="mt-4 rounded-2xl border border-red-100 bg-red-50 p-4 text-sm text-red-700">{error}</p> : null}
             <button disabled={submitting} className="mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-orange-500 font-bold text-white shadow-xl shadow-orange-500/25 disabled:opacity-60">
-              {submitting ? <><Clock3 className="h-5 w-5 animate-spin" /> กำลังส่งคำสั่งซื้อ...</> : <><Check className="h-5 w-5" /> ยืนยันสั่งซื้อ {baht(total)}</>}
+              {submitting ? <><Clock3 className="h-5 w-5 animate-spin" /> กำลังส่งคำสั่งซื้อ...</> : <><Check className="h-5 w-5" /> {previewMode ? "ปุ่มนี้ปิดในโหมดเจ้าของ" : `ยืนยันสั่งซื้อ ${baht(total)}`}</>}
             </button>
             <p className="mt-3 text-center text-xs leading-5 text-stone-400">เมื่อยืนยัน ข้อมูลคำสั่งซื้อจะถูกส่งให้ทีมงานผ่าน LINE OA เพื่อดำเนินการต่อ</p>
           </form>
