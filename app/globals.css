@@ -1,0 +1,273 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  min-height: 100vh;
+  background: #f7f8fa;
+  color: #0f172a;
+  font-family: "Noto Sans Thai", "Leelawadee UI", Tahoma, ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+input,
+select,
+textarea {
+  @apply w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none transition placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100;
+}
+
+label {
+  @apply text-sm font-medium text-slate-700;
+}
+
+table {
+  @apply w-full text-left text-sm;
+}
+
+th {
+  @apply bg-slate-50/80 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500;
+}
+
+td {
+  @apply border-t border-slate-100 px-4 py-3.5 align-middle text-sm;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid #f97316;
+  outline-offset: 2px;
+}
+
+.domicha-app-pattern {
+  background-color: #ffd9ad;
+  background-image:
+    radial-gradient(circle at 88% 4%, rgb(245 102 45 / 18%), transparent 25rem),
+    radial-gradient(circle at 8% 92%, rgb(255 247 232 / 35%), transparent 24rem),
+    repeating-linear-gradient(
+      135deg,
+      rgb(255 255 255 / 26%) 0,
+      rgb(255 255 255 / 26%) 2px,
+      transparent 2px,
+      transparent 34px
+    );
+  background-attachment: fixed;
+}
+
+.domicha-sidebar-pattern {
+  background-image:
+    repeating-linear-gradient(135deg, rgb(245 102 45 / 5%) 0 1px, transparent 1px 22px),
+    linear-gradient(155deg, #fffaf0, #fff 55%);
+  background-size: auto;
+}
+
+.domicha-dark-pattern {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background-image:
+    radial-gradient(circle at 88% 10%, rgb(249 115 22 / 28%), transparent 9rem),
+    radial-gradient(circle at 15% 95%, rgb(16 185 129 / 16%), transparent 10rem),
+    linear-gradient(135deg, rgb(255 255 255 / 5%) 1px, transparent 1px),
+    linear-gradient(45deg, rgb(255 255 255 / 4%) 1px, transparent 1px);
+  background-size: auto, auto, 24px 24px, 24px 24px;
+}
+
+.domicha-dark-pattern::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  width: 150px;
+  height: 150px;
+  right: -74px;
+  top: -72px;
+  border: 26px solid rgb(255 255 255 / 6%);
+  border-radius: 42% 58% 62% 38%;
+  transform: rotate(24deg);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .domicha-dark-pattern::after {
+    animation: domicha-drift 12s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes domicha-drift {
+  to {
+    transform: rotate(40deg) translate(-8px, 8px);
+  }
+}
+
+.premium-brand-mark,
+.premium-button {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.premium-brand-mark::after,
+.premium-button::after {
+  content: "";
+  position: absolute;
+  inset: -80% auto -80% -45%;
+  z-index: -1;
+  width: 38%;
+  transform: rotate(16deg);
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 45%), transparent);
+}
+
+.premium-button:hover::after {
+  animation: premium-shine .75s ease-out;
+}
+
+.premium-page-header,
+.premium-summary {
+  position: relative;
+  isolation: isolate;
+  background-image:
+    radial-gradient(circle at 88% 10%, rgb(249 115 22 / 28%), transparent 16rem),
+    radial-gradient(circle at 8% 90%, rgb(245 158 11 / 12%), transparent 13rem),
+    linear-gradient(135deg, rgb(255 255 255 / 5%) 1px, transparent 1px);
+  background-size: auto, auto, 26px 26px;
+}
+
+.premium-page-header::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  width: 260px;
+  height: 260px;
+  right: -100px;
+  top: -130px;
+  border: 44px solid rgb(255 255 255 / 5%);
+  border-radius: 44% 56% 62% 38%;
+  transform: rotate(24deg);
+}
+
+.premium-surface {
+  position: relative;
+}
+
+.premium-surface::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  border-radius: 999px;
+  background: linear-gradient(#fb923c, #f59e0b, transparent 82%);
+  opacity: .75;
+}
+
+.premium-line-card {
+  background-image:
+    radial-gradient(circle at 100% 0, rgb(6 199 85 / 9%), transparent 13rem),
+    linear-gradient(145deg, rgb(255 255 255 / 98%), rgb(248 250 252 / 95%));
+}
+
+.premium-success {
+  background-image:
+    radial-gradient(circle at 50% -10%, rgb(16 185 129 / 14%), transparent 20rem),
+    linear-gradient(rgb(16 185 129 / 3%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(16 185 129 / 3%) 1px, transparent 1px);
+  background-size: auto, 28px 28px, 28px 28px;
+}
+
+@media (max-width: 1023px) {
+  body {
+    overscroll-behavior-y: none;
+  }
+
+  button,
+  a,
+  input,
+  select {
+    touch-action: manipulation;
+  }
+
+  input,
+  select,
+  textarea {
+    min-height: 44px;
+  }
+
+  .domicha-app-pattern {
+    background-image:
+      radial-gradient(circle at 100% 0, rgb(245 102 45 / 16%), transparent 18rem),
+      repeating-linear-gradient(
+        135deg,
+        rgb(255 255 255 / 24%) 0,
+        rgb(255 255 255 / 24%) 1.5px,
+        transparent 1.5px,
+        transparent 26px
+      );
+  }
+}
+
+@media (display-mode: standalone) {
+  body {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  header {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
+.pwa-install-cta {
+  bottom: calc(6rem + env(safe-area-inset-bottom));
+}
+
+.mobile-safe-nav {
+  bottom: calc(.75rem + env(safe-area-inset-bottom));
+}
+
+.shop-shell {
+  background:
+    radial-gradient(circle at 100% 0, rgb(251 146 60 / 18%), transparent 32rem),
+    radial-gradient(circle at 0 48%, rgb(245 158 11 / 10%), transparent 26rem),
+    #fffaf3;
+}
+
+.shop-hero {
+  position: relative;
+  isolation: isolate;
+  background-image:
+    radial-gradient(circle at 88% 8%, rgb(249 115 22 / 42%), transparent 18rem),
+    radial-gradient(circle at 68% 130%, rgb(245 158 11 / 22%), transparent 20rem),
+    linear-gradient(125deg, rgb(255 255 255 / 5%) 1px, transparent 1px);
+  background-size: auto, auto, 28px 28px;
+}
+
+.shop-hero::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  right: -80px;
+  top: -135px;
+  width: 330px;
+  height: 330px;
+  border: 58px solid rgb(255 255 255 / 5%);
+  border-radius: 42% 58% 64% 36%;
+  transform: rotate(28deg);
+}
+
+@media (min-width: 1024px) {
+  .pwa-install-cta {
+    bottom: calc(1.5rem + env(safe-area-inset-bottom));
+  }
+}
+
+@keyframes premium-shine {
+  from { left: -45%; }
+  to { left: 130%; }
+}
