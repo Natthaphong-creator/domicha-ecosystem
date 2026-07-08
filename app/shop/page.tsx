@@ -246,7 +246,8 @@ export default function CustomerShopPage() {
     })), [cart, products]);
   const itemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const subtotal = cartItems.reduce((sum, item) => sum + item.lineTotal, 0);
-  const deliveryFee = form.deliveryMethod === "delivery" && subtotal < 5_000 ? 80 : 0;
+  const hasUnpricedCartItems = cartItems.some(({ product }) => product.price <= 0);
+  const deliveryFee = form.deliveryMethod === "delivery" && subtotal > 0 && subtotal < 5_000 ? 80 : 0;
   const total = subtotal + deliveryFee;
 
   function changeQuantity(productId: string, amount: number) {
@@ -426,6 +427,7 @@ export default function CustomerShopPage() {
             {filteredProducts.map((product) => {
               const quantity = cart[product.id] || 0;
               const outOfStock = product.stock === 0;
+              const hasPrice = product.price > 0;
               return (
                 <article key={product.id} className={`group overflow-hidden rounded-[24px] border border-white/80 bg-white/80 shadow-[0_12px_40px_rgba(75,43,20,.07)] backdrop-blur sm:rounded-[28px] ${outOfStock ? "opacity-60" : ""}`}>
                   <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-orange-50 via-[#fffaf4] to-amber-100/60">
@@ -439,8 +441,8 @@ export default function CustomerShopPage() {
                     <p className="mt-1 hidden text-xs leading-5 text-stone-500 sm:block">{product.description}</p>
                     <div className="mt-3 flex items-center justify-between gap-2">
                       <div>
-                        <strong className="block text-base sm:text-lg">{baht(product.price)}</strong>
-                        <span className="text-[11px] text-stone-400">ต่อ {product.unit}</span>
+                        <strong className={`block text-base sm:text-lg ${hasPrice ? "" : "text-orange-600"}`}>{hasPrice ? baht(product.price) : "รอ HQ ยืนยันราคา"}</strong>
+                        <span className="text-[11px] text-stone-400">{hasPrice ? `ต่อ ${product.unit}` : `หน่วย ${product.unit}`}</span>
                       </div>
                       {outOfStock ? (
                         <button disabled className="h-10 rounded-2xl bg-stone-200 px-3 text-xs font-bold text-stone-500">หมด</button>
@@ -485,9 +487,9 @@ export default function CustomerShopPage() {
               {cartItems.map(({ product, quantity, lineTotal }) => (
                 <article key={product.id} className="flex items-center gap-3 rounded-2xl bg-white p-3 shadow-sm">
                   <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-orange-50"><Image src={product.image} alt="" fill sizes="64px" className="object-contain p-1" /></div>
-                  <div className="min-w-0 flex-1"><strong className="block truncate text-sm">{product.name}</strong><span className="text-xs text-stone-400">{baht(product.price)} / {product.unit}</span></div>
+                  <div className="min-w-0 flex-1"><strong className="block truncate text-sm">{product.name}</strong><span className="text-xs text-stone-400">{product.price > 0 ? `${baht(product.price)} / ${product.unit}` : `รอ HQ ยืนยันราคา • ${product.unit}`}</span></div>
                   <div className="text-right">
-                    <strong className="block text-sm">{baht(lineTotal)}</strong>
+                    <strong className="block text-sm">{product.price > 0 ? baht(lineTotal) : "รอราคา"}</strong>
                     <div className="mt-1 flex items-center gap-2"><button onClick={() => changeQuantity(product.id, -1)} className="text-stone-400" aria-label="ลด"><Minus className="h-4 w-4" /></button><span className="min-w-5 text-sm">{quantity}</span><button onClick={() => changeQuantity(product.id, 1)} className="text-orange-600" aria-label="เพิ่ม"><Plus className="h-4 w-4" /></button></div>
                   </div>
                 </article>
@@ -495,7 +497,7 @@ export default function CustomerShopPage() {
             </div>
             <div className="mt-5 rounded-2xl bg-orange-50 p-4 text-sm">
               <div className="flex justify-between text-stone-500"><span>ยอดสินค้า</span><strong className="text-stone-950">{baht(subtotal)}</strong></div>
-              <p className="mt-2 text-xs text-orange-700">{subtotal >= 5_000 ? "🎉 ออเดอร์นี้ได้รับสิทธิ์จัดส่งฟรี" : `สั่งเพิ่มอีก ${baht(5_000 - subtotal)} เพื่อรับสิทธิ์จัดส่งฟรี`}</p>
+              <p className="mt-2 text-xs text-orange-700">{hasUnpricedCartItems ? "มีสินค้าที่ยังไม่มีราคา HQ จะยืนยันยอดอีกครั้ง" : subtotal >= 5_000 ? "🎉 ออเดอร์นี้ได้รับสิทธิ์จัดส่งฟรี" : `สั่งเพิ่มอีก ${baht(5_000 - subtotal)} เพื่อรับสิทธิ์จัดส่งฟรี`}</p>
             </div>
             <button onClick={openCheckout} className="mt-4 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-orange-500 font-bold text-white shadow-lg shadow-orange-500/25">
               {previewMode ? "ดูหน้าฟอร์มยืนยัน" : "ดำเนินการสั่งซื้อ"} <ChevronRight className="h-5 w-5" />

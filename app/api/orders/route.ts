@@ -226,7 +226,7 @@ export async function POST(request: NextRequest) {
 
   const validItems = normalizedItems.filter((item): item is NonNullable<typeof item> => Boolean(item));
   const subtotal = validItems.reduce((sum, item) => sum + item.lineTotal, 0);
-  const deliveryFee = deliveryMethod === "delivery" && subtotal < 5_000 ? 80 : 0;
+  const deliveryFee = deliveryMethod === "delivery" && subtotal > 0 && subtotal < 5_000 ? 80 : 0;
   const total = subtotal + deliveryFee;
   const orderNumber = makeOrderNumber();
   const { data: savedOrder, error: orderError } = await auth.supabase

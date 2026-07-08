@@ -77,16 +77,19 @@ export function transformStockSnapshot(snapshot: StockSnapshot): ShopProduct[] {
       if (!name || seen.has(name)) continue;
       seen.add(name);
       const price = numberValue(prices[name]);
-      const stock = numberValue(warehouseStock[name]);
+      const hasStockValue = Object.prototype.hasOwnProperty.call(warehouseStock, name);
+      const stock = hasStockValue ? numberValue(warehouseStock[name]) : undefined;
       products.push({
         id: `stock-${slugify(name)}`,
         name,
-        description: `สินค้า DomiCha Stock • คลังกลาง ${stock.toLocaleString("th-TH")} ${unitFromName(name)}`,
+        description: stock === undefined
+          ? "สินค้า DomiCha Stock • รอ HQ ยืนยันราคา/สต็อก"
+          : `สินค้า DomiCha Stock • คลังกลาง ${stock.toLocaleString("th-TH")} ${unitFromName(name)}`,
         category: categoryName,
         price,
         unit: unitFromName(name),
         image: normalizeImage(images[name]),
-        badge: stock <= 0 ? "หมด" : undefined,
+        badge: stock === 0 ? "หมด" : price <= 0 ? "รอราคา" : undefined,
         stock,
         source: "stock"
       });
@@ -113,7 +116,7 @@ export function transformStockSnapshot(snapshot: StockSnapshot): ShopProduct[] {
     });
   }
 
-  return products.filter((product) => product.price > 0);
+  return products;
 }
 
 export async function fetchStockProducts(): Promise<StockProductsResult> {
