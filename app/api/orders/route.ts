@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { shopProductMap } from "@/lib/shopCatalog";
+import { requireUserRole } from "@/lib/supabaseServer";
 
 export const runtime = "nodejs";
 
@@ -114,6 +115,13 @@ function buildOrderFlexMessage(order: {
 }
 
 export async function POST(request: NextRequest) {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    return NextResponse.json({ error: "พอร์ทัลแฟรนไชส์ซีต้องตั้งค่า Supabase ก่อนใช้งาน" }, { status: 503 });
+  }
+
+  const auth = await requireUserRole(request, ["Franchisee"]);
+  if ("response" in auth) return auth.response;
+
   if (!checkRateLimit(request)) {
     return NextResponse.json({ error: "ส่งคำสั่งซื้อถี่เกินไป กรุณารอสักครู่" }, { status: 429 });
   }
@@ -125,9 +133,23 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "รูปแบบข้อมูลไม่ถูกต้อง" }, { status: 400 });
   }
 
-  const customerName = cleanText(payload.customerName, 80);
-  const phone = cleanText(payload.phone, 20);
-  const branchName = cleanText(payload.branchName, 80);
+  const { data: franchisee, error: franchiseeError } = await auth.supabase
+    .from("franchisee_profiles")
+    .select("id,user_id,branch_id,branch_name,owner_name,phone,shipping_address,status,payment_terms,credit_limit")
+    .eq("user_id", auth.user.id)
+    .single();
+
+  if (franchiseeError || !franchisee) {
+    return NextResponse.json({ error: "บัญชีนี้ยังไม่ได้ถูกเพิ่มเป็นแฟรนไชส์ซีโดย HQ" }, { status: 403 });
+  }
+
+  if (franchisee.status !== "Active") {
+    return NextResponse.json({ error: "บัญชีแฟรนไชส์ซีนี้ยังไม่พร้อมใช้งาน กรุณาติดต่อ HQ" }, { status: 403 });
+  }
+
+  const customerName = cleanText(franchisee.owner_name, 80);
+  const phone = cleanText(franchisee.phone, 20);
+  const branchName = cleanText(franchisee.branch_name, 80);
   const address = cleanText(payload.address, 300);
   const note = cleanText(payload.note, 240);
   const deliveryMethod: "delivery" | "pickup" = payload.deliveryMethod === "pickup" ? "pickup" : "delivery";
@@ -156,6 +178,44 @@ export async function POST(request: NextRequest) {
   const deliveryFee = deliveryMethod === "delivery" && subtotal < 5_000 ? 80 : 0;
   const total = subtotal + deliveryFee;
   const orderNumber = makeOrderNumber();
+  const { data: savedOrder, error: orderError } = await auth.supabase
+    .from("franchisee_orders")
+    .insert({
+      order_number: orderNumber,
+      franchisee_id: franchisee.id,
+      user_id: auth.user.id,
+      branch_id: franchisee.branch_id,
+      delivery_method: deliveryMethod,
+      shipping_address: deliveryMethod === "delivery" ? address : "",
+      payment_method: paymentMethod,
+      subtotal,
+      delivery_fee: deliveryFee,
+      grand_total: total,
+      note
+    })
+    .select("id")
+    .single();
+
+  if (orderError || !savedOrder) {
+    return NextResponse.json({ error: "บันทึกคำสั่งซื้อไม่สำเร็จ" }, { status: 500 });
+  }
+
+  const { error: itemsError } = await auth.supabase.from("franchisee_order_items").insert(
+    validItems.map(({ product, quantity, lineTotal }) => ({
+      franchisee_order_id: savedOrder.id,
+      product_id: product.id,
+      product_name: product.name,
+      unit: product.unit,
+      quantity,
+      unit_price: product.price,
+      line_total: lineTotal
+    }))
+  );
+
+  if (itemsError) {
+    return NextResponse.json({ error: "บันทึกรายการสินค้าไม่สำเร็จ" }, { status: 500 });
+  }
+
   const order = {
     orderNumber,
     customerName,
@@ -180,8 +240,8 @@ export async function POST(request: NextRequest) {
       orderNumber,
       total,
       lineNotified: false,
-      demoMode: true,
-      message: "รับคำสั่งซื้อแล้ว (โหมดตัวอย่าง: ยังไม่ได้ตั้งค่า LINE OA)"
+      demoMode: false,
+      message: "รับคำสั่งซื้อแล้ว (ยังไม่ได้ตั้งค่า LINE OA)"
     });
   }
 
@@ -195,6 +255,11 @@ export async function POST(request: NextRequest) {
     const detail = await lineResponse.text();
     return NextResponse.json({ error: "รับออเดอร์แล้ว แต่ LINE OA แจ้งเตือนไม่สำเร็จ", orderNumber, detail }, { status: 502 });
   }
+
+  await auth.supabase
+    .from("franchisee_orders")
+    .update({ line_request_id: lineResponse.headers.get("x-line-request-id") || "" })
+    .eq("id", savedOrder.id);
 
   return NextResponse.json({
     ok: true,

@@ -1,12 +1,15 @@
 "use client";
 
 import Image from "next/image";
-import { FormEvent, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
   Check,
   ChevronRight,
   Clock3,
+  LockKeyhole,
+  LogIn,
   MapPin,
   Minus,
   PackageCheck,
@@ -19,6 +22,7 @@ import {
   X
 } from "lucide-react";
 import { shopProducts } from "@/lib/shopCatalog";
+import { supabase } from "@/lib/supabaseClient";
 
 type Cart = Record<string, number>;
 type CheckoutForm = {
@@ -29,6 +33,17 @@ type CheckoutForm = {
   address: string;
   paymentMethod: "transfer" | "cod";
   note: string;
+};
+type FranchiseeProfile = {
+  id: string;
+  branch_name: string;
+  owner_name: string;
+  phone: string;
+  email: string;
+  shipping_address: string | null;
+  status: "Pending" | "Active" | "Suspended";
+  payment_terms: string;
+  credit_limit: number;
 };
 
 const categories = ["ทั้งหมด", "ชา", "ผงเครื่องดื่ม", "ไซรัป"] as const;
@@ -51,6 +66,8 @@ function baht(value: number) {
 }
 
 export default function CustomerShopPage() {
+  const router = useRouter();
+  const supabaseConfigured = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<(typeof categories)[number]>("ทั้งหมด");
   const [cart, setCart] = useState<Cart>({});
@@ -60,6 +77,68 @@ export default function CustomerShopPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState<{ orderNumber: string; lineNotified: boolean } | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [profile, setProfile] = useState<FranchiseeProfile | null>(null);
+  const [accessError, setAccessError] = useState("");
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadProfile() {
+      if (!supabaseConfigured) {
+        setAccessError("พอร์ทัลแฟรนไชส์ซีต้องตั้งค่า Supabase ก่อนใช้งานจริง");
+        setAuthLoading(false);
+        return;
+      }
+
+      const {
+        data: { session }
+      } = await supabase.auth.getSession();
+
+      if (!session) {
+        router.replace("/login?next=/shop");
+        return;
+      }
+
+      const { data, error: profileError } = await supabase
+        .from("franchisee_profiles")
+        .select("id,branch_name,owner_name,phone,email,shipping_address,status,payment_terms,credit_limit")
+        .eq("user_id", session.user.id)
+        .single();
+
+      if (!mounted) return;
+
+      if (profileError || !data) {
+        setAccessError("บัญชีนี้ยังไม่ได้ถูกเพิ่มเป็นแฟรนไชส์ซีโดย HQ");
+        setAuthLoading(false);
+        return;
+      }
+
+      const franchisee = data as FranchiseeProfile;
+      if (franchisee.status !== "Active") {
+        setAccessError(franchisee.status === "Pending" ? "บัญชีแฟรนไชส์ซีนี้ยังรอ HQ อนุมัติ" : "บัญชีแฟรนไชส์ซีนี้ถูกระงับ กรุณาติดต่อ HQ");
+        setProfile(franchisee);
+        setAuthLoading(false);
+        return;
+      }
+
+      setProfile(franchisee);
+      setForm((current) => ({
+        ...current,
+        customerName: franchisee.owner_name,
+        phone: franchisee.phone,
+        branchName: franchisee.branch_name,
+        address: franchisee.shipping_address || ""
+      }));
+      setAuthLoading(false);
+    }
+
+    loadProfile();
+
+    return () => {
+      mounted = false;
+    };
+  }, [router, supabaseConfigured]);
 
   const filteredProducts = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -101,14 +180,29 @@ export default function CustomerShopPage() {
 
   async function submitOrder(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!profile) {
+      setError("กรุณาเข้าสู่ระบบด้วยบัญชีแฟรนไชส์ซีก่อนสั่งซื้อ");
+      return;
+    }
     setSubmitting(true);
     setError("");
     try {
+      const {
+        data: { session }
+      } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error("Session หมดอายุ กรุณาเข้าสู่ระบบใหม่");
+
       const response = await fetch("/api/orders", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`
+        },
         body: JSON.stringify({
           ...form,
+          customerName: profile.owner_name,
+          phone: profile.phone,
+          branchName: profile.branch_name,
           items: cartItems.map(({ product, quantity }) => ({ productId: product.id, quantity }))
         })
       });
@@ -117,12 +211,47 @@ export default function CustomerShopPage() {
       setSuccess(result);
       setCheckoutOpen(false);
       setCart({});
-      setForm(initialForm);
+      setForm({
+        ...initialForm,
+        customerName: profile.owner_name,
+        phone: profile.phone,
+        branchName: profile.branch_name,
+        address: profile.shipping_address || ""
+      });
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "ไม่สามารถส่งคำสั่งซื้อได้");
     } finally {
       setSubmitting(false);
     }
+  }
+
+  if (authLoading) {
+    return (
+      <main className="shop-shell grid min-h-screen place-items-center px-5 text-stone-950">
+        <section className="w-full max-w-md rounded-[32px] border border-white/80 bg-white/90 p-7 text-center shadow-2xl shadow-orange-950/10">
+          <Image src="/icons/domicha-original-logo.png" alt="Domi Cha" width={80} height={80} className="mx-auto h-20 w-20 object-contain" priority />
+          <h1 className="mt-4 text-2xl font-black">กำลังตรวจสอบสิทธิ์แฟรนไชส์ซี</h1>
+          <p className="mt-2 text-sm text-stone-500">ระบบนี้สำหรับเจ้าของสาขา DomiCha ที่ HQ สร้างบัญชีให้เท่านั้น</p>
+        </section>
+      </main>
+    );
+  }
+
+  if (accessError) {
+    return (
+      <main className="shop-shell grid min-h-screen place-items-center px-5 text-stone-950">
+        <section className="w-full max-w-md rounded-[32px] border border-white/80 bg-white/90 p-7 text-center shadow-2xl shadow-orange-950/10">
+          <span className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-orange-50 text-orange-600">
+            <LockKeyhole className="h-7 w-7" />
+          </span>
+          <h1 className="mt-5 text-2xl font-black">พอร์ทัลนี้เปิดเฉพาะแฟรนไชส์ซี</h1>
+          <p className="mt-3 text-sm leading-6 text-stone-500">{accessError}</p>
+          <button onClick={() => router.push("/login?next=/shop")} className="mt-6 inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-stone-950 px-5 font-bold text-white">
+            <LogIn className="h-4 w-4" /> เข้าสู่ระบบแฟรนไชส์ซี
+          </button>
+        </section>
+      </main>
+    );
   }
 
   return (
@@ -131,8 +260,8 @@ export default function CustomerShopPage() {
         <div className="mx-auto flex h-[76px] max-w-7xl items-center gap-3 px-4 sm:px-6">
           <Image src="/icons/domicha-original-logo.png" alt="Domi Cha" width={58} height={58} className="h-[58px] w-[58px] object-contain" priority />
           <div className="min-w-0">
-            <strong className="block text-[17px] tracking-tight">DomiCha Supply</strong>
-            <span className="block truncate text-xs text-stone-500">วัตถุดิบคุณภาพ ส่งตรงถึงร้าน</span>
+            <strong className="block text-[17px] tracking-tight">DomiCha Franchise</strong>
+            <span className="block truncate text-xs text-stone-500">{profile?.branch_name || "พอร์ทัลสั่งซื้อวัตถุดิบ"}</span>
           </div>
           <button onClick={() => setCartOpen(true)} className="relative ml-auto grid h-11 w-11 place-items-center rounded-2xl bg-stone-950 text-white shadow-lg shadow-stone-950/15" aria-label="เปิดตะกร้า">
             <ShoppingBag className="h-5 w-5" />
@@ -145,12 +274,12 @@ export default function CustomerShopPage() {
         <section className="shop-hero mt-5 overflow-hidden rounded-[30px] bg-stone-950 px-5 py-7 text-white shadow-2xl shadow-orange-950/10 sm:px-10 sm:py-11">
           <div className="relative z-10 max-w-2xl">
             <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1.5 text-xs font-semibold text-orange-200">
-              <Sparkles className="h-3.5 w-3.5" /> DomiCha Partner Store
+              <Sparkles className="h-3.5 w-3.5" /> Private Franchisee Portal
             </span>
             <h1 className="mt-5 text-3xl font-black leading-tight tracking-[-.03em] sm:text-5xl">
-              เติมสต๊อกง่าย<br /><span className="text-orange-400">พร้อมขายทุกวัน</span>
+              สั่งวัตถุดิบสำหรับสาขา<br /><span className="text-orange-400">เฉพาะแฟรนไชส์ซี DomiCha</span>
             </h1>
-            <p className="mt-4 max-w-xl text-sm leading-6 text-stone-300 sm:text-base">เลือกวัตถุดิบ ตรวจยอด และส่งออเดอร์ถึงทีม DomiCha ผ่าน LINE OA ได้ในไม่กี่ขั้นตอน</p>
+            <p className="mt-4 max-w-xl text-sm leading-6 text-stone-300 sm:text-base">เข้าสู่ระบบด้วยบัญชีที่ HQ สร้างให้ เลือกสินค้า และส่งออเดอร์ถึงทีม DomiCha ผ่าน LINE OA ได้ในไม่กี่ขั้นตอน</p>
             <div className="mt-6 flex flex-wrap gap-3 text-xs text-stone-300">
               <span className="flex items-center gap-1.5"><Truck className="h-4 w-4 text-orange-400" /> ฟรีค่าส่งเมื่อครบ 5,000 บาท</span>
               <span className="flex items-center gap-1.5"><ShieldCheck className="h-4 w-4 text-emerald-400" /> สินค้าจากศูนย์ DomiCha</span>
@@ -269,11 +398,11 @@ export default function CustomerShopPage() {
             </section>
 
             <section className="mt-5 space-y-4 rounded-[28px] border border-white bg-white/80 p-5 shadow-sm sm:p-6">
-              <div><h2 className="font-bold">ข้อมูลผู้สั่งซื้อ</h2><p className="mt-1 text-xs text-stone-400">ทีมงานจะใช้ข้อมูลนี้ติดต่อยืนยันออเดอร์</p></div>
-              <label className="block">ชื่อผู้ติดต่อ<input required value={form.customerName} onChange={(event) => setForm({ ...form, customerName: event.target.value })} className="mt-1.5 h-12 rounded-2xl" placeholder="ชื่อ-นามสกุล" /></label>
+              <div><h2 className="font-bold">ข้อมูลแฟรนไชส์ซี</h2><p className="mt-1 text-xs text-stone-400">ข้อมูลนี้มาจากบัญชีที่ HQ สร้างไว้ให้</p></div>
+              <label className="block">ชื่อผู้ติดต่อ<input required readOnly value={form.customerName} className="mt-1.5 h-12 rounded-2xl bg-stone-50 text-stone-500" placeholder="ชื่อ-นามสกุล" /></label>
               <div className="grid gap-4 sm:grid-cols-2">
-                <label className="block">เบอร์โทร<input required inputMode="tel" value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} className="mt-1.5 h-12 rounded-2xl" placeholder="08x-xxx-xxxx" /></label>
-                <label className="block">ชื่อสาขา / ร้าน<input required value={form.branchName} onChange={(event) => setForm({ ...form, branchName: event.target.value })} className="mt-1.5 h-12 rounded-2xl" placeholder="เช่น DomiCha บางแสน" /></label>
+                <label className="block">เบอร์โทร<input required readOnly inputMode="tel" value={form.phone} className="mt-1.5 h-12 rounded-2xl bg-stone-50 text-stone-500" placeholder="08x-xxx-xxxx" /></label>
+                <label className="block">ชื่อสาขา / ร้าน<input required readOnly value={form.branchName} className="mt-1.5 h-12 rounded-2xl bg-stone-50 text-stone-500" placeholder="เช่น DomiCha บางแสน" /></label>
               </div>
             </section>
 

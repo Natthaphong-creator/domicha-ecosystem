@@ -32,6 +32,27 @@ export async function requireUser(request: NextRequest) {
   return { supabase, user };
 }
 
+export async function requireUserRole(request: NextRequest, allowedRoles: string[]) {
+  const auth = await requireUser(request);
+  if ("response" in auth) return auth;
+
+  const { data: profile, error } = await auth.supabase
+    .from("users")
+    .select("id,email,full_name,role")
+    .eq("id", auth.user.id)
+    .single();
+
+  if (error || !profile) {
+    return { ...auth, response: NextResponse.json({ error: "ไม่พบข้อมูลผู้ใช้งาน" }, { status: 403 }) };
+  }
+
+  if (!allowedRoles.includes(profile.role)) {
+    return { ...auth, profile, response: NextResponse.json({ error: "ไม่มีสิทธิ์ใช้งานส่วนนี้" }, { status: 403 }) };
+  }
+
+  return { ...auth, profile };
+}
+
 export function handleRouteError(error: unknown) {
   const message = error instanceof Error ? error.message : "Unexpected error";
   return NextResponse.json({ error: message }, { status: 500 });

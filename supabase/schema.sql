@@ -1,6 +1,6 @@
 create extension if not exists "pgcrypto";
 
-create type user_role as enum ('Admin', 'Sales', 'Accountant');
+create type user_role as enum ('Admin', 'Sales', 'Accountant', 'Franchisee');
 create type status_type as enum ('Active', 'Inactive');
 create type customer_type as enum ('Retail', 'Franchisee', 'Corporate');
 create type vat_type as enum ('VAT 7%', 'No VAT', 'VAT Included');
@@ -10,12 +10,45 @@ create type sales_document_type as enum ('Invoice', 'Receipt', 'TaxInvoice');
 create type sales_document_status as enum ('Draft', 'Pending', 'Paid', 'Overdue', 'Cancelled');
 create type delivery_channel as enum ('LINE');
 create type delivery_status as enum ('Queued', 'Sent', 'Failed', 'Skipped');
+create type franchisee_status as enum ('Pending', 'Active', 'Suspended');
+create type franchisee_order_status as enum ('Received', 'Confirmed', 'Packing', 'Shipped', 'Completed', 'Cancelled');
+create type payment_status as enum ('Pending', 'Paid', 'Overdue', 'Cancelled');
 
 create table public.users (
   id uuid primary key references auth.users(id) on delete cascade,
   full_name text,
   email text unique not null,
   role user_role not null default 'Sales',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table public.branches (
+  id uuid primary key default gen_random_uuid(),
+  branch_code text unique not null,
+  branch_name text not null,
+  province text,
+  address text,
+  status status_type not null default 'Active',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table public.franchisee_profiles (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid unique not null references public.users(id) on delete cascade,
+  branch_id uuid references public.branches(id) on delete set null,
+  branch_name text not null,
+  owner_name text not null,
+  phone text not null,
+  email text not null,
+  province text,
+  shipping_address text,
+  tax_id text,
+  credit_limit numeric(12,2) not null default 0,
+  payment_terms text not null default 'ชำระก่อนจัดส่ง',
+  status franchisee_status not null default 'Pending',
+  created_by uuid references public.users(id),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -162,6 +195,38 @@ create table public.line_delivery_logs (
   created_by uuid references public.users(id)
 );
 
+create table public.franchisee_orders (
+  id uuid primary key default gen_random_uuid(),
+  order_number text unique not null,
+  franchisee_id uuid not null references public.franchisee_profiles(id),
+  user_id uuid not null references public.users(id),
+  branch_id uuid references public.branches(id) on delete set null,
+  delivery_method text not null default 'delivery',
+  shipping_address text,
+  payment_method text not null default 'transfer',
+  order_status franchisee_order_status not null default 'Received',
+  payment_status payment_status not null default 'Pending',
+  subtotal numeric(12,2) not null default 0,
+  delivery_fee numeric(12,2) not null default 0,
+  grand_total numeric(12,2) not null default 0,
+  note text,
+  line_request_id text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table public.franchisee_order_items (
+  id uuid primary key default gen_random_uuid(),
+  franchisee_order_id uuid not null references public.franchisee_orders(id) on delete cascade,
+  product_id text not null,
+  product_name text not null,
+  unit text not null,
+  quantity numeric(12,2) not null default 1,
+  unit_price numeric(12,2) not null default 0,
+  line_total numeric(12,2) not null default 0,
+  created_at timestamptz not null default now()
+);
+
 create or replace function public.set_updated_at()
 returns trigger
 language plpgsql
@@ -173,11 +238,14 @@ end;
 $$;
 
 create trigger users_set_updated_at before update on public.users for each row execute function public.set_updated_at();
+create trigger branches_set_updated_at before update on public.branches for each row execute function public.set_updated_at();
+create trigger franchisee_profiles_set_updated_at before update on public.franchisee_profiles for each row execute function public.set_updated_at();
 create trigger customers_set_updated_at before update on public.customers for each row execute function public.set_updated_at();
 create trigger suppliers_set_updated_at before update on public.suppliers for each row execute function public.set_updated_at();
 create trigger products_set_updated_at before update on public.products for each row execute function public.set_updated_at();
 create trigger quotations_set_updated_at before update on public.quotations for each row execute function public.set_updated_at();
 create trigger sales_documents_set_updated_at before update on public.sales_documents for each row execute function public.set_updated_at();
+create trigger franchisee_orders_set_updated_at before update on public.franchisee_orders for each row execute function public.set_updated_at();
 
 create or replace function public.handle_new_user()
 returns trigger
@@ -255,6 +323,8 @@ create trigger quotations_history
   for each row execute function public.append_quotation_history();
 
 alter table public.users enable row level security;
+alter table public.branches enable row level security;
+alter table public.franchisee_profiles enable row level security;
 alter table public.customers enable row level security;
 alter table public.suppliers enable row level security;
 alter table public.products enable row level security;
@@ -264,9 +334,43 @@ alter table public.document_files enable row level security;
 alter table public.sales_documents enable row level security;
 alter table public.sales_document_items enable row level security;
 alter table public.line_delivery_logs enable row level security;
+alter table public.franchisee_orders enable row level security;
+alter table public.franchisee_order_items enable row level security;
 
 create policy "Users can read own profile" on public.users for select using (auth.uid() = id);
 create policy "Users can update own profile" on public.users for update using (auth.uid() = id);
+
+create policy "Authenticated users read active branches" on public.branches for select using (auth.role() = 'authenticated');
+create policy "HQ users manage branches" on public.branches for all using (
+  exists (
+    select 1 from public.users u
+    where u.id = auth.uid() and u.role in ('Admin', 'Sales', 'Accountant')
+  )
+) with check (
+  exists (
+    select 1 from public.users u
+    where u.id = auth.uid() and u.role in ('Admin', 'Sales', 'Accountant')
+  )
+);
+
+create policy "Franchisees read own profile" on public.franchisee_profiles for select using (user_id = auth.uid());
+create policy "HQ users read franchisees" on public.franchisee_profiles for select using (
+  exists (
+    select 1 from public.users u
+    where u.id = auth.uid() and u.role in ('Admin', 'Sales', 'Accountant')
+  )
+);
+create policy "HQ users manage franchisees" on public.franchisee_profiles for all using (
+  exists (
+    select 1 from public.users u
+    where u.id = auth.uid() and u.role in ('Admin', 'Sales', 'Accountant')
+  )
+) with check (
+  exists (
+    select 1 from public.users u
+    where u.id = auth.uid() and u.role in ('Admin', 'Sales', 'Accountant')
+  )
+);
 
 create policy "Authenticated users read customers" on public.customers for select using (auth.role() = 'authenticated');
 create policy "Authenticated users write customers" on public.customers for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
@@ -292,6 +396,45 @@ create policy "Authenticated users read sales document items" on public.sales_do
 create policy "Authenticated users write sales document items" on public.sales_document_items for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
 create policy "Authenticated users read LINE delivery logs" on public.line_delivery_logs for select using (auth.role() = 'authenticated');
 create policy "Authenticated users write LINE delivery logs" on public.line_delivery_logs for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
+
+create policy "Franchisees read own orders" on public.franchisee_orders for select using (user_id = auth.uid());
+create policy "Franchisees create own orders" on public.franchisee_orders for insert with check (user_id = auth.uid());
+create policy "HQ users read franchisee orders" on public.franchisee_orders for select using (
+  exists (
+    select 1 from public.users u
+    where u.id = auth.uid() and u.role in ('Admin', 'Sales', 'Accountant')
+  )
+);
+create policy "HQ users manage franchisee orders" on public.franchisee_orders for update using (
+  exists (
+    select 1 from public.users u
+    where u.id = auth.uid() and u.role in ('Admin', 'Sales', 'Accountant')
+  )
+) with check (
+  exists (
+    select 1 from public.users u
+    where u.id = auth.uid() and u.role in ('Admin', 'Sales', 'Accountant')
+  )
+);
+
+create policy "Franchisees read own order items" on public.franchisee_order_items for select using (
+  exists (
+    select 1 from public.franchisee_orders o
+    where o.id = franchisee_order_id and o.user_id = auth.uid()
+  )
+);
+create policy "Franchisees create own order items" on public.franchisee_order_items for insert with check (
+  exists (
+    select 1 from public.franchisee_orders o
+    where o.id = franchisee_order_id and o.user_id = auth.uid()
+  )
+);
+create policy "HQ users read franchisee order items" on public.franchisee_order_items for select using (
+  exists (
+    select 1 from public.users u
+    where u.id = auth.uid() and u.role in ('Admin', 'Sales', 'Accountant')
+  )
+);
 
 insert into storage.buckets (id, name, public)
 values ('documents', 'documents', false)

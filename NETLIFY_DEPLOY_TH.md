@@ -30,16 +30,19 @@ Publish directory: .next
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
 LINE_CHANNEL_ACCESS_TOKEN=your-line-channel-access-token
 LINE_OA_ORDER_TARGET_ID=your-line-user-group-or-room-id
 NEXT_PUBLIC_APP_URL=https://your-netlify-site.netlify.app
 ```
 
-ถ้ายังไม่มี LINE token ระบบจะรับออเดอร์แบบ Demo Mode ได้ แต่จะยังไม่ส่งเข้า LINE จริง
+`SUPABASE_SERVICE_ROLE_KEY` จำเป็นสำหรับหน้า `/franchisees` ที่ HQ/Admin ใช้สร้างบัญชีแฟรนไชส์ซี ห้ามตั้งชื่อนี้เป็น `NEXT_PUBLIC_*`
+
+ถ้ายังไม่มี LINE token ระบบจะบันทึกออเดอร์ได้ แต่จะยังไม่ส่งเข้า LINE จริง
 
 ## หน้าใช้งานหลัง Deploy
 
-- หน้าร้านลูกค้า: `https://your-site.netlify.app/shop`
+- พอร์ทัลแฟรนไชส์ซี: `https://your-site.netlify.app/shop`
 - ระบบหลังบ้าน: `https://your-site.netlify.app/dashboard`
 - Login: `https://your-site.netlify.app/login`
 

@@ -1,6 +1,6 @@
-# วิธี Deploy DomiCha Business / หน้าร้านลูกค้า
+# วิธี Deploy DomiCha Business / พอร์ทัลแฟรนไชส์ซี
 
-โปรเจกต์นี้เป็น Next.js app พร้อมหน้าแอดมินและหน้าร้านลูกค้า `/shop`
+โปรเจกต์นี้เป็น Next.js app พร้อมหน้าแอดมินและพอร์ทัลแฟรนไชส์ซี `/shop`
 
 ## Deploy แนะนำ: Vercel หรือ Netlify
 
@@ -21,16 +21,19 @@
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
 LINE_CHANNEL_ACCESS_TOKEN=your-line-channel-access-token
 LINE_OA_ORDER_TARGET_ID=your-line-user-group-or-room-id
 NEXT_PUBLIC_APP_URL=https://your-domain.com
 ```
 
-ถ้ายังไม่มี Supabase หรือ LINE token ระบบยังเปิดดูหน้าร้านได้ แต่การส่ง LINE จะเป็น Demo Mode
+`SUPABASE_SERVICE_ROLE_KEY` ใช้สำหรับให้ HQ/Admin สร้างบัญชีแฟรนไชส์ซีในหน้า `/franchisees`
+
+ถ้ายังไม่มี LINE token ระบบยังบันทึกออเดอร์ได้ แต่จะยังไม่ส่ง LINE จริง
 
 ## หลัง Deploy แล้วใช้งานยังไง
 
-- หน้าร้านลูกค้า: `https://your-domain.com/shop`
+- พอร์ทัลแฟรนไชส์ซี: `https://your-domain.com/shop`
 - ระบบหลังบ้าน: `https://your-domain.com/dashboard`
 - หน้า Login: `https://your-domain.com/login`
 

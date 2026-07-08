@@ -22,6 +22,7 @@ import {
   Store,
   Truck,
   Users,
+  UserRoundCog,
   WalletCards,
   X
 } from "lucide-react";
@@ -37,7 +38,8 @@ const navGroups = [
   {
     label: "งานขาย",
     items: [
-      { href: "/shop", label: "หน้าร้านลูกค้า", icon: Store },
+      { href: "/shop", label: "พอร์ทัลแฟรนไชส์ซี", icon: Store },
+      { href: "/franchisees", label: "แฟรนไชส์ซี", icon: UserRoundCog },
       { href: "/documents", label: "เอกสารขาย", icon: FileText },
       { href: "/sales/new", label: "บันทึกการขาย", icon: CircleDollarSign },
       { href: "/quotations", label: "ใบเสนอราคา", icon: ReceiptText },
@@ -187,9 +189,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <Crown className="h-3.5 w-3.5 text-amber-600" />
               {demoMode ? "● ข้อมูลตัวอย่าง" : "● ระบบออนไลน์"}
             </span>
-            <Link href="/shop" className="inline-flex h-10 items-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-3 text-sm font-semibold text-orange-700 hover:bg-orange-100" aria-label="เปิดหน้าร้านลูกค้า">
+            <Link href="/shop" className="inline-flex h-10 items-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-3 text-sm font-semibold text-orange-700 hover:bg-orange-100" aria-label="เปิดพอร์ทัลแฟรนไชส์ซี">
               <Store className="h-4 w-4" />
-              <span className="hidden xl:inline">หน้าร้านลูกค้า</span>
+              <span className="hidden xl:inline">พอร์ทัลแฟรนไชส์ซี</span>
             </Link>
             <Link href="/sales/new" className="premium-button inline-flex h-10 items-center gap-2 rounded-xl bg-orange-500 px-3.5 text-sm font-semibold text-white shadow-lg shadow-orange-500/20 hover:bg-orange-600">
               <Plus className="h-4 w-4" />

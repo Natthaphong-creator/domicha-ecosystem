@@ -16,8 +16,9 @@ export default function LoginPage() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const nextPath = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("next") : null;
     if (demoMode) {
-      router.replace("/dashboard");
+      router.replace(nextPath || "/dashboard");
       return;
     }
     setLoading(true);
@@ -29,7 +30,7 @@ export default function LoginPage() {
       setError("อีเมลหรือรหัสผ่านไม่ถูกต้อง");
       return;
     }
-    router.replace("/dashboard");
+    router.replace(nextPath || "/dashboard");
   }
 
   return (
@@ -44,10 +45,10 @@ export default function LoginPage() {
             className="h-[76px] w-[76px] shrink-0 object-contain"
             priority
           />
-          <div><h1 className="text-xl font-bold">DomiCha Business</h1><p className="text-xs text-slate-400">Accounting & Operations</p></div>
+          <div><h1 className="text-xl font-bold">DomiCha Business</h1><p className="text-xs text-slate-400">HQ & Franchisee Portal</p></div>
         </div>
         <h2 className="text-2xl font-bold text-slate-950">เข้าสู่ระบบ</h2>
-        <p className="mt-1 text-sm text-slate-500">{demoMode ? "เปิดโหมดตัวอย่างเพื่อทดลองระบบได้ทันที" : "บริหารบัญชีและธุรกิจของคุณในที่เดียว"}</p>
+        <p className="mt-1 text-sm text-slate-500">{demoMode ? "เปิดโหมดตัวอย่างเพื่อทดลองระบบหลังบ้าน" : "เข้าสู่ระบบสำหรับ HQ, พนักงาน และแฟรนไชส์ซี"}</p>
         <div className="mt-6 space-y-4">
           <div>
             <label htmlFor="email">อีเมล</label>
@@ -63,7 +64,7 @@ export default function LoginPage() {
           {loading ? "กำลังเข้าสู่ระบบ..." : demoMode ? "เข้าสู่ระบบตัวอย่าง" : "เข้าสู่ระบบ"}
         </button>
         <p className="mt-4 text-center text-sm text-slate-500">
-          ยังไม่มีบัญชี?{" "}
+          ยังไม่มีบัญชีหลังบ้าน?{" "}
           <Link className="font-medium text-orange-600" href="/register">
             สมัครสมาชิก
           </Link>
