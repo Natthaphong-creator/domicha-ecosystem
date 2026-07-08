@@ -118,6 +118,8 @@ LINE_OA_ORDER_TARGET_ID=user-group-or-room-id
 
 ## วิธีสร้างสมาชิกแฟรนไชส์ซี แบบ A
 
+ถ้าเคยรัน `supabase/schema.sql` เวอร์ชันเดิมไว้แล้ว ให้รันไฟล์ `supabase/franchisee_migration.sql` เพิ่มใน Supabase SQL Editor เพื่อเพิ่มตารางและสิทธิ์ของระบบแฟรนไชส์ซี
+
 1. ให้ HQ/Admin เข้าระบบหลังบ้าน
 2. เปิดเมนู `/franchisees`
 3. กรอกอีเมล รหัสผ่านเริ่มต้น ชื่อเจ้าของสาขา ชื่อสาขา เบอร์โทร และที่อยู่จัดส่ง
