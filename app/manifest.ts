@@ -2,9 +2,9 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "DomiCha Business",
+    name: "DomiCha Portal Site",
     short_name: "DomiCha",
-    description: "ระบบบัญชี งานขาย และบริหารธุรกิจ DomiCha",
+    description: "ระบบพอร์ทัลสำหรับ Brand Owner, พนักงาน และแฟรนไชส์ซี DomiCha",
     start_url: "/dashboard",
     display: "standalone",
     background_color: "#ffd9ad",

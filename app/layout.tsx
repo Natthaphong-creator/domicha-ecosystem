@@ -4,8 +4,8 @@ import { PwaRegister } from "@/components/PwaRegister";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "DomiCha Business",
-  description: "ระบบบัญชีและบริหารธุรกิจครบวงจรสำหรับ DomiCha",
+  title: "DomiCha Portal Site",
+  description: "ระบบพอร์ทัลสำหรับ Brand Owner, พนักงาน และแฟรนไชส์ซี DomiCha",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,

@@ -45,10 +45,10 @@ export default function LoginPage() {
             className="h-[76px] w-[76px] shrink-0 object-contain"
             priority
           />
-          <div><h1 className="text-xl font-bold">DomiCha Business</h1><p className="text-xs text-slate-400">HQ & Franchisee Portal</p></div>
+          <div><h1 className="text-xl font-bold">DomiCha Portal Site</h1><p className="text-xs text-slate-400">Brand Owner, Staff & Franchisee Portal</p></div>
         </div>
         <h2 className="text-2xl font-bold text-slate-950">เข้าสู่ระบบ</h2>
-        <p className="mt-1 text-sm text-slate-500">{demoMode ? "เปิดโหมดตัวอย่างเพื่อทดลองระบบหลังบ้าน" : "เข้าสู่ระบบสำหรับ HQ, พนักงาน และแฟรนไชส์ซี"}</p>
+        <p className="mt-1 text-sm text-slate-500">{demoMode ? "เปิดโหมดตัวอย่างเพื่อทดลองระบบหลังบ้าน" : "เข้าสู่ระบบสำหรับ Brand Owner, พนักงาน และแฟรนไชส์ซี"}</p>
         <div className="mt-6 space-y-4">
           <div>
             <label htmlFor="email">อีเมล</label>

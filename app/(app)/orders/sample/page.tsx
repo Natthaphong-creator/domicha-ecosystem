@@ -57,7 +57,7 @@ export default function SampleOrderDocumentPage() {
             <div className="flex items-center gap-4">
               <Image src="/icons/domicha-original-logo.png" alt="DomiCha" width={74} height={74} className="h-[74px] w-[74px] rounded-2xl bg-white object-contain p-1" />
               <div>
-                <p className="text-xs font-bold uppercase tracking-[.22em] text-orange-300 print:text-orange-600">DomiCha Business</p>
+                <p className="text-xs font-bold uppercase tracking-[.22em] text-orange-300 print:text-orange-600">DomiCha Portal Site</p>
                 <h1 className="mt-1 text-2xl font-black">ใบสั่งซื้อแฟรนไชส์ซี</h1>
                 <p className="mt-1 text-sm text-slate-300 print:text-slate-500">Franchisee Purchase Order</p>
               </div>
@@ -153,7 +153,7 @@ export default function SampleOrderDocumentPage() {
         </section>
 
         <footer className="grid gap-4 border-t border-slate-100 bg-slate-50 p-7 text-xs text-slate-500 md:grid-cols-2">
-          <p>เอกสารนี้เป็นข้อมูลตัวอย่างจากระบบ DomiCha Business • พิมพ์เมื่อ {sampleOrder.printedAt}</p>
+          <p>เอกสารนี้เป็นข้อมูลตัวอย่างจากระบบ DomiCha Portal Site • พิมพ์เมื่อ {sampleOrder.printedAt}</p>
           <p className="md:text-right">ผู้จัดทำ ____________________ &nbsp;&nbsp; ผู้อนุมัติ ____________________</p>
         </footer>
       </article>
