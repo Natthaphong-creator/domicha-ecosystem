@@ -96,6 +96,9 @@ export default function DocumentsPage() {
             <Link href="/shop" className="inline-flex h-11 items-center gap-2 rounded-xl border border-white/15 bg-white/10 px-4 text-sm font-semibold text-white backdrop-blur hover:bg-white/15">
               เปิดหน้าร้านลูกค้า <ArrowUpRight className="h-4 w-4" />
             </Link>
+            <Link href="/documents/template" className="inline-flex h-11 items-center gap-2 rounded-xl border border-white/15 bg-white/10 px-4 text-sm font-semibold text-white backdrop-blur hover:bg-white/15">
+              ดู Template <Eye className="h-4 w-4" />
+            </Link>
             <div className="relative">
               <button className="inline-flex h-11 items-center gap-2 rounded-xl bg-orange-500 px-4 text-sm font-semibold text-white shadow-lg shadow-orange-500/20" onClick={() => setShowCreate((current) => !current)}>
                 <Plus className="h-4 w-4" />
