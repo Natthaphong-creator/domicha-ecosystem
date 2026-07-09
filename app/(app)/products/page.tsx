@@ -2,6 +2,7 @@
 
 import { EntityList } from "@/components/EntityList";
 import { PageHeader } from "@/components/PageHeader";
+import { ProductImportButton } from "@/components/ProductImportButton";
 import { money } from "@/lib/format";
 import type { Product } from "@/lib/types";
 
@@ -9,6 +10,7 @@ export default function ProductsPage() {
   return (
     <>
       <PageHeader title="จัดการสินค้า/วัตถุดิบ" description="ข้อมูลสินค้า วัตถุดิบ ราคา และซัพพลายเออร์" actionHref="/products/new" actionLabel="เพิ่มสินค้า" />
+      <ProductImportButton />
       <EntityList<Product>
         endpoint="/api/products"
         editBasePath="/products"

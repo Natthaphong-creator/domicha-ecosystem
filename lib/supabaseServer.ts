@@ -54,6 +54,12 @@ export async function requireUserRole(request: NextRequest, allowedRoles: string
 }
 
 export function handleRouteError(error: unknown) {
-  const message = error instanceof Error ? error.message : "Unexpected error";
+  const message = error instanceof Error
+    ? error.message
+    : typeof error === "object" && error
+      ? (error as { message?: string; details?: string; hint?: string }).message
+        || (error as { details?: string }).details
+        || JSON.stringify(error)
+      : "Unexpected error";
   return NextResponse.json({ error: message }, { status: 500 });
 }
