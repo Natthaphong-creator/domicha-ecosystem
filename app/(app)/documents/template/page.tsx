@@ -5,18 +5,18 @@ import { ArrowLeft, Download, Printer } from "lucide-react";
 import { FlowAccountDocumentTemplate } from "@/components/FlowAccountDocumentTemplate";
 
 const invoiceItems = [
-  { description: "แก้ว สกรีนลาย", quantity: 1000, unit: "ใบ", unitPrice: 1.5 },
-  { description: "ชาไต้หวัน", quantity: 5, unit: "ห่อ", unitPrice: 40 },
-  { description: "ชามะลิ", quantity: 10, unit: "ห่อ", unitPrice: 40 },
-  { description: "ชาเขียว", quantity: 5, unit: "ห่อ", unitPrice: 40 },
-  { description: "ชาแดง", quantity: 5, unit: "ห่อ", unitPrice: 40 },
-  { description: "ผงพันซ์", quantity: 1, unit: "ซอง", unitPrice: 120 },
-  { description: "อัญชันมะนาว", quantity: 1, unit: "ถุง", unitPrice: 120 },
-  { description: "ม้วนซีล", quantity: 1, unit: "ม้วน", unitPrice: 960, discount: "0.0 ฿" }
+  { code: "CUP-001", description: "แก้ว สกรีนลาย", quantity: 1000, unit: "ใบ", unitPrice: 1.5, vatRate: 7 },
+  { code: "TEA-TW", description: "ชาไต้หวัน", quantity: 5, unit: "ห่อ", unitPrice: 40, vatRate: 7 },
+  { code: "TEA-JS", description: "ชามะลิ", quantity: 10, unit: "ห่อ", unitPrice: 40, vatRate: 7 },
+  { code: "TEA-GR", description: "ชาเขียว", quantity: 5, unit: "ห่อ", unitPrice: 40, vatRate: 7 },
+  { code: "TEA-RD", description: "ชาแดง", quantity: 5, unit: "ห่อ", unitPrice: 40, vatRate: 7 },
+  { code: "PWD-PN", description: "ผงพันซ์", quantity: 1, unit: "ซอง", unitPrice: 120, vatRate: 7 },
+  { code: "PWD-BF", description: "อัญชันมะนาว", quantity: 1, unit: "ถุง", unitPrice: 120, vatRate: 7 },
+  { code: "SEAL-01", description: "ม้วนซีล", quantity: 1, unit: "ม้วน", unitPrice: 960, vatRate: 7 }
 ];
 
 const receiptItems = [
-  { description: "ชามะลิ", quantity: 10, unit: "ห่อ", unitPrice: 40 }
+  { code: "TEA-JS", description: "ชามะลิ", quantity: 10, unit: "ห่อ", unitPrice: 40, vatRate: 7 }
 ];
 
 export default function DocumentTemplatePage() {
@@ -45,11 +45,17 @@ export default function DocumentTemplatePage() {
         documentDate="03/07/2026"
         dueDate="03/07/2026"
         seller="ณัฐพงษ์ อุทระ"
+        reference="SO202607030001"
+        poNumber="PO-WT-20260703"
         customerName="คุณ อภินันท์ คุณสวัสดิ์   โดมิชา สาขาวัดตาลล้อม"
         customerAddress="218 ซ.สุภาวรรณ 4 ต.บ้านบึง อ.บ้านบึง ชลบุรี 20170"
+        customerBranch="โดมิชา สาขาวัดตาลล้อม"
         customerTaxId="1209500039121"
         items={invoiceItems}
-        amountText="สามพันเจ็ดร้อยบาทถ้วน"
+        amountText="สามพันเก้าร้อยห้าสิบเก้าบาทถ้วน"
+        creditTerm="ชำระภายในวันออกเอกสาร"
+        deliveryMethod="จัดส่งจากคลังกลาง"
+        note="อ้างอิงใบสั่งซื้อแฟรนไชส์ซีและรายการตัดสต๊อกคลังกลาง ใช้ตรวจสอบยอดขาย ภาษีขาย และลูกหนี้การค้า"
       />
 
       <FlowAccountDocumentTemplate
@@ -58,17 +64,23 @@ export default function DocumentTemplatePage() {
         documentDate="26/03/2026"
         seller="ณัฐพงษ์ อุทระ"
         reference="INV202603290004"
+        poNumber="PO-WT-20260329"
         customerName="คุณ อภินันท์ คุณสวัสดิ์   โดมิชา สาขาวัดตาลล้อม"
         customerAddress="218 ซ.สุภาวรรณ 4 ต.บ้านบึง อ.บ้านบึง ชลบุรี 20170"
+        customerBranch="โดมิชา สาขาวัดตาลล้อม"
         customerTaxId="1209500039121"
         items={receiptItems}
-        amountText="สี่ร้อยบาทถ้วน"
+        amountText="สี่ร้อยยี่สิบแปดบาทถ้วน"
+        creditTerm="รับชำระแล้ว"
+        deliveryMethod="จัดส่งจากคลังกลาง"
+        note="แนบหลักฐานการโอนเงินเพื่อกระทบยอดบัญชีธนาคาร และใช้ปิดยอดลูกหนี้ตามใบแจ้งหนี้อ้างอิง"
         payment={{
           method: "transfer",
           bank: "กสิกรไทย ออมทรัพย์",
           accountNumber: "1862519848",
           paidDate: "29/03/2026",
-          amount: 400
+          amount: 428,
+          transactionRef: "KBNK20260329001"
         }}
       />
     </div>
