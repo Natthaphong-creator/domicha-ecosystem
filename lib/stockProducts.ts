@@ -12,7 +12,6 @@ type StockCategory = {
 type StockSnapshot = {
   cats?: StockCategory[];
   item_prices?: Record<string, number | string>;
-  item_images?: Record<string, string>;
   wh_stock?: Record<string, number | string>;
   min_stock?: Record<string, number | string>;
   wh_min?: Record<string, number | string>;
@@ -132,7 +131,6 @@ export function transformStockSnapshot(snapshot: StockSnapshot, overrides: Produ
   const seen = new Set<string>();
   const products: ShopProduct[] = [];
   const prices = snapshot.item_prices || {};
-  const images = snapshot.item_images || {};
   const warehouseStock = snapshot.wh_stock || {};
 
   for (const category of snapshot.cats || []) {
@@ -155,7 +153,7 @@ export function transformStockSnapshot(snapshot: StockSnapshot, overrides: Produ
         category: categoryName,
         price,
         unit: unitFromName(name),
-        image: normalizeImage(images[name] || override?.image_url, fallbackImage),
+        image: normalizeImage(override?.image_url, fallbackImage),
         badge: stock === 0 ? "หมด" : price <= 0 ? "รอราคา" : undefined,
         stock,
         source: "stock"
@@ -178,7 +176,7 @@ export function transformStockSnapshot(snapshot: StockSnapshot, overrides: Produ
       category: "สินค้า",
       price,
       unit: unitFromName(name),
-      image: normalizeImage(images[name] || override?.image_url, fallbackImage),
+      image: normalizeImage(override?.image_url, fallbackImage),
       badge: stock <= 0 ? "หมด" : undefined,
       stock,
       source: "stock"
