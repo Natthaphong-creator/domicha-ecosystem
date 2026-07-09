@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { fetchStockProducts } from "@/lib/stockProducts";
+import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 import { handleRouteError, requireUser } from "@/lib/supabaseServer";
 
 const columns = "id,product_code,product_name,category,unit,cost_price,selling_price,image_url,vat_type,minimum_stock,supplier_id,status,created_at,suppliers(supplier_name)";
@@ -23,6 +24,7 @@ export async function POST(request: NextRequest) {
   try {
     const auth = await requireUser(request);
     if ("response" in auth) return auth.response;
+    const db = getSupabaseAdmin() || auth.supabase;
 
     const catalog = await fetchStockProducts();
     const rows = catalog.products.map((product) => ({
@@ -44,7 +46,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ imported: 0, total: 0, source: catalog.source });
     }
 
-    const { data, error } = await auth.supabase
+    const { data, error } = await db
       .from("products")
       .upsert(rows, { onConflict: "product_code", ignoreDuplicates: true })
       .select(columns);
@@ -56,7 +58,7 @@ export async function POST(request: NextRequest) {
     if (!isMissingImageColumn(error)) throw error;
 
     const rowsWithoutImage = rows.map(({ image_url: _imageUrl, ...row }) => row);
-    const fallback = await auth.supabase
+    const fallback = await db
       .from("products")
       .upsert(rowsWithoutImage, { onConflict: "product_code", ignoreDuplicates: true })
       .select(columnsWithoutImage);

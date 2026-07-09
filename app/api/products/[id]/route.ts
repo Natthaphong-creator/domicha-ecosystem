@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 import { handleRouteError, requireUser } from "@/lib/supabaseServer";
 
 const columns = "id,product_code,product_name,category,unit,cost_price,selling_price,image_url,vat_type,minimum_stock,supplier_id,status,created_at,suppliers(supplier_name)";
@@ -12,12 +13,13 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   try {
     const auth = await requireUser(request);
     if ("response" in auth) return auth.response;
+    const db = getSupabaseAdmin() || auth.supabase;
 
-    const { data, error } = await auth.supabase.from("products").select(columns).eq("id", params.id).single();
+    const { data, error } = await db.from("products").select(columns).eq("id", params.id).single();
     if (!error) return NextResponse.json(data);
     if (!isMissingImageColumn(error)) throw error;
 
-    const fallback = await auth.supabase.from("products").select(columnsWithoutImage).eq("id", params.id).single();
+    const fallback = await db.from("products").select(columnsWithoutImage).eq("id", params.id).single();
     if (fallback.error) throw fallback.error;
     return NextResponse.json({ ...fallback.data, image_url: null });
   } catch (error) {
@@ -29,10 +31,11 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   try {
     const auth = await requireUser(request);
     if ("response" in auth) return auth.response;
+    const db = getSupabaseAdmin() || auth.supabase;
 
     const payload = await request.json();
     const updatePayload = { ...payload, supplier_id: payload.supplier_id || null };
-    const { data, error } = await auth.supabase
+    const { data, error } = await db
       .from("products")
       .update(updatePayload)
       .eq("id", params.id)
@@ -42,7 +45,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     if (!isMissingImageColumn(error)) throw error;
 
     const { image_url: _imageUrl, ...payloadWithoutImage } = updatePayload;
-    const fallback = await auth.supabase
+    const fallback = await db
       .from("products")
       .update(payloadWithoutImage)
       .eq("id", params.id)
@@ -59,8 +62,9 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
   try {
     const auth = await requireUser(request);
     if ("response" in auth) return auth.response;
+    const db = getSupabaseAdmin() || auth.supabase;
 
-    const { error } = await auth.supabase.from("products").delete().eq("id", params.id);
+    const { error } = await db.from("products").delete().eq("id", params.id);
     if (error) throw error;
     return new NextResponse(null, { status: 204 });
   } catch (error) {
