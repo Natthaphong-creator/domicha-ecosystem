@@ -14,8 +14,12 @@ import {
   TrendingUp,
   WalletCards
 } from "lucide-react";
+import { DomiChaSystemPanel } from "@/components/DomiChaSystemPanel";
 import { accountingDocuments, documentStatusLabels, documentTypeLabels, monthlyCashflow } from "@/lib/accountingDemo";
+import { getDomiChaSystemSummary } from "@/lib/domichaSystem";
 import { dateThai, money } from "@/lib/format";
+
+export const dynamic = "force-dynamic";
 
 const maxCashflow = Math.max(...monthlyCashflow.flatMap((row) => [row.income, row.expense]));
 
@@ -27,7 +31,9 @@ const statusClasses = {
   Cancelled: "bg-slate-100 text-slate-500"
 } as const;
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const domichaSystem = await getDomiChaSystemSummary();
+
   return (
     <div className="space-y-6 pb-24 lg:pb-4">
       <section className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
@@ -47,6 +53,8 @@ export default function DashboardPage() {
           </Link>
         </div>
       </section>
+
+      <DomiChaSystemPanel initial={domichaSystem} />
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[
