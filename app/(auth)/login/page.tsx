@@ -55,7 +55,12 @@ export default function LoginPage() {
             <input id="email" type="email" required value={email} onChange={(event) => setEmail(event.target.value)} />
           </div>
           <div>
-            <label htmlFor="password">รหัสผ่าน</label>
+            <div className="flex items-center justify-between gap-3">
+              <label htmlFor="password">รหัสผ่าน</label>
+              <Link className="text-sm font-medium text-orange-600 hover:text-orange-700" href="/forgot-password">
+                ลืมรหัสผ่าน?
+              </Link>
+            </div>
             <input id="password" type="password" required value={password} onChange={(event) => setPassword(event.target.value)} />
           </div>
         </div>
