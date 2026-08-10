@@ -17,13 +17,7 @@ export default function manifest(): MetadataRoute.Manifest {
         src: "/icons/domicha-original-logo.png",
         sizes: "511x511",
         type: "image/png",
-        purpose: "any"
-      },
-      {
-        src: "/icons/domicha-app-maskable.svg",
-        sizes: "any",
-        type: "image/svg+xml",
-        purpose: "maskable"
+        purpose: "any maskable"
       }
     ]
   };
