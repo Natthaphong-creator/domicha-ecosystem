@@ -148,7 +148,7 @@ function Header() {
         <Link href="/" className="flex items-center gap-3" aria-label="DomiCha homepage">
           <Image src="/brand/logo.png" alt="DomiCha logo" width={48} height={48} className="h-11 w-11 object-contain" priority />
           <div className="leading-tight">
-            <p className="text-lg font-black">DomiCha</p>
+            <p className="text-lg font-black">Domichathailand</p>
             <p className="text-xs font-semibold text-[#7d4b2a]">Good taste Good fresh Everyday</p>
           </div>
         </Link>
@@ -410,7 +410,7 @@ function Footer() {
         <div className="flex items-center gap-3">
           <Image src="/brand/logo.png" alt="DomiCha logo" width={46} height={46} className="h-11 w-11 object-contain" />
           <div>
-            <p className="font-black">DomiCha Thailand</p>
+            <p className="font-black">Domichathailand</p>
             <p className="text-sm font-semibold text-white/58">Good taste Good fresh Everyday</p>
           </div>
         </div>

@@ -53,7 +53,7 @@ export function PwaRegister() {
         onClick={install}
       >
         <Download className="h-4 w-4 text-orange-400" />
-        ติดตั้ง DomiCha App
+        ติดตั้ง Domichathailand
       </button>
     );
   }

@@ -47,7 +47,7 @@ export default function ForgotPasswordPage() {
             className="h-[76px] w-[76px] shrink-0 object-contain"
             priority
           />
-          <div><h1 className="text-xl font-bold">DomiCha Portal Site</h1><p className="text-xs text-slate-400">Reset password</p></div>
+          <div><h1 className="text-xl font-bold">Domichathailand</h1><p className="text-xs text-slate-400">Reset password</p></div>
         </div>
 
         <h2 className="text-2xl font-bold text-slate-950">ลืมรหัสผ่าน</h2>

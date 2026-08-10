@@ -1,4 +1,4 @@
-# วิธี Deploy DomiCha Business / พอร์ทัลแฟรนไชส์ซี
+# วิธี Deploy Domichathailand / พอร์ทัลแฟรนไชส์ซี
 
 โปรเจกต์นี้เป็น Next.js app พร้อมหน้าแอดมินและพอร์ทัลแฟรนไชส์ซี `/shop`
 

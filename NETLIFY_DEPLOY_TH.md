@@ -1,4 +1,4 @@
-# Deploy DomiCha Business บน Netlify
+# Deploy Domichathailand บน Netlify
 
 โปรเจกต์นี้เป็น Next.js app มีทั้งหน้าร้าน `/shop`, ระบบหลังบ้าน และ API สำหรับส่ง LINE OA ดังนั้นต้อง deploy แบบ Next.js Runtime ของ Netlify ไม่ใช่ static upload อย่างเดียว
 
