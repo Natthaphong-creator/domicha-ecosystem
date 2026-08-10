@@ -62,6 +62,10 @@ const navGroups = [
       { href: "/cashflow", label: "กระแสเงินสด", icon: CircleDollarSign },
       { href: "/reports", label: "รายงาน", icon: FileBarChart }
     ]
+  },
+  {
+    label: "เว็บไซต์",
+    items: [{ href: "/settings", label: "ตั้งค่าเว็บไซต์", icon: Settings }]
   }
 ] as const;
 
@@ -199,9 +203,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <Plus className="h-4 w-4" />
               <span className="hidden sm:inline">สร้างเอกสาร</span>
             </Link>
-            <button className="hidden rounded-xl border border-slate-200 p-2.5 text-slate-500 sm:block" aria-label="ตั้งค่า">
+            <Link href="/settings" className="hidden rounded-xl border border-slate-200 p-2.5 text-slate-500 sm:block" aria-label="ตั้งค่าเว็บไซต์">
               <Settings className="h-4 w-4" />
-            </button>
+            </Link>
           </div>
         </header>
         <main className="mx-auto max-w-[1500px] px-4 py-6 sm:px-6 lg:px-8">{children}</main>
@@ -213,7 +217,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           { href: "/orders", label: "ออเดอร์", icon: ClipboardList },
           { href: "/expenses", label: "รายจ่าย", icon: WalletCards },
           { href: "/products", label: "สินค้า", icon: PackageOpen },
-          { href: "/customers", label: "ลูกค้า", icon: Store }
+          { href: "/settings", label: "เว็บ", icon: Settings }
         ].map((item) => {
           const Icon = item.icon;
           const active = pathname.startsWith(item.href);

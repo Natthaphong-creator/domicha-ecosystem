@@ -1,4 +1,5 @@
 import { calculateQuotation } from "@/lib/quotationMath";
+import { cleanSiteSettings, defaultSiteSettings, SiteSettings } from "@/lib/siteSettingsShared";
 
 const DEMO_STORAGE_KEY = "domicha-business-demo-v1";
 
@@ -7,7 +8,10 @@ type DemoDatabase = {
   suppliers: Record<string, unknown>[];
   products: Record<string, unknown>[];
   quotations: Record<string, unknown>[];
+  siteSettings: SiteSettings;
 };
+
+type DemoResource = "customers" | "suppliers" | "products" | "quotations";
 
 const initialDatabase: DemoDatabase = {
   customers: [
@@ -44,7 +48,8 @@ const initialDatabase: DemoDatabase = {
         { id: "item-2", product_id: "product-2", product_name: "ชาเขียว DomiCha", quantity: 40, unit_price: 210, discount: 250, vat_amount: 560, line_total: 8710 }
       ]
     }
-  ]
+  ],
+  siteSettings: defaultSiteSettings
 };
 
 function cloneInitialDatabase(): DemoDatabase {
@@ -70,7 +75,7 @@ function saveDatabase(database: DemoDatabase) {
   window.localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(database));
 }
 
-function relationName(resource: keyof DemoDatabase, row: Record<string, unknown>, database: DemoDatabase) {
+function relationName(resource: DemoResource, row: Record<string, unknown>, database: DemoDatabase) {
   if (resource === "products") {
     const supplier = database.suppliers.find((item) => item.id === row.supplier_id);
     return { ...row, suppliers: supplier ? { supplier_name: supplier.supplier_name } : null };
@@ -85,7 +90,19 @@ function relationName(resource: keyof DemoDatabase, row: Record<string, unknown>
 export async function demoApiFetch<T>(url: string, init?: RequestInit): Promise<T> {
   const database = loadDatabase();
   const segments = url.split("?")[0].split("/").filter(Boolean);
-  const resource = segments[1] as keyof DemoDatabase;
+  if (segments[1] === "site-settings") {
+    const method = (init?.method || "GET").toUpperCase();
+    if (method === "GET") return cleanSiteSettings(database.siteSettings || defaultSiteSettings) as T;
+    if (method === "PATCH") {
+      const payload = init?.body ? JSON.parse(String(init.body)) as Partial<SiteSettings> : {};
+      database.siteSettings = cleanSiteSettings(payload);
+      saveDatabase(database);
+      return database.siteSettings as T;
+    }
+    throw new Error("ไม่รองรับคำสั่งนี้ในโหมดตัวอย่าง");
+  }
+
+  const resource = segments[1] as DemoResource;
   const id = segments[2];
   const method = (init?.method || "GET").toUpperCase();
 
