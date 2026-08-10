@@ -1,4 +1,4 @@
-# โครงสร้างโดเมน DomiCha Thailand
+# โครงสร้างโดเมน Domichathailand
 
 โดเมนหลักที่แนะนำ: `domichathailand.com`
 

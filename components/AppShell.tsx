@@ -124,7 +124,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             priority
           />
           <span>
-            <strong className="block text-base leading-tight">DomiCha Portal Site</strong>
+            <strong className="block text-base leading-tight">Domichathailand</strong>
             <span className="text-xs text-slate-400">Brand Owner • Staff • Franchisee</span>
           </span>
         </Link>
@@ -156,7 +156,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   height={54}
                   className="h-[54px] w-[54px] object-contain"
                 />
-                <strong className="text-base">DomiCha Portal Site</strong>
+                <strong className="text-base">Domichathailand</strong>
               </Link>
               <button className="rounded-lg p-2 hover:bg-slate-100" aria-label="ปิดเมนู" onClick={() => setOpen(false)}>
                 <X className="h-5 w-5" />

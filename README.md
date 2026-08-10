@@ -1,4 +1,4 @@
-# DomiCha Business
+# Domichathailand
 
 เว็บแอปบัญชีและบริหารธุรกิจสำหรับ DomiCha ออกแบบแนวเดียวกับระบบบัญชีออนไลน์สมัยใหม่ ครอบคลุมงานขาย ค่าใช้จ่าย ลูกค้า ซัพพลายเออร์ สินค้า กระแสเงินสด และรายงาน
 
@@ -133,7 +133,7 @@ LINE_OA_ORDER_TARGET_ID=user-group-or-room-id
 
 ระบบรองรับ Progressive Web App (PWA), หน้าจอสัมผัส และ safe area ของอุปกรณ์:
 
-- Android/Chrome: เปิดเว็บไซต์แล้วกด `ติดตั้ง DomiCha App`
+- Android/Chrome: เปิดเว็บไซต์แล้วกด `ติดตั้ง Domichathailand`
 - iPhone/iPad: เปิดด้วย Safari → กด Share → `เพิ่มไปยังหน้าจอโฮม`
 - เมื่อติดตั้งแล้ว ระบบเปิดแบบ standalone ไม่มีแถบ address bar
 - Service worker ใช้ network-first สำหรับหน้าเว็บและเก็บ icon/manifest สำหรับการติดตั้ง
