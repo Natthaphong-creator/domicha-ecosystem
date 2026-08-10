@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
+import { canAccessRole, isOwnerUserId } from "@/lib/ownerAccess";
 
 export function createSupabaseRouteClient(request: NextRequest) {
   const token = request.headers.get("authorization")?.replace("Bearer ", "");
@@ -42,15 +43,31 @@ export async function requireUserRole(request: NextRequest, allowedRoles: string
     .eq("id", auth.user.id)
     .single();
 
+  if ((error || !profile) && isOwnerUserId(auth.user.id) && allowedRoles.includes("Admin")) {
+    return {
+      ...auth,
+      profile: {
+        id: auth.user.id,
+        email: auth.user.email || "",
+        full_name: auth.user.user_metadata?.full_name || "DomiCha Owner",
+        role: "Admin"
+      }
+    };
+  }
+
   if (error || !profile) {
     return { ...auth, response: NextResponse.json({ error: "ไม่พบข้อมูลผู้ใช้งาน" }, { status: 403 }) };
   }
 
-  if (!allowedRoles.includes(profile.role)) {
-    return { ...auth, profile, response: NextResponse.json({ error: "ไม่มีสิทธิ์ใช้งานส่วนนี้" }, { status: 403 }) };
+  const normalizedProfile = isOwnerUserId(auth.user.id)
+    ? { ...profile, role: "Admin" }
+    : profile;
+
+  if (!canAccessRole(auth.user.id, normalizedProfile.role, allowedRoles)) {
+    return { ...auth, profile: normalizedProfile, response: NextResponse.json({ error: "ไม่มีสิทธิ์ใช้งานส่วนนี้" }, { status: 403 }) };
   }
 
-  return { ...auth, profile };
+  return { ...auth, profile: normalizedProfile };
 }
 
 export function handleRouteError(error: unknown) {
