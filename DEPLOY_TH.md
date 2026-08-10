@@ -33,9 +33,13 @@ NEXT_PUBLIC_APP_URL=https://your-domain.com
 
 ## หลัง Deploy แล้วใช้งานยังไง
 
-- พอร์ทัลแฟรนไชส์ซี: `https://your-domain.com/shop`
-- ระบบหลังบ้าน: `https://your-domain.com/dashboard`
+- หน้าเว็บลูกค้าทั่วไป: `https://www.domichathailand.com`
+- หน้าแฟรนไชส์: `https://www.domichathailand.com/franchise`
+- พอร์ทัลแฟรนไชส์ซี: `https://order.domichathailand.com` หรือ `https://www.domichathailand.com/shop`
+- ระบบหลังบ้าน: `https://admin.domichathailand.com` หรือ `https://www.domichathailand.com/dashboard`
 - หน้า Login: `https://your-domain.com/login`
+
+ดูรายละเอียด DNS และโครงสร้างโดเมนใน `DOMAIN_STRUCTURE_TH.md`
 
 ## ติดตั้งเป็นแอปบนมือถือ / แท็บเล็ต
 

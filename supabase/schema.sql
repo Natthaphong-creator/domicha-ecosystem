@@ -196,6 +196,14 @@ create table public.line_delivery_logs (
   created_by uuid references public.users(id)
 );
 
+create table public.site_settings (
+  key text primary key,
+  value jsonb not null default '{}'::jsonb,
+  updated_by uuid references public.users(id),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 create table public.franchisee_orders (
   id uuid primary key default gen_random_uuid(),
   order_number text unique not null,
@@ -247,6 +255,7 @@ create trigger products_set_updated_at before update on public.products for each
 create trigger quotations_set_updated_at before update on public.quotations for each row execute function public.set_updated_at();
 create trigger sales_documents_set_updated_at before update on public.sales_documents for each row execute function public.set_updated_at();
 create trigger franchisee_orders_set_updated_at before update on public.franchisee_orders for each row execute function public.set_updated_at();
+create trigger site_settings_set_updated_at before update on public.site_settings for each row execute function public.set_updated_at();
 
 create or replace function public.handle_new_user()
 returns trigger
@@ -335,6 +344,7 @@ alter table public.document_files enable row level security;
 alter table public.sales_documents enable row level security;
 alter table public.sales_document_items enable row level security;
 alter table public.line_delivery_logs enable row level security;
+alter table public.site_settings enable row level security;
 alter table public.franchisee_orders enable row level security;
 alter table public.franchisee_order_items enable row level security;
 
@@ -397,6 +407,25 @@ create policy "Authenticated users read sales document items" on public.sales_do
 create policy "Authenticated users write sales document items" on public.sales_document_items for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
 create policy "Authenticated users read LINE delivery logs" on public.line_delivery_logs for select using (auth.role() = 'authenticated');
 create policy "Authenticated users write LINE delivery logs" on public.line_delivery_logs for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
+create policy "Anyone can read public site settings" on public.site_settings for select using (key = 'public_contact');
+create policy "HQ users manage site settings" on public.site_settings for all using (
+  exists (
+    select 1 from public.users u
+    where u.id = auth.uid() and u.role in ('Admin', 'Sales')
+  )
+) with check (
+  exists (
+    select 1 from public.users u
+    where u.id = auth.uid() and u.role in ('Admin', 'Sales')
+  )
+);
+
+insert into public.site_settings (key, value)
+values (
+  'public_contact',
+  '{"brandPhone":"","lineUrl":"https://line.me/R/ti/p/@domicha","lineLabel":"@domicha","contactNote":"ฝากข้อมูลเบื้องต้นเพื่อให้ทีมงานแนะนำแพ็กเกจตามงบ ทำเล และรูปแบบร้านที่ต้องการ"}'::jsonb
+)
+on conflict (key) do nothing;
 
 create policy "Franchisees read own orders" on public.franchisee_orders for select using (user_id = auth.uid());
 create policy "Franchisees create own orders" on public.franchisee_orders for insert with check (user_id = auth.uid());

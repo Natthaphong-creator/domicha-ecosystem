@@ -20,9 +20,9 @@ export default function manifest(): MetadataRoute.Manifest {
         purpose: "any"
       },
       {
-        src: "/icons/domicha-app-maskable.svg",
-        sizes: "any",
-        type: "image/svg+xml",
+        src: "/icons/domicha-original-logo.png",
+        sizes: "511x511",
+        type: "image/png",
         purpose: "maskable"
       }
     ]
