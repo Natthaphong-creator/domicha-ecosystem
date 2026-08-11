@@ -58,7 +58,7 @@ const pillars = [
   {
     icon: ShieldCheck,
     title: "พร้อมขยายต่อ",
-    text: "รองรับทั้งหน้าเว็บลูกค้า ระบบสั่งซื้อแฟรนไชส์ซี และหลังบ้านเจ้าของ"
+    text: "เหมาะกับผู้ที่อยากเริ่มร้านเครื่องดื่มด้วยภาพแบรนด์ชัด เมนูเข้าใจง่าย และแนวทางเปิดร้านเป็นขั้นตอน"
   }
 ];
 
@@ -112,13 +112,6 @@ const protectedDetails = [
   "เงื่อนไขสัญญาฉบับละเอียด"
 ];
 
-const systemPaths = [
-  { label: "ลูกค้าทั่วไป", href: "/", text: "ดูแบรนด์ เมนู จุดเด่น และช่องทางติดต่อ" },
-  { label: "ผู้สนใจแฟรนไชส์", href: "/franchise", text: "ดูโมเดล ลงทะเบียน และให้ทีมงานประเมินก่อนลงทุน" },
-  { label: "แฟรนไชส์ซี", href: "/shop", text: "เข้าสู่ระบบเพื่อสั่งวัตถุดิบและติดตามออเดอร์" },
-  { label: "เจ้าของแบรนด์", href: "/dashboard", text: "จัดการใบเสนอราคา ใบเสร็จ บัญชี สต๊อก และ dashboard" }
-];
-
 const steps = [
   "ฝากข้อมูล งบประมาณ และทำเลที่สนใจ",
   "ทีมงานช่วยประเมินโมเดลร้านที่เหมาะ",
@@ -156,8 +149,6 @@ function Header() {
           <a href="/#brand">จุดแข็ง</a>
           <a href="/#menu">เมนู</a>
           <Link href="/franchise">แฟรนไชส์</Link>
-          <Link href="/shop">สั่งซื้อแฟรนไชส์ซี</Link>
-          <Link href="/login">สำหรับเจ้าของ</Link>
         </nav>
         <Link href="/franchise#contact" className="inline-flex items-center gap-2 rounded-full bg-[#18120f] px-4 py-2 text-sm font-extrabold text-white transition hover:bg-[#f0692f]">
           <MessageCircle className="h-4 w-4" />
@@ -182,7 +173,7 @@ function Hero({ franchise = false }: { franchise?: boolean }) {
           </h1>
           <p className="mt-6 max-w-2xl text-lg font-semibold leading-8 text-[#6a4a35]">
             {franchise
-              ? "ระบบแฟรนไชส์ที่สื่อสารพอดี เห็นภาพชัด แต่สงวนสูตร ต้นทุน SOP และรายละเอียดลึกไว้หลังการประเมิน"
+              ? "แฟรนไชส์ที่สื่อสารพอดี เห็นภาพชัด และสงวนสูตร ต้นทุน SOP รวมถึงรายละเอียดลึกไว้หลังการประเมิน"
               : "ชานมไข่มุก เมนูดื่มง่าย ไข่มุกหนึบ และมาสคอทแมว DomiCha ที่ทำให้หน้าร้านดูอบอุ่น เป็นมิตร และถ่ายรูปขึ้น"}
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -233,17 +224,9 @@ function BrandSections() {
       <section id="brand" className="border-y border-[#f0dfc6] bg-white px-4 py-16 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="max-w-3xl">
-            <p className="text-sm font-black uppercase tracking-[.22em] text-[#f0692f]">Brand Ecosystem</p>
-            <h2 className="mt-3 text-4xl font-black leading-tight sm:text-5xl">โดเมนเดียว แยกระบบชัด และข้อมูลเชื่อมกัน</h2>
-            <p className="mt-5 text-lg font-semibold leading-8 text-[#6a4a35]">ลูกค้าทั่วไป แฟรนไชส์ซี และเจ้าของแบรนด์ใช้พื้นที่คนละส่วน แต่เชื่อมข้อมูลเข้าสู่ระบบหลังบ้านเดียวกัน</p>
-          </div>
-          <div className="mt-8 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-            {systemPaths.map((item) => (
-              <Link key={item.href} href={item.href} className="rounded-lg border border-[#f0dfc6] bg-[#fffaf3] p-5 transition hover:border-[#f0692f] hover:bg-[#fff3df]">
-                <h3 className="text-lg font-black text-[#18120f]">{item.label}</h3>
-                <p className="mt-2 text-sm font-semibold leading-6 text-[#6a4a35]">{item.text}</p>
-              </Link>
-            ))}
+            <p className="text-sm font-black uppercase tracking-[.22em] text-[#f0692f]">Brand Strength</p>
+            <h2 className="mt-3 text-4xl font-black leading-tight sm:text-5xl">แบรนด์จำง่าย เมนูคุ้นเคย และภาพร้านพร้อมขาย</h2>
+            <p className="mt-5 text-lg font-semibold leading-8 text-[#6a4a35]">Domichathailand ทำให้ลูกค้าเข้าใจเร็วว่าขายอะไร ทำไมต้องลอง และทำไมร้านนี้ดูน่าเชื่อถือ ตั้งแต่โลโก้ สี เมนู ไปจนถึงภาพหน้าร้าน</p>
           </div>
           <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {pillars.map((item) => {
@@ -293,7 +276,7 @@ function FranchiseModelSection() {
             <p className="text-sm font-black uppercase tracking-[.22em] text-[#feebc8]">Franchise Model</p>
             <h2 className="mt-3 text-4xl font-black leading-tight sm:text-5xl">โชว์จุดตัดสินใจให้ชัด แต่สงวนรายละเอียดสำคัญของแบรนด์</h2>
           </div>
-          <p className="text-base font-semibold leading-8 text-white/72">หน้าเว็บบอกสิ่งที่ผู้สนใจควรรู้: เริ่มง่าย มีระบบช่วยดูแล และเลือกแพ็กเกจตามทำเลได้ ส่วนสูตร ต้นทุน รายการอุปกรณ์ และ SOP ฉบับเต็มค่อยคุยหลังประเมินเบื้องต้น</p>
+          <p className="text-base font-semibold leading-8 text-white/72">หน้าเว็บบอกสิ่งที่ผู้สนใจควรรู้: เริ่มง่าย มีทีมงานช่วยดูแล และเลือกแพ็กเกจตามทำเลได้ ส่วนสูตร ต้นทุน รายการอุปกรณ์ และ SOP ฉบับเต็มค่อยคุยหลังประเมินเบื้องต้น</p>
         </div>
         <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {decisionKeywords.map((keyword) => (
@@ -333,7 +316,7 @@ function FranchiseModelSection() {
           </div>
           <div className="rounded-lg border border-[#feebc8]/24 bg-[#2a1a13] p-6">
             <h3 className="text-2xl font-black">รายละเอียดที่สงวนไว้</h3>
-            <p className="mt-3 text-sm font-semibold leading-7 text-white/70">รายละเอียดแพ็กเกจ สูตร ต้นทุน และรายการอุปกรณ์ฉบับเต็ม สงวนไว้สำหรับผู้ที่ผ่านการประเมินเบื้องต้นโดยทีมงาน DomiCha เพื่อปกป้องระบบของแบรนด์และลดการลอกแบบ</p>
+            <p className="mt-3 text-sm font-semibold leading-7 text-white/70">รายละเอียดแพ็กเกจ สูตร ต้นทุน และรายการอุปกรณ์ฉบับเต็ม สงวนไว้สำหรับผู้ที่ผ่านการประเมินเบื้องต้นโดยทีมงาน DomiCha เพื่อปกป้องมาตรฐานของแบรนด์และลดการลอกแบบ</p>
             <div className="mt-5 flex flex-wrap gap-2">
               {protectedDetails.map((item) => <span key={item} className="rounded-full border border-white/12 bg-white/8 px-3 py-1.5 text-xs font-bold text-white/82">{item}</span>)}
             </div>
@@ -417,8 +400,6 @@ function Footer() {
         <div className="flex flex-wrap gap-3 text-sm font-bold text-white/72">
           <Link href="/">หน้าแรก</Link>
           <Link href="/franchise">แฟรนไชส์</Link>
-          <Link href="/shop">สั่งซื้อแฟรนไชส์ซี</Link>
-          <Link href="/login">หลังบ้าน</Link>
         </div>
       </div>
     </footer>

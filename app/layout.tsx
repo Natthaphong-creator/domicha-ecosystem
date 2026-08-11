@@ -4,8 +4,8 @@ import { PwaRegister } from "@/components/PwaRegister";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Domichathailand | ชานมไข่มุก แฟรนไชส์ และระบบหลังบ้าน",
-  description: "เว็บไซต์ Domichathailand สำหรับลูกค้าทั่วไป ผู้สนใจแฟรนไชส์ ระบบสั่งซื้อแฟรนไชส์ซี และหลังบ้านเจ้าของแบรนด์",
+  title: "Domichathailand | ชานมไข่มุกและแฟรนไชส์ DomiCha",
+  description: "เว็บไซต์ Domichathailand สำหรับลูกค้าทั่วไปและผู้สนใจเปิดร้านแฟรนไชส์ DomiCha",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
