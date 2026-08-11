@@ -13,6 +13,7 @@ create type delivery_status as enum ('Queued', 'Sent', 'Failed', 'Skipped');
 create type franchisee_status as enum ('Pending', 'Active', 'Suspended');
 create type franchisee_order_status as enum ('Received', 'Confirmed', 'Packing', 'Shipped', 'Completed', 'Cancelled');
 create type payment_status as enum ('Pending', 'Paid', 'Overdue', 'Cancelled');
+create type franchise_lead_status as enum ('New', 'Contacted', 'Qualified', 'PackageSent', 'Won', 'Lost');
 
 create table public.users (
   id uuid primary key references auth.users(id) on delete cascade,
@@ -49,6 +50,22 @@ create table public.franchisee_profiles (
   payment_terms text not null default 'ชำระก่อนจัดส่ง',
   status franchisee_status not null default 'Pending',
   created_by uuid references public.users(id),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table public.franchise_leads (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  contact text not null,
+  location text,
+  budget text,
+  note text,
+  source text not null default 'DomiCha Website',
+  status franchise_lead_status not null default 'New',
+  assigned_to uuid references public.users(id) on delete set null,
+  last_contacted_at timestamptz,
+  internal_note text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -249,6 +266,7 @@ $$;
 create trigger users_set_updated_at before update on public.users for each row execute function public.set_updated_at();
 create trigger branches_set_updated_at before update on public.branches for each row execute function public.set_updated_at();
 create trigger franchisee_profiles_set_updated_at before update on public.franchisee_profiles for each row execute function public.set_updated_at();
+create trigger franchise_leads_set_updated_at before update on public.franchise_leads for each row execute function public.set_updated_at();
 create trigger customers_set_updated_at before update on public.customers for each row execute function public.set_updated_at();
 create trigger suppliers_set_updated_at before update on public.suppliers for each row execute function public.set_updated_at();
 create trigger products_set_updated_at before update on public.products for each row execute function public.set_updated_at();
@@ -355,6 +373,7 @@ create trigger quotations_history
 alter table public.users enable row level security;
 alter table public.branches enable row level security;
 alter table public.franchisee_profiles enable row level security;
+alter table public.franchise_leads enable row level security;
 alter table public.customers enable row level security;
 alter table public.suppliers enable row level security;
 alter table public.products enable row level security;
@@ -400,6 +419,24 @@ create policy "HQ users manage franchisees" on public.franchisee_profiles for al
   exists (
     select 1 from public.users u
     where u.id = auth.uid() and u.role in ('Admin', 'Sales', 'Accountant')
+  )
+);
+
+create policy "HQ users read franchise leads" on public.franchise_leads for select using (
+  exists (
+    select 1 from public.users u
+    where u.id = auth.uid() and u.role in ('Admin', 'Sales')
+  )
+);
+create policy "HQ users manage franchise leads" on public.franchise_leads for update using (
+  exists (
+    select 1 from public.users u
+    where u.id = auth.uid() and u.role in ('Admin', 'Sales')
+  )
+) with check (
+  exists (
+    select 1 from public.users u
+    where u.id = auth.uid() and u.role in ('Admin', 'Sales')
   )
 );
 

@@ -89,6 +89,23 @@ export type Quotation = {
 
 export type FranchiseeOrderStatus = "Received" | "Confirmed" | "Packing" | "Shipped" | "Completed" | "Cancelled";
 export type PaymentStatus = "Pending" | "Paid" | "Overdue" | "Cancelled";
+export type FranchiseLeadStatus = "New" | "Contacted" | "Qualified" | "PackageSent" | "Won" | "Lost";
+
+export type FranchiseLead = {
+  id: string;
+  name: string;
+  contact: string;
+  location: string | null;
+  budget: string | null;
+  note: string | null;
+  source: string;
+  status: FranchiseLeadStatus;
+  assigned_to: string | null;
+  last_contacted_at: string | null;
+  internal_note: string | null;
+  created_at: string;
+  updated_at: string;
+};
 
 export type FranchiseeOrderItem = {
   id: string;
