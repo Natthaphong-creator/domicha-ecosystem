@@ -7,7 +7,9 @@ import {
   ClipboardCheck,
   Coffee,
   HelpCircle,
+  MapPin,
   MessageCircle,
+  ShoppingBag,
   ShieldCheck,
   Sparkles
 } from "lucide-react";
@@ -63,6 +65,24 @@ const pillars = [
 ];
 
 const drinks = ["Milk Tea", "Brown Sugar", "Thai Tea", "Cocoa", "Pink Milk", "Green Tea"];
+
+const orderSteps = [
+  {
+    icon: Coffee,
+    title: "เลือกเมนูโปรด",
+    text: "ดูเมนูแนะนำ เครื่องดื่มขายดี และเลือกความหวานหรือท็อปปิงที่ต้องการ"
+  },
+  {
+    icon: MapPin,
+    title: "เลือกสาขาใกล้คุณ",
+    text: "เตรียมรองรับการเลือกสาขา เวลาไปรับ และช่องทางติดต่อกลับจากทีมร้าน"
+  },
+  {
+    icon: ShoppingBag,
+    title: "สั่งง่าย รับไว",
+    text: "ออกแบบให้ลูกค้าสั่งซ้ำได้ง่าย ลดขั้นตอน และช่วยให้ร้านปิดการขายเร็วขึ้น"
+  }
+];
 
 const models = [
   {
@@ -148,6 +168,7 @@ function Header() {
         <nav className="hidden items-center gap-7 text-sm font-bold text-[#4b3427] md:flex">
           <a href="/#brand">จุดแข็ง</a>
           <a href="/#menu">เมนู</a>
+          <Link href="/order-app">สั่งผ่านแอป</Link>
           <Link href="/franchise">แฟรนไชส์</Link>
         </nav>
         <Link href="/franchise#contact" className="inline-flex items-center gap-2 rounded-full bg-[#18120f] px-4 py-2 text-sm font-extrabold text-white transition hover:bg-[#f0692f]">
@@ -156,6 +177,102 @@ function Header() {
         </Link>
       </div>
     </header>
+  );
+}
+
+function OrderAppHero({ settings }: { settings: SiteSettings }) {
+  return (
+    <section className="bg-[#fff8ed] px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
+      <div className="mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[1fr_.86fr]">
+        <div>
+          <p className="inline-flex items-center gap-2 rounded-full border border-[#f4cfaa] bg-white px-4 py-2 text-sm font-extrabold text-[#8b4a22]">
+            <ShoppingBag className="h-4 w-4 text-[#f0692f]" />
+            Order DomiCha
+          </p>
+          <h1 className="mt-6 max-w-4xl text-5xl font-black leading-[1.05] text-[#18120f] sm:text-6xl lg:text-7xl">
+            สั่ง DomiCha ผ่านแอป สะดวกขึ้นตั้งแต่เลือกเมนูจนถึงรับเครื่องดื่ม
+          </h1>
+          <p className="mt-6 max-w-2xl text-lg font-semibold leading-8 text-[#6a4a35]">
+            หน้า ordering สำหรับลูกค้าทั่วไป ช่วยให้เห็นเมนูชัด ตัดสินใจเร็ว และติดต่อร้านได้ทันที เหมาะสำหรับต่อยอดเป็นช่องทางขายออนไลน์ของแบรนด์
+          </p>
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <a href={settings.lineUrl} className="inline-flex items-center justify-center gap-2 rounded-full bg-[#06c755] px-6 py-4 font-black text-white transition hover:bg-[#05ad49]">
+              สั่งผ่าน LINE ตอนนี้
+              <MessageCircle className="h-5 w-5" />
+            </a>
+            <Link href="#how-to-order" className="inline-flex items-center justify-center gap-2 rounded-full border border-[#18120f] bg-white px-6 py-4 font-black text-[#18120f] transition hover:bg-[#feebc8]">
+              ดูขั้นตอนสั่งซื้อ
+            </Link>
+          </div>
+          <p className="mt-4 text-sm font-bold leading-6 text-[#7d4b2a]">
+            LINE {settings.lineLabel} {settings.brandPhone ? `• โทร ${settings.brandPhone}` : "• ฝากข้อความไว้ ทีมงานจะติดต่อกลับ"}
+          </p>
+        </div>
+        <div className="mx-auto w-full max-w-[520px]">
+          <div className="relative overflow-hidden rounded-lg border border-[#f0dfc6] bg-white shadow-xl shadow-orange-950/10" style={{ aspectRatio: "941 / 1672" }}>
+            <Image src="/brand/customer.png" alt="ลูกค้าสั่ง DomiCha" fill priority sizes="(max-width: 1024px) 92vw, 520px" className="object-cover object-center" />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function OrderAppSections({ settings }: { settings: SiteSettings }) {
+  return (
+    <>
+      <section id="how-to-order" className="px-4 pb-16 sm:px-6 lg:px-8">
+        <div className="mx-auto grid max-w-7xl gap-4 md:grid-cols-3">
+          {orderSteps.map((item) => {
+            const Icon = item.icon;
+            return (
+              <article key={item.title} className="rounded-lg border border-[#f0dfc6] bg-white p-6 shadow-sm">
+                <Icon className="h-7 w-7 text-[#f0692f]" />
+                <h2 className="mt-5 text-xl font-black">{item.title}</h2>
+                <p className="mt-3 text-sm font-semibold leading-7 text-[#6a4a35]">{item.text}</p>
+              </article>
+            );
+          })}
+        </div>
+      </section>
+      <section className="border-y border-[#f0dfc6] bg-white px-4 py-16 sm:px-6 lg:px-8">
+        <div className="mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[.9fr_1.1fr]">
+          <div>
+            <p className="text-sm font-black uppercase tracking-[.22em] text-[#f0692f]">Customer Order</p>
+            <h2 className="mt-3 text-4xl font-black leading-tight sm:text-5xl">หน้าสั่งซื้อที่ลูกค้าเห็นแล้วเข้าใจทันที</h2>
+            <p className="mt-5 text-lg font-semibold leading-8 text-[#6a4a35]">
+              โฟกัสที่เมนูขายดี ภาพเครื่องดื่มชัด และปุ่มติดต่อที่กดง่าย เพื่อให้ลูกค้าตัดสินใจสั่งเร็ว โดยไม่แสดงข้อมูลธุรกิจเชิงลึกบนหน้า public
+            </p>
+            <div className="mt-7 grid gap-3 sm:grid-cols-2">
+              {["เมนูแนะนำชัด", "สั่งซ้ำง่าย", "รองรับโปรโมชัน", "เชื่อม LINE ได้"].map((item) => (
+                <div key={item} className="flex items-center gap-3 rounded-lg bg-[#fff8ed] p-4">
+                  <CheckCircle2 className="h-5 w-5 shrink-0 text-[#f0692f]" />
+                  <p className="text-sm font-black text-[#4b3427]">{item}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="rounded-lg border border-[#f0dfc6] bg-[#fff8ed] p-5">
+            <div className="rounded-lg bg-[#18120f] p-5 text-white">
+              <p className="text-sm font-black uppercase tracking-[.22em] text-[#feebc8]">Quick Order</p>
+              <h3 className="mt-3 text-3xl font-black">เมนูที่ลูกค้าน่ากดสั่ง</h3>
+              <div className="mt-6 grid gap-3">
+                {drinks.slice(0, 5).map((drink) => (
+                  <div key={drink} className="flex items-center justify-between rounded-lg bg-white/10 p-4">
+                    <span className="font-black">{drink}</span>
+                    <span className="rounded-full bg-[#feebc8] px-3 py-1 text-xs font-black text-[#18120f]">เลือกเมนู</span>
+                  </div>
+                ))}
+              </div>
+              <a href={settings.lineUrl} className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#f0692f] px-5 py-4 font-black text-white transition hover:bg-[#d9541c]">
+                ไปที่ช่องทางสั่งซื้อ
+                <ArrowRight className="h-5 w-5" />
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </>
   );
 }
 
@@ -399,6 +516,7 @@ function Footer() {
         </div>
         <div className="flex flex-wrap gap-3 text-sm font-bold text-white/72">
           <Link href="/">หน้าแรก</Link>
+          <Link href="/order-app">สั่งผ่านแอป</Link>
           <Link href="/franchise">แฟรนไชส์</Link>
         </div>
       </div>
@@ -426,6 +544,18 @@ export function DomichaFranchise({ settings }: { settings: SiteSettings }) {
       <Hero franchise />
       <FranchiseModelSection />
       <ProcessAndFaq />
+      <ContactSection settings={settings} />
+      <Footer />
+    </main>
+  );
+}
+
+export function DomichaOrderApp({ settings }: { settings: SiteSettings }) {
+  return (
+    <main className="min-h-screen bg-[#fff8ed] text-[#18120f]">
+      <Header />
+      <OrderAppHero settings={settings} />
+      <OrderAppSections settings={settings} />
       <ContactSection settings={settings} />
       <Footer />
     </main>
