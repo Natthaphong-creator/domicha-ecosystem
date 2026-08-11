@@ -40,6 +40,7 @@ const navGroups = [
     label: "งานขาย",
     items: [
       { href: "/shop", label: "พอร์ทัลแฟรนไชส์ซี", icon: Store },
+      { href: "/franchise-leads", label: "Lead แฟรนไชส์", icon: BarChart3 },
       { href: "/franchisees", label: "แฟรนไชส์ซี", icon: UserRoundCog },
       { href: "/orders", label: "ใบสั่งซื้อ", icon: ClipboardList },
       { href: "/documents", label: "เอกสารขาย", icon: FileText },
