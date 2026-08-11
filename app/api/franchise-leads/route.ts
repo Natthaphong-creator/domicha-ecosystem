@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
+import { handleRouteError, requireUserRole } from "@/lib/supabaseServer";
 
 type LeadPayload = {
   name?: string;
@@ -7,6 +9,9 @@ type LeadPayload = {
   budget?: string;
   note?: string;
 };
+
+const columns = "id,name,contact,location,budget,note,source,status,assigned_to,last_contacted_at,internal_note,created_at,updated_at";
+const statuses = ["New", "Contacted", "Qualified", "PackageSent", "Won", "Lost"] as const;
 
 function cleanText(value: unknown, max = 240) {
   return String(value || "").trim().slice(0, max);
@@ -59,6 +64,43 @@ async function sendToLine(lead: Required<LeadPayload>) {
   return true;
 }
 
+async function saveLead(lead: Required<LeadPayload>) {
+  const supabase = getSupabaseAdmin();
+  if (!supabase) return null;
+
+  const { data, error } = await supabase
+    .from("franchise_leads")
+    .insert({
+      name: lead.name,
+      contact: lead.contact,
+      location: lead.location || null,
+      budget: lead.budget || null,
+      note: lead.note || null,
+      source: "DomiCha Website"
+    })
+    .select(columns)
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    const auth = await requireUserRole(request, ["Admin", "Sales"]);
+    if ("response" in auth) return auth.response;
+
+    const { data, error } = await auth.supabase
+      .from("franchise_leads")
+      .select(columns)
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return NextResponse.json(data);
+  } catch (error) {
+    return handleRouteError(error);
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const payload = (await request.json()) as LeadPayload;
@@ -74,6 +116,8 @@ export async function POST(request: NextRequest) {
     if (validation) return NextResponse.json({ error: validation }, { status: 400 });
 
     const destinations: string[] = [];
+    const savedLead = await saveLead(lead);
+    if (savedLead) destinations.push("ระบบหลังบ้าน");
     if (await sendToWebhook(lead)) destinations.push("Webhook");
     if (await sendToLine(lead)) destinations.push("LINE OA");
 
@@ -85,5 +129,38 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "ส่งข้อมูลไม่สำเร็จ" }, { status: 500 });
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const auth = await requireUserRole(request, ["Admin", "Sales"]);
+    if ("response" in auth) return auth.response;
+
+    const payload = await request.json();
+    const id = cleanText(payload.id, 80);
+    if (!id) return NextResponse.json({ error: "ไม่พบ Lead ที่ต้องการแก้ไข" }, { status: 400 });
+
+    const nextStatus = cleanText(payload.status, 40);
+    const updatePayload: Record<string, string | null> = {};
+    if (nextStatus) {
+      if (!statuses.includes(nextStatus as (typeof statuses)[number])) {
+        return NextResponse.json({ error: "สถานะ Lead ไม่ถูกต้อง" }, { status: 400 });
+      }
+      updatePayload.status = nextStatus;
+      if (nextStatus !== "New") updatePayload.last_contacted_at = new Date().toISOString();
+    }
+    if ("internal_note" in payload) updatePayload.internal_note = cleanText(payload.internal_note, 500) || null;
+
+    const { data, error } = await auth.supabase
+      .from("franchise_leads")
+      .update(updatePayload)
+      .eq("id", id)
+      .select(columns)
+      .single();
+    if (error) throw error;
+    return NextResponse.json(data);
+  } catch (error) {
+    return handleRouteError(error);
   }
 }
