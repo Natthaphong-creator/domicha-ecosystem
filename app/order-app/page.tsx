@@ -5,8 +5,8 @@ import { getPublicSiteSettings } from "@/lib/siteSettings";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "สั่ง DomiCha ผ่านแอป | Domichathailand",
-  description: "หน้าสั่งซื้อ DomiCha สำหรับลูกค้าทั่วไป เลือกเมนู ติดต่อร้าน และต่อยอดเป็นช่องทางขายออนไลน์ของแบรนด์"
+  title: "สั่งวัตถุดิบสำหรับแฟรนไชส์ซี | Domichathailand",
+  description: "หน้าสั่งวัตถุดิบสำหรับสาขาแฟรนไชส์ซี DomiCha ที่ลงทะเบียนและได้รับอนุมัติจากแบรนด์แล้ว"
 };
 
 export default async function OrderAppPage() {
