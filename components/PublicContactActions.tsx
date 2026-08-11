@@ -23,7 +23,7 @@ export function PublicContactActions({ initialSettings }: { initialSettings: Sit
   return (
     <>
       <p className="mt-5 text-lg font-semibold leading-8 text-[#6a4a35]">
-        {settings.contactNote} โดยยังไม่เปิดรายละเอียดลึกของระบบแฟรนไชส์บนหน้าเว็บสาธารณะ
+        {settings.contactNote} ทีมงานจะช่วยแนะนำโมเดลร้านที่เหมาะกับงบ ทำเล และเป้าหมายของคุณ
       </p>
       <div className="mt-8 flex flex-wrap gap-3">
         <a href={phoneHref(settings.brandPhone)} className="inline-flex items-center gap-2 rounded-full bg-[#18120f] px-5 py-3 font-black text-white">
@@ -36,7 +36,7 @@ export function PublicContactActions({ initialSettings }: { initialSettings: Sit
         </a>
       </div>
       <p className="mt-4 text-sm font-bold leading-6 text-[#7d4b2a]">
-        {settings.brandPhone ? `โทร ${settings.brandPhone}` : "สามารถตั้งค่าเบอร์โทรแบรนด์ได้ในหลังบ้าน"} • LINE {settings.lineLabel}
+        {settings.brandPhone ? `โทร ${settings.brandPhone}` : "ฝากข้อมูลไว้ แล้วทีมงานจะติดต่อกลับ"} • LINE {settings.lineLabel}
       </p>
     </>
   );

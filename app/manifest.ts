@@ -4,8 +4,8 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Domichathailand",
     short_name: "Domichathailand",
-    description: "ระบบพอร์ทัลสำหรับ Brand Owner, พนักงาน และแฟรนไชส์ซี Domichathailand",
-    start_url: "/dashboard",
+    description: "เว็บไซต์ Domichathailand สำหรับชานมไข่มุก DomiCha และข้อมูลแฟรนไชส์",
+    start_url: "/",
     display: "standalone",
     background_color: "#ffd9ad",
     theme_color: "#f5662d",
