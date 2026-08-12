@@ -6,5 +6,6 @@ dist
 coverage
 *.log
 *.tsbuildinfo
+.clasp.json
 
 .deploy-ssh/
