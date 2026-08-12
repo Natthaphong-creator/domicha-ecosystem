@@ -25,7 +25,7 @@ const orderSelect = `
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const auth = await requireUserRole(request, ["Admin", "Sales", "Accountant", "Franchisee"]);
+    const auth = await requireUserRole(request, ["Admin", "Executive", "Manager", "AssistantManager", "Franchisee"]);
     if ("response" in auth) return auth.response;
     if (!("profile" in auth)) {
       return NextResponse.json({ error: "ไม่พบข้อมูลผู้ใช้งาน" }, { status: 403 });
