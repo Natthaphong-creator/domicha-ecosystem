@@ -4,7 +4,6 @@
 
 [build.environment]
   NODE_VERSION = "20"
-  DOMICHA_FRANCHISE_LEAD_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbxKh68k9I6v_x4D2y8RYDOdNdpQ8zxQ306ojohAR5FiB9o47fdEiTGsUYZGnXn_xIKa/exec"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
