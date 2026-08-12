@@ -13,6 +13,12 @@ type LeadPayload = {
 const columns = "id,name,contact,location,budget,note,source,status,assigned_to,last_contacted_at,internal_note,created_at,updated_at";
 const statuses = ["New", "Contacted", "Qualified", "PackageSent", "Won", "Lost"] as const;
 
+type NotificationResult = {
+  label: string;
+  sent: boolean;
+  error?: string;
+};
+
 function cleanText(value: unknown, max = 240) {
   return String(value || "").trim().slice(0, max);
 }
@@ -23,24 +29,41 @@ function validateLead(lead: Required<LeadPayload>) {
   return "";
 }
 
-async function sendToWebhook(lead: Required<LeadPayload>) {
-  const webhookUrl = process.env.DOMICHA_FRANCHISE_LEAD_WEBHOOK_URL;
-  if (!webhookUrl) return false;
-
-  const response = await fetch(webhookUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ...lead, source: "DomiCha Website", createdAt: new Date().toISOString() })
-  });
-
-  if (!response.ok) throw new Error("Webhook rejected franchise lead");
-  return true;
+function leadNotificationBody(lead: Required<LeadPayload>) {
+  return {
+    ...lead,
+    source: "DomiCha Website",
+    createdAt: new Date().toISOString()
+  };
 }
 
-async function sendToLine(lead: Required<LeadPayload>) {
+async function sendToWebhook(lead: Required<LeadPayload>): Promise<NotificationResult> {
+  const webhookUrl = process.env.DOMICHA_FRANCHISE_LEAD_WEBHOOK_URL;
+  if (!webhookUrl) return { label: "Google Sheet/Email", sent: false };
+
+  try {
+    const response = await fetch(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(leadNotificationBody(lead))
+    });
+
+    if (!response.ok) throw new Error(`Webhook rejected franchise lead (${response.status})`);
+    return { label: "Google Sheet/Email", sent: true };
+  } catch (error) {
+    console.error("Franchise lead webhook notification failed", error);
+    return {
+      label: "Google Sheet/Email",
+      sent: false,
+      error: error instanceof Error ? error.message : "Webhook notification failed"
+    };
+  }
+}
+
+async function sendToLine(lead: Required<LeadPayload>): Promise<NotificationResult> {
   const channelAccessToken = process.env.LINE_CHANNEL_ACCESS_TOKEN;
   const targetId = process.env.LINE_FRANCHISE_LEAD_TARGET_ID;
-  if (!channelAccessToken || !targetId) return false;
+  if (!channelAccessToken || !targetId) return { label: "LINE OA", sent: false };
 
   const text = [
     "มี Lead แฟรนไชส์ใหม่จากเว็บไซต์ DomiCha",
@@ -51,17 +74,26 @@ async function sendToLine(lead: Required<LeadPayload>) {
     `หมายเหตุ: ${lead.note || "-"}`
   ].join("\n");
 
-  const response = await fetch("https://api.line.me/v2/bot/message/push", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${channelAccessToken}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ to: targetId, messages: [{ type: "text", text }] })
-  });
+  try {
+    const response = await fetch("https://api.line.me/v2/bot/message/push", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${channelAccessToken}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ to: targetId, messages: [{ type: "text", text }] })
+    });
 
-  if (!response.ok) throw new Error("LINE rejected franchise lead");
-  return true;
+    if (!response.ok) throw new Error(`LINE rejected franchise lead (${response.status})`);
+    return { label: "LINE OA", sent: true };
+  } catch (error) {
+    console.error("Franchise lead LINE notification failed", error);
+    return {
+      label: "LINE OA",
+      sent: false,
+      error: error instanceof Error ? error.message : "LINE notification failed"
+    };
+  }
 }
 
 async function saveLead(lead: Required<LeadPayload>) {
@@ -115,17 +147,19 @@ export async function POST(request: NextRequest) {
     const validation = validateLead(lead);
     if (validation) return NextResponse.json({ error: validation }, { status: 400 });
 
-    const destinations: string[] = [];
     const savedLead = await saveLead(lead);
+    const notificationResults = await Promise.all([sendToWebhook(lead), sendToLine(lead)]);
+    const destinations: string[] = [];
     if (savedLead) destinations.push("ระบบหลังบ้าน");
-    if (await sendToWebhook(lead)) destinations.push("Webhook");
-    if (await sendToLine(lead)) destinations.push("LINE OA");
+    destinations.push(...notificationResults.filter((result) => result.sent).map((result) => result.label));
+    const notificationErrors = notificationResults.filter((result) => result.error);
 
     return NextResponse.json({
       ok: true,
       message: destinations.length
         ? `รับข้อมูลแล้ว ส่งต่อไปยัง ${destinations.join(" และ ")} เรียบร้อย`
-        : "รับข้อมูลตัวอย่างแล้ว ตั้งค่า Webhook หรือ LINE OA เพื่อส่ง lead จริง"
+        : "รับข้อมูลตัวอย่างแล้ว ตั้งค่า Google Sheet/Email หรือ LINE OA เพื่อส่ง lead จริง",
+      notificationErrors: notificationErrors.length ? notificationErrors : undefined
     });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "ส่งข้อมูลไม่สำเร็จ" }, { status: 500 });
