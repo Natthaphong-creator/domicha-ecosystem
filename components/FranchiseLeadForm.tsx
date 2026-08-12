@@ -37,7 +37,7 @@ export function FranchiseLeadForm() {
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(payload.error || "ส่งข้อมูลไม่สำเร็จ");
-      setMessage(payload.message || "รับข้อมูลแล้ว ทีมงาน DomiCha จะติดต่อกลับ");
+      setMessage(payload.message || "รับข้อมูลแล้ว");
       setForm({ name: "", contact: "", location: "", budget: budgets[0], note: "" });
     } catch (err) {
       setError(err instanceof Error ? err.message : "ส่งข้อมูลไม่สำเร็จ");
