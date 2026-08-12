@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
-import { canAccessRole, isOwnerUserId } from "@/lib/ownerAccess";
+import { canAccessRole, isOwnerUserId, normalizeRole } from "@/lib/ownerAccess";
 
 export function createSupabaseRouteClient(request: NextRequest) {
   const token = request.headers.get("authorization")?.replace("Bearer ", "");
@@ -61,7 +61,7 @@ export async function requireUserRole(request: NextRequest, allowedRoles: string
 
   const normalizedProfile = isOwnerUserId(auth.user.id)
     ? { ...profile, role: "Admin" }
-    : profile;
+    : { ...profile, role: normalizeRole(profile.role) };
 
   if (!canAccessRole(auth.user.id, normalizedProfile.role, allowedRoles)) {
     return { ...auth, profile: normalizedProfile, response: NextResponse.json({ error: "ไม่มีสิทธิ์ใช้งานส่วนนี้" }, { status: 403 }) };

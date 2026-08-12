@@ -1,4 +1,4 @@
-export type UserRole = "Admin" | "Sales" | "Accountant" | "Franchisee";
+export type UserRole = "Admin" | "Executive" | "Manager" | "AssistantManager" | "Sales" | "Accountant" | "Franchisee";
 export type Status = "Active" | "Inactive";
 export type CustomerType = "Retail" | "Franchisee" | "Corporate";
 export type VatType = "VAT 7%" | "No VAT" | "VAT Included";

@@ -1,9 +1,10 @@
 import type { FormField } from "@/lib/types";
 
 export const roles = [
-  { label: "ผู้ดูแลระบบ", value: "Admin" },
-  { label: "ฝ่ายขาย", value: "Sales" },
-  { label: "บัญชี", value: "Accountant" },
+  { label: "Admin", value: "Admin" },
+  { label: "ผู้บริหาร", value: "Executive" },
+  { label: "ผู้จัดการ", value: "Manager" },
+  { label: "ผู้ช่วยผู้จัดการ", value: "AssistantManager" },
   { label: "แฟรนไชส์ซี", value: "Franchisee" }
 ];
 

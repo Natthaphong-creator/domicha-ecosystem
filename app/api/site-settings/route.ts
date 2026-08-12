@@ -12,7 +12,7 @@ export async function GET() {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const auth = await requireUserRole(request, ["Admin", "Sales"]);
+    const auth = await requireUserRole(request, ["Admin"]);
     if ("response" in auth) return auth.response;
 
     const settings = cleanSiteSettings(await request.json());

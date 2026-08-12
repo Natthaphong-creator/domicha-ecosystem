@@ -87,7 +87,7 @@ async function saveLead(lead: Required<LeadPayload>) {
 
 export async function GET(request: NextRequest) {
   try {
-    const auth = await requireUserRole(request, ["Admin", "Sales"]);
+    const auth = await requireUserRole(request, ["Admin", "Executive", "Manager", "AssistantManager"]);
     if ("response" in auth) return auth.response;
 
     const { data, error } = await auth.supabase
@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const auth = await requireUserRole(request, ["Admin", "Sales"]);
+    const auth = await requireUserRole(request, ["Admin", "Manager", "AssistantManager"]);
     if ("response" in auth) return auth.response;
 
     const payload = await request.json();

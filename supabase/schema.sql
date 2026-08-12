@@ -1,6 +1,6 @@
 create extension if not exists "pgcrypto";
 
-create type user_role as enum ('Admin', 'Sales', 'Accountant', 'Franchisee');
+create type user_role as enum ('Admin', 'Executive', 'Manager', 'AssistantManager', 'Sales', 'Accountant', 'Franchisee');
 create type status_type as enum ('Active', 'Inactive');
 create type customer_type as enum ('Retail', 'Franchisee', 'Corporate');
 create type vat_type as enum ('VAT 7%', 'No VAT', 'VAT Included');
@@ -394,12 +394,12 @@ create policy "Authenticated users read active branches" on public.branches for 
 create policy "HQ users manage branches" on public.branches for all using (
   exists (
     select 1 from public.users u
-    where u.id = auth.uid() and u.role in ('Admin', 'Sales', 'Accountant')
+    where u.id = auth.uid() and u.role in ('Admin', 'Manager')
   )
 ) with check (
   exists (
     select 1 from public.users u
-    where u.id = auth.uid() and u.role in ('Admin', 'Sales', 'Accountant')
+    where u.id = auth.uid() and u.role in ('Admin', 'Manager')
   )
 );
 
@@ -407,36 +407,36 @@ create policy "Franchisees read own profile" on public.franchisee_profiles for s
 create policy "HQ users read franchisees" on public.franchisee_profiles for select using (
   exists (
     select 1 from public.users u
-    where u.id = auth.uid() and u.role in ('Admin', 'Sales', 'Accountant')
+    where u.id = auth.uid() and u.role in ('Admin', 'Executive', 'Manager')
   )
 );
 create policy "HQ users manage franchisees" on public.franchisee_profiles for all using (
   exists (
     select 1 from public.users u
-    where u.id = auth.uid() and u.role in ('Admin', 'Sales', 'Accountant')
+    where u.id = auth.uid() and u.role in ('Admin', 'Manager')
   )
 ) with check (
   exists (
     select 1 from public.users u
-    where u.id = auth.uid() and u.role in ('Admin', 'Sales', 'Accountant')
+    where u.id = auth.uid() and u.role in ('Admin', 'Manager')
   )
 );
 
 create policy "HQ users read franchise leads" on public.franchise_leads for select using (
   exists (
     select 1 from public.users u
-    where u.id = auth.uid() and u.role in ('Admin', 'Sales')
+    where u.id = auth.uid() and u.role in ('Admin', 'Executive', 'Manager', 'AssistantManager')
   )
 );
 create policy "HQ users manage franchise leads" on public.franchise_leads for update using (
   exists (
     select 1 from public.users u
-    where u.id = auth.uid() and u.role in ('Admin', 'Sales')
+    where u.id = auth.uid() and u.role in ('Admin', 'Manager', 'AssistantManager')
   )
 ) with check (
   exists (
     select 1 from public.users u
-    where u.id = auth.uid() and u.role in ('Admin', 'Sales')
+    where u.id = auth.uid() and u.role in ('Admin', 'Manager', 'AssistantManager')
   )
 );
 
@@ -468,12 +468,12 @@ create policy "Anyone can read public site settings" on public.site_settings for
 create policy "HQ users manage site settings" on public.site_settings for all using (
   exists (
     select 1 from public.users u
-    where u.id = auth.uid() and u.role in ('Admin', 'Sales')
+    where u.id = auth.uid() and u.role = 'Admin'
   )
 ) with check (
   exists (
     select 1 from public.users u
-    where u.id = auth.uid() and u.role in ('Admin', 'Sales')
+    where u.id = auth.uid() and u.role = 'Admin'
   )
 );
 
@@ -489,18 +489,18 @@ create policy "Franchisees create own orders" on public.franchisee_orders for in
 create policy "HQ users read franchisee orders" on public.franchisee_orders for select using (
   exists (
     select 1 from public.users u
-    where u.id = auth.uid() and u.role in ('Admin', 'Sales', 'Accountant')
+    where u.id = auth.uid() and u.role in ('Admin', 'Executive', 'Manager', 'AssistantManager')
   )
 );
 create policy "HQ users manage franchisee orders" on public.franchisee_orders for update using (
   exists (
     select 1 from public.users u
-    where u.id = auth.uid() and u.role in ('Admin', 'Sales', 'Accountant')
+    where u.id = auth.uid() and u.role in ('Admin', 'Manager')
   )
 ) with check (
   exists (
     select 1 from public.users u
-    where u.id = auth.uid() and u.role in ('Admin', 'Sales', 'Accountant')
+    where u.id = auth.uid() and u.role in ('Admin', 'Manager')
   )
 );
 
@@ -519,7 +519,7 @@ create policy "Franchisees create own order items" on public.franchisee_order_it
 create policy "HQ users read franchisee order items" on public.franchisee_order_items for select using (
   exists (
     select 1 from public.users u
-    where u.id = auth.uid() and u.role in ('Admin', 'Sales', 'Accountant')
+    where u.id = auth.uid() and u.role in ('Admin', 'Executive', 'Manager', 'AssistantManager')
   )
 );
 
