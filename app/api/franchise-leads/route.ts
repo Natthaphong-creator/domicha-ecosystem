@@ -167,18 +167,13 @@ export async function POST(request: NextRequest) {
     const validation = validateLead(lead);
     if (validation) return NextResponse.json({ error: validation }, { status: 400 });
 
-    const savedLead = await saveLead(lead);
+    await saveLead(lead);
     const notificationResults = await Promise.all([sendToWebhook(lead), sendToLine(lead)]);
-    const destinations: string[] = [];
-    if (savedLead) destinations.push("ระบบหลังบ้าน");
-    destinations.push(...notificationResults.filter((result) => result.sent).map((result) => result.label));
     const notificationErrors = notificationResults.filter((result) => result.error);
 
     return NextResponse.json({
       ok: true,
-      message: destinations.length
-        ? `รับข้อมูลแล้ว ส่งต่อไปยัง ${destinations.join(" และ ")} เรียบร้อย`
-        : "รับข้อมูลตัวอย่างแล้ว ตั้งค่า Google Sheet/Email หรือ LINE OA เพื่อส่ง lead จริง",
+      message: "รับข้อมูลแล้ว",
       notificationErrors: notificationErrors.length ? notificationErrors : undefined
     });
   } catch (error) {
