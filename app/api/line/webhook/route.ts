@@ -39,6 +39,11 @@ function getTargetId(event: LineWebhookEvent) {
   return event.source?.userId || "";
 }
 
+function isSetupCommand(text: string) {
+  const normalized = text.trim().toLowerCase();
+  return ["ตั้งค่าแจ้งเตือน", "แจ้งเตือนแฟรนไชส์", "แจ้งเตือน", "ทดสอบ", "test", "lead"].some((keyword) => normalized.includes(keyword));
+}
+
 async function replyLine(replyToken: string | undefined, text: string) {
   const channelAccessToken = await getLineChannelAccessToken();
   if (!channelAccessToken || !replyToken) return;
@@ -58,6 +63,25 @@ async function replyLine(replyToken: string | undefined, text: string) {
   if (!response.ok) {
     console.error("LINE webhook reply failed", response.status, await response.text());
   }
+}
+
+async function saveLineWebhookLog(event: LineWebhookEvent) {
+  const supabase = getSupabaseAdmin();
+  if (!supabase) return;
+
+  const { error } = await supabase.from("site_settings").upsert({
+    key: "line_webhook_last_event",
+    value: {
+      eventType: event.type,
+      messageType: event.message?.type || "",
+      text: event.message?.text || "",
+      sourceType: event.source?.type || "",
+      hasTargetId: Boolean(getTargetId(event)),
+      updatedAt: new Date().toISOString()
+    }
+  });
+
+  if (error) console.error("Save LINE webhook log failed", error);
 }
 
 async function saveLeadTarget(event: LineWebhookEvent) {
@@ -99,19 +123,15 @@ export async function POST(request: NextRequest) {
 
   const events = body.events || [];
   await Promise.all(events.map(async (event) => {
+    await saveLineWebhookLog(event);
     if (event.type !== "message" || event.message?.type !== "text") return;
 
-    const text = (event.message.text || "").trim();
-    if (!["ตั้งค่าแจ้งเตือน", "แจ้งเตือนแฟรนไชส์", "lead"].includes(text.toLowerCase())) return;
+    const text = event.message.text || "";
+    if (!isSetupCommand(text)) return;
 
     const saved = await saveLeadTarget(event);
-    await replyLine(
-      event.replyToken,
-      saved
-        ? "ตั้งค่าแจ้งเตือน Lead แฟรนไชส์เรียบร้อยแล้วครับ หลังจากนี้ถ้ามีลูกค้ากรอกฟอร์ม เว็บไซต์จะส่งแจ้งเตือนเข้าห้องนี้"
-        : "ยังตั้งค่าแจ้งเตือนไม่สำเร็จครับ กรุณาตรวจสอบการตั้งค่า Supabase/LINE ในระบบ"
-    );
+    await replyLine(event.replyToken, saved ? "รับข้อมูลแล้ว" : "ยังตั้งค่าแจ้งเตือนไม่สำเร็จครับ");
   }));
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, received: events.length });
 }
