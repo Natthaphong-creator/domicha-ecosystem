@@ -65,7 +65,7 @@ async function findAuthUserIdByEmail(admin: ReturnType<typeof getSupabaseAdmin>,
 
 export async function GET(request: NextRequest) {
   try {
-    const auth = await requireUserRole(request, ["Admin", "Sales", "Accountant"]);
+    const auth = await requireUserRole(request, ["Admin", "Executive", "Manager"]);
     if ("response" in auth) return auth.response;
 
     const admin = getSupabaseAdmin();
@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const auth = await requireUserRole(request, ["Admin"]);
+    const auth = await requireUserRole(request, ["Admin", "Manager"]);
     if ("response" in auth) return auth.response;
 
     const admin = getSupabaseAdmin();
