@@ -138,7 +138,7 @@ function buildOrderFlexMessage(order: {
 
 export async function GET(request: NextRequest) {
   try {
-    const auth = await requireUserRole(request, ["Admin", "Sales", "Accountant", "Franchisee"]);
+    const auth = await requireUserRole(request, ["Admin", "Executive", "Manager", "AssistantManager", "Franchisee"]);
     if ("response" in auth) return auth.response;
     if (!("profile" in auth)) {
       return NextResponse.json({ error: "ไม่พบข้อมูลผู้ใช้งาน" }, { status: 403 });
