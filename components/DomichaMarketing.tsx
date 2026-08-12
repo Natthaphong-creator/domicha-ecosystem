@@ -292,7 +292,7 @@ function Hero({ franchise = false }: { franchise?: boolean }) {
           </h1>
           <p className="mt-6 max-w-2xl text-lg font-semibold leading-8 text-[#6a4a35]">
             {franchise
-              ? "แฟรนไชส์ที่สื่อสารพอดี เห็นภาพชัด และสงวนสูตร ต้นทุน SOP รวมถึงรายละเอียดลึกไว้หลังการประเมิน"
+              ? "เห็นภาพการเริ่มต้นชัดเจน พร้อมรับคำแนะนำแพ็กเกจที่เหมาะกับงบ ทำเล และรูปแบบร้านของคุณ"
               : "ชานมไข่มุก เมนูดื่มง่าย ไข่มุกหนึบ และมาสคอทแมว DomiCha ที่ทำให้หน้าร้านดูอบอุ่น เป็นมิตร และถ่ายรูปขึ้น"}
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -393,9 +393,9 @@ function FranchiseModelSection() {
         <div className="grid gap-8 lg:grid-cols-[.85fr_1.15fr] lg:items-end">
           <div>
             <p className="text-sm font-black uppercase tracking-[.22em] text-[#feebc8]">Franchise Model</p>
-            <h2 className="mt-3 text-4xl font-black leading-tight sm:text-5xl">โชว์จุดตัดสินใจให้ชัด แต่สงวนรายละเอียดสำคัญของแบรนด์</h2>
+            <h2 className="mt-3 text-4xl font-black leading-tight sm:text-5xl">เห็นภาพการเริ่มต้นชัด ก่อนคุยรายละเอียดเชิงลึกกับทีม DomiCha</h2>
           </div>
-          <p className="text-base font-semibold leading-8 text-white/72">หน้าเว็บบอกสิ่งที่ผู้สนใจควรรู้: เริ่มง่าย มีทีมงานช่วยดูแล และเลือกแพ็กเกจตามทำเลได้ ส่วนสูตร ต้นทุน รายการอุปกรณ์ และ SOP ฉบับเต็มค่อยคุยหลังประเมินเบื้องต้น</p>
+          <p className="text-base font-semibold leading-8 text-white/72">หน้าเว็บสรุปสิ่งที่ผู้สนใจควรรู้ก่อนตัดสินใจ เช่น รูปแบบร้าน แนวทางสนับสนุน เมนูหลัก และขั้นตอนเริ่มต้น ส่วนรายละเอียดเชิงลึก ทีมงานจะแนะนำหลังประเมินทำเล งบประมาณ และความพร้อมเบื้องต้น</p>
         </div>
         <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {decisionKeywords.map((keyword) => (
@@ -434,8 +434,8 @@ function FranchiseModelSection() {
             </div>
           </div>
           <div className="rounded-lg border border-[#feebc8]/24 bg-[#2a1a13] p-6">
-            <h3 className="text-2xl font-black">รายละเอียดที่สงวนไว้</h3>
-            <p className="mt-3 text-sm font-semibold leading-7 text-white/70">รายละเอียดแพ็กเกจ สูตร ต้นทุน และรายการอุปกรณ์ฉบับเต็ม สงวนไว้สำหรับผู้ที่ผ่านการประเมินเบื้องต้นโดยทีมงาน DomiCha เพื่อปกป้องมาตรฐานของแบรนด์และลดการลอกแบบ</p>
+            <h3 className="text-2xl font-black">รายละเอียดเชิงลึกหลังประเมิน</h3>
+            <p className="mt-3 text-sm font-semibold leading-7 text-white/70">ทีมงานจะอธิบายรายละเอียดแพ็กเกจ สูตร ต้นทุน รายการอุปกรณ์ และ SOP ฉบับเต็ม หลังประเมินทำเล งบประมาณ และความพร้อมเบื้องต้น เพื่อให้คำแนะนำตรงกับรูปแบบร้านจริงและรักษามาตรฐานของแบรนด์</p>
             <div className="mt-5 flex flex-wrap gap-2">
               {protectedDetails.map((item) => <span key={item} className="rounded-full border border-white/12 bg-white/8 px-3 py-1.5 text-xs font-bold text-white/82">{item}</span>)}
             </div>
