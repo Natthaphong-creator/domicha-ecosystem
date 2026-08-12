@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 import { handleRouteError, requireUserRole } from "@/lib/supabaseServer";
+import { getLineChannelAccessToken } from "@/lib/lineMessaging";
 
 type LeadPayload = {
   name?: string;
@@ -61,8 +62,8 @@ async function sendToWebhook(lead: Required<LeadPayload>): Promise<NotificationR
 }
 
 async function sendToLine(lead: Required<LeadPayload>): Promise<NotificationResult> {
-  const channelAccessToken = process.env.LINE_CHANNEL_ACCESS_TOKEN;
-  const targetId = process.env.LINE_FRANCHISE_LEAD_TARGET_ID;
+  const channelAccessToken = await getLineChannelAccessToken();
+  const targetId = process.env.LINE_FRANCHISE_LEAD_TARGET_ID || await getSavedLineLeadTargetId();
   if (!channelAccessToken || !targetId) return { label: "LINE OA", sent: false };
 
   const text = [
@@ -94,6 +95,25 @@ async function sendToLine(lead: Required<LeadPayload>): Promise<NotificationResu
       error: error instanceof Error ? error.message : "LINE notification failed"
     };
   }
+}
+
+async function getSavedLineLeadTargetId() {
+  const supabase = getSupabaseAdmin();
+  if (!supabase) return "";
+
+  const { data, error } = await supabase
+    .from("site_settings")
+    .select("value")
+    .eq("key", "line_franchise_lead_target")
+    .maybeSingle();
+
+  if (error) {
+    console.error("Load LINE franchise lead target failed", error);
+    return "";
+  }
+
+  const value = data?.value as { targetId?: string } | null | undefined;
+  return value?.targetId || "";
 }
 
 async function saveLead(lead: Required<LeadPayload>) {
