@@ -15,8 +15,59 @@ type ImportRow = {
   locationNote?: string;
 };
 
+const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/117qoLgTd1LJnBFwzVcaGVeYiuG0-AXN621pzmtH7eBQ/export?format=csv&gid=0";
+
 function cleanText(value: unknown, maxLength: number) {
   return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
+}
+
+function parseCsv(text: string) {
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let cell = "";
+  let quoted = false;
+
+  for (let index = 0; index < text.length; index += 1) {
+    const char = text[index];
+    const next = text[index + 1];
+    if (char === '"' && quoted && next === '"') {
+      cell += '"';
+      index += 1;
+    } else if (char === '"') {
+      quoted = !quoted;
+    } else if (char === "," && !quoted) {
+      row.push(cell);
+      cell = "";
+    } else if ((char === "\n" || char === "\r") && !quoted) {
+      if (char === "\r" && next === "\n") index += 1;
+      row.push(cell);
+      if (row.some((value) => value.trim())) rows.push(row);
+      row = [];
+      cell = "";
+    } else {
+      cell += char;
+    }
+  }
+
+  row.push(cell);
+  if (row.some((value) => value.trim())) rows.push(row);
+  return rows;
+}
+
+function sheetCellsToRows(rows: string[][]): ImportRow[] {
+  return rows
+    .filter((cells) => cells.length >= 7)
+    .filter((cells) => cells[0]?.trim() !== "เลขสาขา")
+    .map((cells) => ({
+      branchCode: cells[0] || "",
+      ownerName: cells[1] || "",
+      shippingAddress: cells[2] || "",
+      phone: cells[3] || "",
+      taxId: cells[4] || "",
+      branchName: cells[5] || "",
+      province: cells[6] || "",
+      locationNote: cells[10] || ""
+    }));
 }
 
 function cleanBranchCode(value: string) {
@@ -57,8 +108,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "ยังไม่ได้ตั้งค่า SUPABASE_SERVICE_ROLE_KEY สำหรับนำเข้าบัญชีแฟรนไชส์ซี" }, { status: 503 });
     }
 
-    const payload = (await request.json()) as { rows?: ImportRow[] };
-    const rows = Array.isArray(payload.rows) ? payload.rows.slice(0, 200) : [];
+    const payload = (await request.json()) as { rows?: ImportRow[]; source?: "sheet" | "paste" };
+    let rows = Array.isArray(payload.rows) ? payload.rows.slice(0, 200) : [];
+
+    if (payload.source === "sheet") {
+      const response = await fetch(SHEET_CSV_URL, { cache: "no-store" });
+      const text = await response.text();
+      if (!response.ok || text.trim().startsWith("<!DOCTYPE")) {
+        return NextResponse.json({ error: "Google Sheet ยังไม่ได้เปิดสิทธิ์ export CSV ให้ระบบอ่าน กรุณาใช้วิธี copy แถวจาก Sheet มาวางแทน" }, { status: 400 });
+      }
+      rows = sheetCellsToRows(parseCsv(text)).slice(0, 200);
+    }
+
     if (!rows.length) return NextResponse.json({ error: "ไม่พบข้อมูลสำหรับนำเข้า" }, { status: 400 });
 
     const accounts: Array<{ branchCode: string; branchName: string; email: string; password: string; status: string }> = [];
@@ -146,6 +207,10 @@ export async function POST(request: NextRequest) {
       if (profileError) throw profileError;
 
       accounts.push({ branchCode, branchName, email, password, status });
+    }
+
+    if (!accounts.length) {
+      return NextResponse.json({ error: "นำเข้าไม่สำเร็จ เพราะระบบอ่านข้อมูลไม่ครบ ต้องมีเลขสาขา ชื่อลูกค้า เบอร์โทร และชื่อสาขา" }, { status: 400 });
     }
 
     return NextResponse.json({ ok: true, imported: accounts.length, accounts });
