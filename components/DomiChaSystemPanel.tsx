@@ -30,8 +30,12 @@ function timeThai(value: string) {
   return date.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" });
 }
 
-function openable(url: string) {
-  return Boolean(url && /^https?:\/\//.test(url));
+function isExternalUrl(url: string) {
+  return /^https?:\/\//.test(url);
+}
+
+function hasSystemUrl(url: string) {
+  return Boolean(url && (isExternalUrl(url) || url.startsWith("/")));
 }
 
 export function DomiChaSystemPanel({ initial }: { initial: DomiChaSystemSummary }) {
@@ -123,16 +127,26 @@ export function DomiChaSystemPanel({ initial }: { initial: DomiChaSystemSummary 
                   <p className="mt-1 text-sm leading-6 text-slate-500">{app.detail}</p>
                 </div>
               </div>
-              {openable(app.url) ? (
-                <a
-                  href={app.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-3 text-sm font-bold text-white hover:bg-orange-600"
-                >
-                  เปิดระบบ
-                  <ExternalLink className="h-4 w-4" />
-                </a>
+              {hasSystemUrl(app.url) ? (
+                isExternalUrl(app.url) ? (
+                  <a
+                    href={app.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-3 text-sm font-bold text-white hover:bg-orange-600"
+                  >
+                    เปิดระบบ
+                    <ExternalLink className="h-4 w-4" />
+                  </a>
+                ) : (
+                  <Link
+                    href={app.url}
+                    className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-3 text-sm font-bold text-white hover:bg-orange-600"
+                  >
+                    เปิดระบบ
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                )
               ) : (
                 <Link
                   href="/settings"
