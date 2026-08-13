@@ -80,6 +80,7 @@ export default function FranchiseesPage() {
   const [success, setSuccess] = useState<{ email: string; password: string } | null>(null);
   const [importedAccounts, setImportedAccounts] = useState<ImportAccount[]>([]);
   const [sheetPaste, setSheetPaste] = useState("");
+  const pastedRows = parsePastedRows(sheetPaste);
 
   async function loadFranchisees() {
     setLoading(true);
@@ -121,27 +122,28 @@ export default function FranchiseesPage() {
     }
   }
 
-  function parsePastedRows() {
-    return sheetPaste
+  function parsePastedRows(value: string) {
+    return value
       .trim()
       .split(/\r?\n/)
       .map((line) => line.split("\t"))
       .filter((cells) => cells.length >= 7)
-      .filter((cells) => cells[0] !== "เลขสาขา")
+      .filter((cells) => cells[0]?.trim() !== "เลขสาขา")
       .map((cells) => ({
-        branchCode: cells[0] || "",
-        ownerName: cells[1] || "",
-        shippingAddress: cells[2] || "",
-        phone: cells[3] || "",
-        taxId: cells[4] || "",
-        branchName: cells[5] || "",
-        province: cells[6] || "",
-        locationNote: cells[10] || ""
-      }));
+        branchCode: cells[0]?.trim() || "",
+        ownerName: cells[1]?.trim() || "",
+        shippingAddress: cells[2]?.trim() || "",
+        phone: cells[3]?.trim() || "",
+        taxId: cells[4]?.trim() || "",
+        branchName: cells[5]?.trim() || "",
+        province: cells[6]?.trim() || "",
+        locationNote: cells[10]?.trim() || ""
+      }))
+      .filter((row) => row.branchCode && row.ownerName && row.phone && row.branchName);
   }
 
   async function importFromSheet(source: "paste" | "sheet") {
-    const rows = source === "paste" ? parsePastedRows() : [];
+    const rows = source === "paste" ? pastedRows : [];
 
     if (source === "paste" && !rows.length) {
       setError("กรุณาคัดลอกแถวจาก Google Sheet แล้ววางในช่องนำเข้าก่อน");
@@ -157,7 +159,11 @@ export default function FranchiseesPage() {
         method: "POST",
         body: JSON.stringify({ rows, source })
       });
-      setImportedAccounts(result.accounts || []);
+      const accounts = result.accounts || [];
+      if (!accounts.length) {
+        throw new Error("ระบบรับคำสั่งแล้ว แต่ยังไม่มีบัญชีถูกสร้าง กรุณาตรวจว่าคัดลอกข้อมูลครบตั้งแต่คอลัมน์ A ถึง K");
+      }
+      setImportedAccounts(accounts);
       await loadFranchisees();
     } catch (importError) {
       setError(importError instanceof Error ? importError.message : "นำเข้าบัญชีจาก Sheet ไม่สำเร็จ");
@@ -184,7 +190,10 @@ export default function FranchiseesPage() {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h2 className="text-xl font-bold">นำเข้าบัญชีจาก Google Sheet</h2>
-            <p className="mt-1 text-sm text-slate-500">คัดลอกแถวจาก Sheet ตั้งแต่คอลัมน์เลขสาขาถึง Status แล้ววางตรงนี้ ระบบจะสร้าง Login เป็น dmc0001@domichathailand.com</p>
+            <p className="mt-1 text-sm text-slate-500">คัดลอกแถวจาก Sheet ตั้งแต่คอลัมน์ A ถึง K แล้ววางตรงนี้ ระบบจะสร้าง Login เป็น dmc0001@domichathailand.com</p>
+            <p className="mt-2 text-xs font-semibold text-orange-600">
+              ตอนนี้ระบบอ่านข้อมูลได้ {pastedRows.length} สาขา
+            </p>
           </div>
           <button
             type="button"
@@ -210,6 +219,9 @@ export default function FranchiseesPage() {
           className="mt-4 w-full rounded-2xl border-slate-200 font-mono text-xs"
           placeholder={"DMC0001\tคุณ...\tที่อยู่...\tเบอร์โทร...\tเลขภาษี...\tชื่อสาขา...\tจังหวัด..."}
         />
+        <div className="mt-3 rounded-2xl bg-orange-50 p-4 text-sm leading-6 text-orange-900">
+          วิธีที่แนะนำ: เปิด Google Sheet แล้วลากเลือกข้อมูลตั้งแต่คอลัมน์ A ถึง K ของแถวที่ต้องการ จากนั้นกด Copy แล้วนำมาวางในช่องนี้ก่อนกดนำเข้า
+        </div>
       </section>
 
       {importedAccounts.length ? (
