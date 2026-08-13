@@ -34,6 +34,14 @@ type FormState = {
   status: "Pending" | "Active" | "Suspended";
 };
 
+type ImportAccount = {
+  branchCode: string;
+  branchName: string;
+  email: string;
+  password: string;
+  status: string;
+};
+
 const initialForm: FormState = {
   email: "",
   password: "",
@@ -67,8 +75,11 @@ export default function FranchiseesPage() {
   const [form, setForm] = useState<FormState>({ ...initialForm, password: makePassword() });
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [importing, setImporting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState<{ email: string; password: string } | null>(null);
+  const [importedAccounts, setImportedAccounts] = useState<ImportAccount[]>([]);
+  const [sheetPaste, setSheetPaste] = useState("");
 
   async function loadFranchisees() {
     setLoading(true);
@@ -110,6 +121,47 @@ export default function FranchiseesPage() {
     }
   }
 
+  async function importFromSheet() {
+    const rows = sheetPaste
+      .trim()
+      .split(/\r?\n/)
+      .map((line) => line.split("\t"))
+      .filter((cells) => cells.length >= 7)
+      .filter((cells) => cells[0] !== "เลขสาขา")
+      .map((cells) => ({
+        branchCode: cells[0] || "",
+        ownerName: cells[1] || "",
+        shippingAddress: cells[2] || "",
+        phone: cells[3] || "",
+        taxId: cells[4] || "",
+        branchName: cells[5] || "",
+        province: cells[6] || "",
+        locationNote: cells[10] || ""
+      }));
+
+    if (!rows.length) {
+      setError("กรุณาคัดลอกแถวจาก Google Sheet แล้ววางในช่องนำเข้าก่อน");
+      return;
+    }
+
+    setImporting(true);
+    setError("");
+    setSuccess(null);
+    setImportedAccounts([]);
+    try {
+      const result = await apiFetch<{ accounts: ImportAccount[] }>("/api/franchisees/import-sheet", {
+        method: "POST",
+        body: JSON.stringify({ rows })
+      });
+      setImportedAccounts(result.accounts || []);
+      await loadFranchisees();
+    } catch (importError) {
+      setError(importError instanceof Error ? importError.message : "นำเข้าบัญชีจาก Sheet ไม่สำเร็จ");
+    } finally {
+      setImporting(false);
+    }
+  }
+
   return (
     <div className="space-y-6">
       <section className="overflow-hidden rounded-[28px] bg-slate-950 p-6 text-white shadow-xl shadow-slate-950/10 sm:p-8">
@@ -123,6 +175,47 @@ export default function FranchiseesPage() {
           </p>
         </div>
       </section>
+
+      <section className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-bold">นำเข้าบัญชีจาก Google Sheet</h2>
+            <p className="mt-1 text-sm text-slate-500">คัดลอกแถวจาก Sheet ตั้งแต่คอลัมน์เลขสาขาถึง Status แล้ววางตรงนี้ ระบบจะสร้าง Login เป็น dmc0001@domichathailand.com</p>
+          </div>
+          <button
+            type="button"
+            onClick={importFromSheet}
+            disabled={importing}
+            className="inline-flex h-11 items-center gap-2 rounded-2xl bg-slate-950 px-4 text-sm font-bold text-white shadow-lg shadow-slate-950/10 disabled:opacity-60"
+          >
+            <RefreshCcw className="h-4 w-4" /> {importing ? "กำลังนำเข้า..." : "นำเข้าจากข้อมูลที่วาง"}
+          </button>
+        </div>
+        <textarea
+          value={sheetPaste}
+          onChange={(event) => setSheetPaste(event.target.value)}
+          rows={5}
+          className="mt-4 w-full rounded-2xl border-slate-200 font-mono text-xs"
+          placeholder={"DMC0001\tคุณ...\tที่อยู่...\tเบอร์โทร...\tเลขภาษี...\tชื่อสาขา...\tจังหวัด..."}
+        />
+      </section>
+
+      {importedAccounts.length ? (
+        <section className="rounded-[28px] border border-emerald-100 bg-emerald-50 p-5 text-emerald-900 shadow-sm sm:p-6">
+          <h2 className="text-lg font-black">นำเข้าจาก Sheet สำเร็จ {importedAccounts.length} สาขา</h2>
+          <p className="mt-1 text-sm">ส่งข้อมูล Login นี้ให้แฟรนไชส์ซีเพื่อเข้าใช้งานหน้าสั่งซื้อวัตถุดิบ</p>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {importedAccounts.map((account) => (
+              <article key={account.branchCode} className="rounded-2xl bg-white p-4 text-sm shadow-sm">
+                <p className="font-black">{account.branchCode} • {account.branchName}</p>
+                <p className="mt-2 text-slate-600">Login: <b>{account.email}</b></p>
+                <p className="text-slate-600">รหัสผ่าน: <b>{account.password}</b></p>
+                <p className="mt-1 text-xs text-slate-400">สถานะ: {account.status}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,520px)_1fr]">
         <form onSubmit={submit} className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
