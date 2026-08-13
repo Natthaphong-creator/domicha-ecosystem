@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { productPayload } from "@/lib/productPayload";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 import { handleRouteError, requireUser } from "@/lib/supabaseServer";
 
@@ -7,22 +8,6 @@ const columnsWithoutImage = "id,product_code,product_name,category,unit,cost_pri
 
 function isMissingImageColumn(error: unknown) {
   return JSON.stringify(error).includes("image_url");
-}
-
-function productUpdatePayload(payload: Record<string, unknown>) {
-  return {
-    product_code: payload.product_code,
-    product_name: payload.product_name,
-    category: payload.category,
-    unit: payload.unit,
-    cost_price: payload.cost_price,
-    selling_price: payload.selling_price,
-    image_url: payload.image_url || null,
-    vat_type: payload.vat_type,
-    minimum_stock: payload.minimum_stock,
-    supplier_id: payload.supplier_id || null,
-    status: payload.status
-  };
 }
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
@@ -50,7 +35,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     const db = getSupabaseAdmin() || auth.supabase;
 
     const payload = await request.json();
-    const updatePayload = productUpdatePayload(payload);
+    const updatePayload = productPayload(payload);
     const { data, error } = await db
       .from("products")
       .update(updatePayload)
