@@ -121,8 +121,8 @@ export default function FranchiseesPage() {
     }
   }
 
-  async function importFromSheet() {
-    const rows = sheetPaste
+  function parsePastedRows() {
+    return sheetPaste
       .trim()
       .split(/\r?\n/)
       .map((line) => line.split("\t"))
@@ -138,8 +138,12 @@ export default function FranchiseesPage() {
         province: cells[6] || "",
         locationNote: cells[10] || ""
       }));
+  }
 
-    if (!rows.length) {
+  async function importFromSheet(source: "paste" | "sheet") {
+    const rows = source === "paste" ? parsePastedRows() : [];
+
+    if (source === "paste" && !rows.length) {
       setError("กรุณาคัดลอกแถวจาก Google Sheet แล้ววางในช่องนำเข้าก่อน");
       return;
     }
@@ -151,7 +155,7 @@ export default function FranchiseesPage() {
     try {
       const result = await apiFetch<{ accounts: ImportAccount[] }>("/api/franchisees/import-sheet", {
         method: "POST",
-        body: JSON.stringify({ rows })
+        body: JSON.stringify({ rows, source })
       });
       setImportedAccounts(result.accounts || []);
       await loadFranchisees();
@@ -184,11 +188,19 @@ export default function FranchiseesPage() {
           </div>
           <button
             type="button"
-            onClick={importFromSheet}
+            onClick={() => importFromSheet("paste")}
             disabled={importing}
             className="inline-flex h-11 items-center gap-2 rounded-2xl bg-slate-950 px-4 text-sm font-bold text-white shadow-lg shadow-slate-950/10 disabled:opacity-60"
           >
             <RefreshCcw className="h-4 w-4" /> {importing ? "กำลังนำเข้า..." : "นำเข้าจากข้อมูลที่วาง"}
+          </button>
+          <button
+            type="button"
+            onClick={() => importFromSheet("sheet")}
+            disabled={importing}
+            className="inline-flex h-11 items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 shadow-sm disabled:opacity-60"
+          >
+            <RefreshCcw className="h-4 w-4" /> ดึงจาก Sheet อัตโนมัติ
           </button>
         </div>
         <textarea
