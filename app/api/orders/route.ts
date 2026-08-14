@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createPromptPayPayload, domichaPromptPay } from "@/lib/promptpay";
 import { fetchStockProducts } from "@/lib/stockProducts";
 import { requireUserRole } from "@/lib/supabaseServer";
 
@@ -28,6 +29,13 @@ const orderSelect = `
   payment_method,
   order_status,
   payment_status,
+  payment_confirmed_at,
+  payment_confirmed_by,
+  payment_reference,
+  promptpay_payload,
+  promptpay_account_name,
+  receipt_number,
+  receipt_issued_at,
   subtotal,
   delivery_fee,
   grand_total,
@@ -188,11 +196,11 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (franchiseeError || !franchisee) {
-    return NextResponse.json({ error: "บัญชีนี้ยังไม่ได้ถูกเพิ่มเป็นแฟรนไชส์ซีโดย HQ" }, { status: 403 });
+    return NextResponse.json({ error: "บัญชีนี้ยังไม่ได้ลงทะเบียนเป็นสาขาแฟรนไชส์ซี กรุณาติดต่อทีม DomiCha" }, { status: 403 });
   }
 
   if (franchisee.status !== "Active") {
-    return NextResponse.json({ error: "บัญชีแฟรนไชส์ซีนี้ยังไม่พร้อมใช้งาน กรุณาติดต่อ HQ" }, { status: 403 });
+    return NextResponse.json({ error: "บัญชีแฟรนไชส์ซีนี้ยังไม่พร้อมใช้งาน กรุณาติดต่อทีม DomiCha" }, { status: 403 });
   }
 
   const customerName = cleanText(franchisee.owner_name, 80);
@@ -229,6 +237,9 @@ export async function POST(request: NextRequest) {
   const deliveryFee = deliveryMethod === "delivery" && subtotal > 0 && subtotal < 5_000 ? 80 : 0;
   const total = subtotal + deliveryFee;
   const orderNumber = makeOrderNumber();
+  const promptpayPayload = paymentMethod === "transfer"
+    ? createPromptPayPayload(domichaPromptPay.target, total)
+    : null;
   const { data: savedOrder, error: orderError } = await auth.supabase
     .from("franchisee_orders")
     .insert({
@@ -242,6 +253,8 @@ export async function POST(request: NextRequest) {
       subtotal,
       delivery_fee: deliveryFee,
       grand_total: total,
+      promptpay_payload: promptpayPayload,
+      promptpay_account_name: paymentMethod === "transfer" ? domichaPromptPay.accountName : null,
       note
     })
     .select("id")
@@ -288,7 +301,11 @@ export async function POST(request: NextRequest) {
   if (!channelAccessToken || !targetId) {
     return NextResponse.json({
       ok: true,
+      orderId: savedOrder.id,
       orderNumber,
+      promptpayPayload,
+      promptpayAccountName: paymentMethod === "transfer" ? domichaPromptPay.accountName : null,
+      promptpayTarget: paymentMethod === "transfer" ? domichaPromptPay.target : null,
       total,
       lineNotified: false,
       demoMode: false,
@@ -314,7 +331,11 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({
     ok: true,
+    orderId: savedOrder.id,
     orderNumber,
+    promptpayPayload,
+    promptpayAccountName: paymentMethod === "transfer" ? domichaPromptPay.accountName : null,
+    promptpayTarget: paymentMethod === "transfer" ? domichaPromptPay.target : null,
     total,
     lineNotified: true,
     requestId: lineResponse.headers.get("x-line-request-id") || ""
