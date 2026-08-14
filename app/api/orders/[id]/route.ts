@@ -66,7 +66,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 
 export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const auth = await requireUserRole(request, ["Admin", "Manager"]);
+    const auth = await requireUserRole(request, ["Admin", "Executive", "Manager", "AssistantManager"]);
     if ("response" in auth) return auth.response;
 
     const payload = await request.json().catch(() => ({})) as { action?: string; paymentReference?: string };
