@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getLineChannelAccessToken } from "@/lib/lineMessaging";
+import { deliverReceiptAutomation } from "@/lib/receiptAutomation";
+import type { FranchiseeOrder } from "@/lib/types";
 import { handleRouteError, requireUserRole } from "@/lib/supabaseServer";
 
 const orderSelect = `
@@ -174,7 +176,9 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       .single();
 
     if (error) throw error;
-    return NextResponse.json(data);
+
+    const receiptDelivery = await deliverReceiptAutomation(data as unknown as FranchiseeOrder);
+    return NextResponse.json({ ...data, receipt_delivery: receiptDelivery });
   } catch (error) {
     return handleRouteError(error);
   }
