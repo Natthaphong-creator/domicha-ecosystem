@@ -2,11 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ArrowLeft, Download, Printer } from "lucide-react";
 import { apiFetch } from "@/lib/apiClient";
 import { dateThai, money } from "@/lib/format";
+import { domichaPromptPay } from "@/lib/promptpay";
 import type { FranchiseeOrder } from "@/lib/types";
 
 function methodLabel(value: string) {
@@ -21,6 +22,7 @@ function paymentLabel(value: string) {
 
 export default function OrderDocumentPage() {
   const params = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
   const [order, setOrder] = useState<FranchiseeOrder | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -38,6 +40,12 @@ export default function OrderDocumentPage() {
   const profile = order.franchisee_profiles;
   const items = order.franchisee_order_items || [];
   const printedAt = new Intl.DateTimeFormat("th-TH", { dateStyle: "medium", timeStyle: "short" }).format(new Date());
+  const showReceipt = searchParams.get("doc") === "receipt" || Boolean(order.receipt_number);
+  const documentTitle = showReceipt ? "ใบเสร็จรับเงิน" : "ใบสั่งซื้อแฟรนไชส์ซี";
+  const documentSubtitle = showReceipt ? "Official Receipt" : "Franchisee Purchase Order";
+  const documentNumber = showReceipt ? order.receipt_number || "-" : order.order_number;
+  const documentDate = showReceipt ? order.receipt_issued_at || order.payment_confirmed_at || order.updated_at : order.created_at;
+  const showPromptPay = !showReceipt && order.payment_method === "transfer" && order.payment_status !== "Paid";
 
   return (
     <div className="space-y-5">
@@ -62,14 +70,14 @@ export default function OrderDocumentPage() {
               <Image src="/icons/domicha-original-logo.png" alt="DomiCha" width={74} height={74} className="h-[74px] w-[74px] rounded-2xl bg-white object-contain p-1" />
               <div>
                 <p className="text-xs font-bold uppercase tracking-[.22em] text-orange-300 print:text-orange-600">Domichathailand</p>
-                <h1 className="mt-1 text-2xl font-black">ใบสั่งซื้อแฟรนไชส์ซี</h1>
-                <p className="mt-1 text-sm text-slate-300 print:text-slate-500">Franchisee Purchase Order</p>
+                <h1 className="mt-1 text-2xl font-black">{documentTitle}</h1>
+                <p className="mt-1 text-sm text-slate-300 print:text-slate-500">{documentSubtitle}</p>
               </div>
             </div>
             <div className="rounded-2xl border border-white/10 bg-white/10 p-4 text-right print:border-slate-200 print:bg-slate-50">
               <p className="text-xs text-slate-300 print:text-slate-500">เลขที่เอกสาร</p>
-              <p className="mt-1 text-xl font-black text-orange-300 print:text-orange-600">{order.order_number}</p>
-              <p className="mt-2 text-xs text-slate-300 print:text-slate-500">วันที่ {dateThai(order.created_at)}</p>
+              <p className="mt-1 text-xl font-black text-orange-300 print:text-orange-600">{documentNumber}</p>
+              <p className="mt-2 text-xs text-slate-300 print:text-slate-500">วันที่ {dateThai(documentDate)}</p>
             </div>
           </div>
         </header>
@@ -95,9 +103,62 @@ export default function OrderDocumentPage() {
               <dd className="font-bold">{order.order_status}</dd>
               <dt className="text-slate-500">สถานะชำระ</dt>
               <dd className="font-bold">{order.payment_status}</dd>
+              {showReceipt ? (
+                <>
+                  <dt className="text-slate-500">รับชำระเมื่อ</dt>
+                  <dd className="font-bold">{dateThai(order.payment_confirmed_at)}</dd>
+                </>
+              ) : null}
             </dl>
           </div>
         </section>
+
+        {showReceipt ? (
+          <section className="border-b border-slate-100 px-7 py-5">
+            <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-5 text-emerald-900">
+              <p className="text-xs font-bold uppercase tracking-[.16em] text-emerald-700">Payment Confirmed</p>
+              <p className="mt-2 text-sm leading-6">
+                ได้รับชำระเงินสำหรับคำสั่งซื้อ {order.order_number} เรียบร้อยแล้ว
+                {order.payment_reference ? ` • อ้างอิง: ${order.payment_reference}` : ""}
+              </p>
+            </div>
+          </section>
+        ) : null}
+
+        {showPromptPay ? (
+          <section className="border-b border-slate-100 px-5 py-5 sm:px-7">
+            <div className="rounded-2xl border border-orange-100 bg-orange-50 p-5">
+              <div className="grid gap-5 md:grid-cols-[220px_1fr] md:items-center">
+                <img
+                  src={`/api/promptpay?amount=${encodeURIComponent(String(order.grand_total || 0))}`}
+                  alt="QR PromptPay DomiCha"
+                  className="mx-auto h-56 w-56 rounded-2xl bg-white p-3 shadow-sm md:mx-0"
+                />
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[.18em] text-orange-600">PromptPay Payment</p>
+                  <h2 className="mt-2 text-xl font-black text-slate-950">รอชำระเงินผ่าน QR พร้อมเพย์</h2>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">
+                    ให้แฟรนไชส์ซีสแกน QR ตามยอดคำสั่งซื้อนี้ หลังได้รับสลิป ทีม DomiCha ตรวจสอบยอดแล้วกด “ยืนยันชำระเงิน” ในหลังบ้านเพื่อออกใบเสร็จรับเงิน
+                  </p>
+                  <div className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+                    <div className="rounded-2xl bg-white p-4">
+                      <p className="text-xs text-slate-400">ชื่อบัญชี</p>
+                      <p className="mt-1 font-bold">{order.promptpay_account_name || domichaPromptPay.accountName}</p>
+                    </div>
+                    <div className="rounded-2xl bg-white p-4">
+                      <p className="text-xs text-slate-400">เลขพร้อมเพย์</p>
+                      <p className="mt-1 font-bold">{domichaPromptPay.target}</p>
+                    </div>
+                    <div className="rounded-2xl bg-white p-4 sm:col-span-2">
+                      <p className="text-xs text-slate-400">ยอดที่ต้องชำระ</p>
+                      <p className="mt-1 text-2xl font-black text-orange-600">{money(order.grand_total)}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        ) : null}
 
         <section className="p-7">
           <div className="overflow-hidden rounded-2xl border border-slate-200">
@@ -165,7 +226,7 @@ export default function OrderDocumentPage() {
 
         <footer className="grid gap-4 border-t border-slate-100 bg-slate-50 p-7 text-xs text-slate-500 md:grid-cols-2">
           <p>เอกสารนี้สร้างจากระบบ Domichathailand • พิมพ์เมื่อ {printedAt}</p>
-          <p className="md:text-right">ผู้จัดทำ ____________________ &nbsp;&nbsp; ผู้อนุมัติ ____________________</p>
+          <p className="md:text-right">{showReceipt ? "ผู้รับเงิน ____________________" : "ผู้จัดทำ ____________________"} &nbsp;&nbsp; ผู้อนุมัติ ____________________</p>
         </footer>
       </article>
     </div>

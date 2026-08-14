@@ -129,6 +129,13 @@ export type FranchiseeOrder = {
   payment_method: "transfer" | "cod" | string;
   order_status: FranchiseeOrderStatus;
   payment_status: PaymentStatus;
+  payment_confirmed_at: string | null;
+  payment_confirmed_by: string | null;
+  payment_reference: string | null;
+  promptpay_payload: string | null;
+  promptpay_account_name: string | null;
+  receipt_number: string | null;
+  receipt_issued_at: string | null;
   subtotal: number;
   delivery_fee: number;
   grand_total: number;
