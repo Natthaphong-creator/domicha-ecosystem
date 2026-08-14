@@ -8,6 +8,7 @@ import {
   Check,
   ChevronRight,
   Clock3,
+  CreditCard,
   LockKeyhole,
   LogIn,
   MapPin,
@@ -95,10 +96,16 @@ export default function CustomerShopPage() {
   const [form, setForm] = useState<CheckoutForm>(initialForm);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState<{ orderNumber: string; lineNotified: boolean } | null>(null);
+  const [success, setSuccess] = useState<{
+    orderId?: string;
+    orderNumber: string;
+    total: number;
+    lineNotified: boolean;
+    promptpayAccountName?: string | null;
+    promptpayTarget?: string | null;
+  } | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [profile, setProfile] = useState<FranchiseeProfile | null>(null);
-  const [previewMode, setPreviewMode] = useState(false);
   const [accessError, setAccessError] = useState("");
 
   useEffect(() => {
@@ -129,55 +136,19 @@ export default function CustomerShopPage() {
       if (!mounted) return;
 
       if (profileError || !data) {
-        const { data: userProfile } = await supabase
-          .from("users")
-          .select("full_name,email,role")
-          .eq("id", session.user.id)
-          .single();
-
-        const userRole = String(userProfile?.role || "");
-        const isKnownFranchiseeWithoutBranch = userRole === "Franchisee";
-
-        if (!isKnownFranchiseeWithoutBranch) {
-          const hqProfile: FranchiseeProfile = {
-            id: "hq-preview",
-            branch_name: "HQ Preview",
-            owner_name: userProfile?.full_name || session.user.email || "DomiCha HQ",
-            phone: "-",
-            email: userProfile?.email || session.user.email || "",
-            shipping_address: "",
-            status: "Active",
-            payment_terms: "โหมดดูตัวอย่าง",
-            credit_limit: 0,
-            preview: true
-          };
-          setPreviewMode(true);
-          setProfile(hqProfile);
-          setForm((current) => ({
-            ...current,
-            customerName: hqProfile.owner_name,
-            phone: hqProfile.phone,
-            branchName: hqProfile.branch_name,
-            address: ""
-          }));
-          setAuthLoading(false);
-          return;
-        }
-
-        setAccessError("บัญชีนี้ยังไม่ได้ถูกเพิ่มเป็นแฟรนไชส์ซีโดย HQ");
+        setAccessError("บัญชีนี้ยังไม่ได้ลงทะเบียนเป็นสาขาแฟรนไชส์ซี กรุณาติดต่อทีม DomiCha");
         setAuthLoading(false);
         return;
       }
 
       const franchisee = data as FranchiseeProfile;
       if (franchisee.status !== "Active") {
-        setAccessError(franchisee.status === "Pending" ? "บัญชีแฟรนไชส์ซีนี้ยังรอ HQ อนุมัติ" : "บัญชีแฟรนไชส์ซีนี้ถูกระงับ กรุณาติดต่อ HQ");
+        setAccessError(franchisee.status === "Pending" ? "บัญชีแฟรนไชส์ซีนี้ยังรอการอนุมัติจากทีม DomiCha" : "บัญชีแฟรนไชส์ซีนี้ถูกระงับ กรุณาติดต่อทีม DomiCha");
         setProfile(franchisee);
         setAuthLoading(false);
         return;
       }
 
-      setPreviewMode(false);
       setProfile(franchisee);
       setForm((current) => ({
         ...current,
@@ -278,10 +249,6 @@ export default function CustomerShopPage() {
       setError("กรุณาเข้าสู่ระบบด้วยบัญชีแฟรนไชส์ซีก่อนสั่งซื้อ");
       return;
     }
-    if (profile.preview || previewMode) {
-      setError("โหมดเจ้าของใช้ดูตัวอย่างหน้าร้านเท่านั้น หากต้องการทดสอบสั่งซื้อ กรุณาเข้าสู่ระบบด้วยบัญชีแฟรนไชส์ซี");
-      return;
-    }
     setSubmitting(true);
     setError("");
     try {
@@ -329,7 +296,7 @@ export default function CustomerShopPage() {
         <section className="w-full max-w-md rounded-[32px] border border-white/80 bg-white/90 p-7 text-center shadow-2xl shadow-orange-950/10">
           <Image src="/icons/domicha-original-logo.png" alt="Domi Cha" width={80} height={80} className="mx-auto h-20 w-20 object-contain" priority />
           <h1 className="mt-4 text-2xl font-black">กำลังตรวจสอบสิทธิ์แฟรนไชส์ซี</h1>
-          <p className="mt-2 text-sm text-stone-500">ระบบนี้สำหรับเจ้าของสาขา DomiCha ที่ HQ สร้างบัญชีให้เท่านั้น</p>
+          <p className="mt-2 text-sm text-stone-500">ระบบนี้สำหรับสาขา DomiCha ที่ได้รับบัญชีจากทีมแบรนด์แล้วเท่านั้น</p>
         </section>
       </main>
     );
@@ -358,8 +325,8 @@ export default function CustomerShopPage() {
         <div className="mx-auto flex h-[76px] max-w-7xl items-center gap-3 px-4 sm:px-6">
           <Image src="/icons/domicha-original-logo.png" alt="Domi Cha" width={58} height={58} className="h-[58px] w-[58px] object-contain" priority />
           <div className="min-w-0">
-            <strong className="block text-[17px] tracking-tight">{previewMode ? "DomiCha Shop Preview" : "DomiCha Franchise"}</strong>
-            <span className="block truncate text-xs text-stone-500">{previewMode ? "โหมดเจ้าของดูหน้าร้าน" : profile?.branch_name || "พอร์ทัลสั่งซื้อวัตถุดิบ"}</span>
+            <strong className="block text-[17px] tracking-tight">DomiCha Franchise</strong>
+            <span className="block truncate text-xs text-stone-500">{profile?.branch_name || "พอร์ทัลสั่งซื้อวัตถุดิบ"}</span>
           </div>
           <button onClick={() => setCartOpen(true)} className="relative ml-auto grid h-11 w-11 place-items-center rounded-2xl bg-stone-950 text-white shadow-lg shadow-stone-950/15" aria-label="เปิดตะกร้า">
             <ShoppingBag className="h-5 w-5" />
@@ -372,24 +339,19 @@ export default function CustomerShopPage() {
         <section className="shop-hero mt-5 overflow-hidden rounded-[30px] bg-stone-950 px-5 py-7 text-white shadow-2xl shadow-orange-950/10 sm:px-10 sm:py-11">
           <div className="relative z-10 max-w-2xl">
             <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1.5 text-xs font-semibold text-orange-200">
-              <Sparkles className="h-3.5 w-3.5" /> {previewMode ? "HQ Shop Preview" : "Private Franchisee Portal"}
+              <Sparkles className="h-3.5 w-3.5" /> Private Franchisee Portal
             </span>
             <h1 className="mt-5 text-3xl font-black leading-tight tracking-[-.03em] sm:text-5xl">
-              {previewMode ? "ดูหน้าร้านสำหรับแฟรนไชส์ซี" : "สั่งวัตถุดิบสำหรับสาขา"}<br /><span className="text-orange-400">{previewMode ? "ในมุมมองเจ้าของ/HQ" : "เฉพาะแฟรนไชส์ซี DomiCha"}</span>
+              สั่งวัตถุดิบสำหรับสาขา<br /><span className="text-orange-400">เฉพาะแฟรนไชส์ซี DomiCha</span>
             </h1>
             <p className="mt-4 max-w-xl text-sm leading-6 text-stone-300 sm:text-base">
-              {previewMode ? "หน้านี้เป็นโหมดดูตัวอย่างสำหรับเจ้าของ สามารถดูสินค้า ราคา สต๊อก และหน้าตาตะกร้าได้ แต่ไม่ส่งคำสั่งซื้อจริง" : "เข้าสู่ระบบด้วยบัญชีที่ HQ สร้างให้ เลือกสินค้า และส่งออเดอร์ถึงทีม DomiCha ผ่าน LINE OA ได้ในไม่กี่ขั้นตอน"}
+              เข้าสู่ระบบด้วยบัญชีสาขาที่ได้รับจากทีม DomiCha เลือกสินค้า และส่งออเดอร์ถึงทีมแบรนด์ผ่าน LINE OA ได้ในไม่กี่ขั้นตอน
             </p>
             <div className="mt-6 flex flex-wrap gap-3 text-xs text-stone-300">
               <span className="flex items-center gap-1.5"><Truck className="h-4 w-4 text-orange-400" /> ฟรีค่าส่งเมื่อครบ 5,000 บาท</span>
               <span className="flex items-center gap-1.5"><ShieldCheck className="h-4 w-4 text-emerald-400" /> สินค้าจากศูนย์ DomiCha</span>
               <span className="flex items-center gap-1.5"><PackageCheck className="h-4 w-4 text-sky-300" /> {catalogSource === "stock" ? "เชื่อมกับ DomiCha Stock" : "ใช้สินค้าสำรอง"}</span>
             </div>
-            {previewMode ? (
-              <div className="mt-6 rounded-2xl border border-orange-300/20 bg-orange-500/10 p-4 text-sm leading-6 text-orange-100">
-                โหมดนี้สำหรับเจ้าของดูหน้าร้านเท่านั้น หากต้องการทดสอบส่งออเดอร์จริง ให้สร้างบัญชีแฟรนไชส์ซีแล้วล็อกอินด้วยบัญชีนั้น
-              </div>
-            ) : null}
           </div>
         </section>
 
@@ -441,7 +403,7 @@ export default function CustomerShopPage() {
                     <p className="mt-1 hidden text-xs leading-5 text-stone-500 sm:block">{product.description}</p>
                     <div className="mt-3 flex items-center justify-between gap-2">
                       <div>
-                        <strong className={`block text-base sm:text-lg ${hasPrice ? "" : "text-orange-600"}`}>{hasPrice ? baht(product.price) : "รอ HQ ยืนยันราคา"}</strong>
+                        <strong className={`block text-base sm:text-lg ${hasPrice ? "" : "text-orange-600"}`}>{hasPrice ? baht(product.price) : "รอทีม DomiCha ยืนยันราคา"}</strong>
                         <span className="text-[11px] text-stone-400">{hasPrice ? `ต่อ ${product.unit}` : `หน่วย ${product.unit}`}</span>
                       </div>
                       {outOfStock ? (
@@ -487,7 +449,7 @@ export default function CustomerShopPage() {
               {cartItems.map(({ product, quantity, lineTotal }) => (
                 <article key={product.id} className="flex items-center gap-3 rounded-2xl bg-white p-3 shadow-sm">
                   <div className="h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-orange-50"><img src={product.image} alt="" className="h-full w-full object-contain p-1" loading="lazy" /></div>
-                  <div className="min-w-0 flex-1"><strong className="block truncate text-sm">{product.name}</strong><span className="text-xs text-stone-400">{product.price > 0 ? `${baht(product.price)} / ${product.unit}` : `รอ HQ ยืนยันราคา • ${product.unit}`}</span></div>
+                  <div className="min-w-0 flex-1"><strong className="block truncate text-sm">{product.name}</strong><span className="text-xs text-stone-400">{product.price > 0 ? `${baht(product.price)} / ${product.unit}` : `รอทีม DomiCha ยืนยันราคา • ${product.unit}`}</span></div>
                   <div className="text-right">
                     <strong className="block text-sm">{product.price > 0 ? baht(lineTotal) : "รอราคา"}</strong>
                     <div className="mt-1 flex items-center gap-2"><button onClick={() => changeQuantity(product.id, -1)} className="text-stone-400" aria-label="ลด"><Minus className="h-4 w-4" /></button><span className="min-w-5 text-sm">{quantity}</span><button onClick={() => changeQuantity(product.id, 1)} className="text-orange-600" aria-label="เพิ่ม"><Plus className="h-4 w-4" /></button></div>
@@ -497,10 +459,10 @@ export default function CustomerShopPage() {
             </div>
             <div className="mt-5 rounded-2xl bg-orange-50 p-4 text-sm">
               <div className="flex justify-between text-stone-500"><span>ยอดสินค้า</span><strong className="text-stone-950">{baht(subtotal)}</strong></div>
-              <p className="mt-2 text-xs text-orange-700">{hasUnpricedCartItems ? "มีสินค้าที่ยังไม่มีราคา HQ จะยืนยันยอดอีกครั้ง" : subtotal >= 5_000 ? "🎉 ออเดอร์นี้ได้รับสิทธิ์จัดส่งฟรี" : `สั่งเพิ่มอีก ${baht(5_000 - subtotal)} เพื่อรับสิทธิ์จัดส่งฟรี`}</p>
+              <p className="mt-2 text-xs text-orange-700">{hasUnpricedCartItems ? "มีสินค้าที่ยังไม่มีราคา ทีม DomiCha จะยืนยันยอดอีกครั้ง" : subtotal >= 5_000 ? "🎉 ออเดอร์นี้ได้รับสิทธิ์จัดส่งฟรี" : `สั่งเพิ่มอีก ${baht(5_000 - subtotal)} เพื่อรับสิทธิ์จัดส่งฟรี`}</p>
             </div>
             <button onClick={openCheckout} className="mt-4 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-orange-500 font-bold text-white shadow-lg shadow-orange-500/25">
-              {previewMode ? "ดูหน้าฟอร์มยืนยัน" : "ดำเนินการสั่งซื้อ"} <ChevronRight className="h-5 w-5" />
+              ดำเนินการสั่งซื้อ <ChevronRight className="h-5 w-5" />
             </button>
           </section>
         </div>
@@ -519,19 +481,13 @@ export default function CustomerShopPage() {
             </section>
 
             <section className="mt-5 space-y-4 rounded-[28px] border border-white bg-white/80 p-5 shadow-sm sm:p-6">
-              <div><h2 className="font-bold">ข้อมูลแฟรนไชส์ซี</h2><p className="mt-1 text-xs text-stone-400">ข้อมูลนี้มาจากบัญชีที่ HQ สร้างไว้ให้</p></div>
+              <div><h2 className="font-bold">ข้อมูลแฟรนไชส์ซี</h2><p className="mt-1 text-xs text-stone-400">ข้อมูลนี้มาจากบัญชีสาขาที่ลงทะเบียนไว้กับ DomiCha</p></div>
               <label className="block">ชื่อผู้ติดต่อ<input required readOnly value={form.customerName} className="mt-1.5 h-12 rounded-2xl bg-stone-50 text-stone-500" placeholder="ชื่อ-นามสกุล" /></label>
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="block">เบอร์โทร<input required readOnly inputMode="tel" value={form.phone} className="mt-1.5 h-12 rounded-2xl bg-stone-50 text-stone-500" placeholder="08x-xxx-xxxx" /></label>
                 <label className="block">ชื่อสาขา / ร้าน<input required readOnly value={form.branchName} className="mt-1.5 h-12 rounded-2xl bg-stone-50 text-stone-500" placeholder="เช่น DomiCha บางแสน" /></label>
               </div>
             </section>
-
-            {previewMode ? (
-              <p className="mt-4 rounded-2xl border border-orange-100 bg-orange-50 p-4 text-sm leading-6 text-orange-800">
-                คุณกำลังดูในโหมดเจ้าของ ระบบจะไม่ส่งคำสั่งซื้อจริงจากบัญชีนี้
-              </p>
-            ) : null}
 
             <section className="mt-5 space-y-4 rounded-[28px] border border-white bg-white/80 p-5 shadow-sm sm:p-6">
               <h2 className="font-bold">การรับสินค้า</h2>
@@ -559,7 +515,7 @@ export default function CustomerShopPage() {
 
             {error ? <p className="mt-4 rounded-2xl border border-red-100 bg-red-50 p-4 text-sm text-red-700">{error}</p> : null}
             <button disabled={submitting} className="mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-orange-500 font-bold text-white shadow-xl shadow-orange-500/25 disabled:opacity-60">
-              {submitting ? <><Clock3 className="h-5 w-5 animate-spin" /> กำลังส่งคำสั่งซื้อ...</> : <><Check className="h-5 w-5" /> {previewMode ? "ปุ่มนี้ปิดในโหมดเจ้าของ" : `ยืนยันสั่งซื้อ ${baht(total)}`}</>}
+              {submitting ? <><Clock3 className="h-5 w-5 animate-spin" /> กำลังส่งคำสั่งซื้อ...</> : <><Check className="h-5 w-5" /> ยืนยันสั่งซื้อ {baht(total)}</>}
             </button>
             <p className="mt-3 text-center text-xs leading-5 text-stone-400">เมื่อยืนยัน ข้อมูลคำสั่งซื้อจะถูกส่งให้ทีมงานผ่าน LINE OA เพื่อดำเนินการต่อ</p>
           </form>
@@ -574,8 +530,27 @@ export default function CustomerShopPage() {
             <h2 className="mt-2 text-2xl font-black">รับคำสั่งซื้อแล้ว</h2>
             <p className="mt-2 text-sm text-stone-500">เลขที่คำสั่งซื้อ</p>
             <strong className="mt-1 block text-lg text-orange-600">{success.orderNumber}</strong>
+            {success.promptpayAccountName ? (
+              <div className="mt-5 rounded-[24px] border border-orange-100 bg-orange-50 p-4">
+                <div className="flex items-center justify-center gap-2 text-sm font-bold text-orange-700">
+                  <CreditCard className="h-4 w-4" /> สแกนจ่ายผ่าน PromptPay
+                </div>
+                <img
+                  src={`/api/promptpay?amount=${encodeURIComponent(String(success.total || 0))}`}
+                  alt="QR PromptPay"
+                  className="mx-auto mt-3 h-56 w-56 rounded-2xl bg-white p-3 shadow-sm"
+                />
+                <p className="mt-3 text-sm font-bold text-stone-950">{success.promptpayAccountName}</p>
+                <p className="mt-1 text-xs text-stone-500">เลขพร้อมเพย์: {success.promptpayTarget}</p>
+                <p className="mt-2 text-lg font-black text-orange-600">{baht(success.total || 0)}</p>
+                <p className="mt-3 rounded-2xl bg-white p-3 text-xs leading-5 text-stone-500">
+                  กรุณาโอนยอดให้ตรงกับ QR นี้ แล้วส่งสลิปใน LINE OA หรือช่องทางที่ทีม DomiCha แจ้งไว้ ทีมงานจะตรวจสอบและออกใบเสร็จให้ในระบบ
+                </p>
+              </div>
+            ) : null}
             <div className="mt-5 rounded-2xl bg-stone-50 p-4 text-left text-sm text-stone-600">
               <p className="flex items-center gap-2"><Check className="h-4 w-4 text-emerald-500" /> บันทึกคำสั่งซื้อเรียบร้อย</p>
+              <p className="mt-2 flex items-center gap-2"><Check className="h-4 w-4 text-emerald-500" /> หลังโอนเงิน ทีม DomiCha จะตรวจสอบและออกใบเสร็จให้</p>
               <p className="mt-2 flex items-center gap-2"><Check className={`h-4 w-4 ${success.lineNotified ? "text-emerald-500" : "text-amber-500"}`} /> {success.lineNotified ? "แจ้งเตือนทีมงานผ่าน LINE OA แล้ว" : "โหมดตัวอย่าง — รอตั้งค่า LINE OA"}</p>
             </div>
             <button onClick={() => setSuccess(null)} className="mt-5 h-12 w-full rounded-2xl bg-stone-950 font-bold text-white">เลือกซื้อสินค้าต่อ</button>
