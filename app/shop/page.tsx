@@ -104,6 +104,10 @@ export default function CustomerShopPage() {
     promptpayAccountName?: string | null;
     promptpayTarget?: string | null;
   } | null>(null);
+  const [paymentReference, setPaymentReference] = useState("");
+  const [paymentSubmitting, setPaymentSubmitting] = useState(false);
+  const [paymentNotice, setPaymentNotice] = useState("");
+  const [paymentError, setPaymentError] = useState("");
   const [authLoading, setAuthLoading] = useState(true);
   const [profile, setProfile] = useState<FranchiseeProfile | null>(null);
   const [accessError, setAccessError] = useState("");
@@ -274,6 +278,9 @@ export default function CustomerShopPage() {
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "ไม่สามารถส่งคำสั่งซื้อได้");
       setSuccess(result);
+      setPaymentReference("");
+      setPaymentNotice("");
+      setPaymentError("");
       setCheckoutOpen(false);
       setCart({});
       setForm({
@@ -287,6 +294,38 @@ export default function CustomerShopPage() {
       setError(submitError instanceof Error ? submitError.message : "ไม่สามารถส่งคำสั่งซื้อได้");
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function submitPaymentNotice() {
+    if (!success?.orderId) {
+      setPaymentError("ไม่พบเลขออเดอร์สำหรับแจ้งโอน");
+      return;
+    }
+
+    setPaymentSubmitting(true);
+    setPaymentError("");
+    try {
+      const {
+        data: { session }
+      } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error("Session หมดอายุ กรุณาเข้าสู่ระบบใหม่");
+
+      const response = await fetch(`/api/orders/${success.orderId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ action: "submit-payment", paymentReference })
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || "แจ้งโอนไม่สำเร็จ");
+      setPaymentNotice("รับข้อมูลแล้ว");
+    } catch (submitError) {
+      setPaymentError(submitError instanceof Error ? submitError.message : "แจ้งโอนไม่สำเร็จ");
+    } finally {
+      setPaymentSubmitting(false);
     }
   }
 
@@ -544,8 +583,31 @@ export default function CustomerShopPage() {
                 <p className="mt-1 text-xs text-stone-500">เลขพร้อมเพย์: {success.promptpayTarget}</p>
                 <p className="mt-2 text-lg font-black text-orange-600">{baht(success.total || 0)}</p>
                 <p className="mt-3 rounded-2xl bg-white p-3 text-xs leading-5 text-stone-500">
-                  กรุณาโอนยอดให้ตรงกับ QR นี้ แล้วส่งสลิปใน LINE OA หรือช่องทางที่ทีม DomiCha แจ้งไว้ ทีมงานจะตรวจสอบและออกใบเสร็จให้ในระบบ
+                  กรุณาโอนยอดให้ตรงกับ QR นี้ แล้วกดแจ้งทีมในระบบ จากนั้นส่งสลิปใน LINE OA เพื่อให้ทีมงานตรวจสอบและออกใบเสร็จให้
                 </p>
+                <div className="mt-3 text-left">
+                  <label className="text-xs font-bold text-stone-600">เลขอ้างอิงสลิป / หมายเหตุการโอน</label>
+                  <input
+                    value={paymentReference}
+                    onChange={(event) => setPaymentReference(event.target.value)}
+                    className="mt-1.5 h-11 rounded-2xl bg-white text-sm"
+                    placeholder="เช่น เลขอ้างอิงท้ายสลิป หรือเวลาโอน"
+                  />
+                  {paymentNotice ? (
+                    <p className="mt-3 rounded-2xl bg-emerald-50 p-3 text-center text-sm font-bold text-emerald-700">{paymentNotice}</p>
+                  ) : null}
+                  {paymentError ? (
+                    <p className="mt-3 rounded-2xl bg-red-50 p-3 text-center text-sm font-bold text-red-700">{paymentError}</p>
+                  ) : null}
+                  <button
+                    type="button"
+                    disabled={paymentSubmitting || Boolean(paymentNotice)}
+                    onClick={submitPaymentNotice}
+                    className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 text-sm font-bold text-white shadow-lg shadow-emerald-600/20 disabled:opacity-60"
+                  >
+                    {paymentSubmitting ? <><Clock3 className="h-4 w-4 animate-spin" /> กำลังแจ้งทีม...</> : <><Check className="h-4 w-4" /> แจ้งทีมว่าโอนแล้ว</>}
+                  </button>
+                </div>
               </div>
             ) : null}
             <div className="mt-5 rounded-2xl bg-stone-50 p-4 text-left text-sm text-stone-600">

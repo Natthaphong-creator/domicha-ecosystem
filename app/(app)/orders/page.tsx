@@ -158,7 +158,11 @@ export default function OrdersPage() {
                       <h3 className="font-black">{order.order_number}</h3>
                       <span className={`rounded-full border px-2.5 py-1 text-[11px] font-bold ${statusClass(order.order_status)}`}>{order.order_status}</span>
                       <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-bold text-slate-500">{order.payment_status}</span>
-                      {order.payment_method === "transfer" && order.payment_status !== "Paid" ? (
+                      {order.payment_method === "transfer" && order.payment_status !== "Paid" && order.payment_reference ? (
+                        <span className="inline-flex items-center gap-1 rounded-full border border-emerald-100 bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700">
+                          <CheckCircle2 className="h-3 w-3" /> ลูกค้าแจ้งโอนแล้ว
+                        </span>
+                      ) : order.payment_method === "transfer" && order.payment_status !== "Paid" ? (
                         <span className="inline-flex items-center gap-1 rounded-full border border-orange-100 bg-orange-50 px-2.5 py-1 text-[11px] font-bold text-orange-700">
                           <CreditCard className="h-3 w-3" /> มี QR รอโอน
                         </span>
@@ -166,6 +170,11 @@ export default function OrdersPage() {
                     </div>
                     <p className="mt-1 text-sm text-slate-600">{profile?.branch_name || "ไม่พบชื่อสาขา"} • {profile?.owner_name || "-"} • {profile?.phone || "-"}</p>
                     <p className="mt-1 text-xs text-slate-400">{dateThai(order.created_at)} • {order.delivery_method === "pickup" ? "รับสินค้าที่ศูนย์" : "จัดส่ง"}</p>
+                    {order.payment_status !== "Paid" && order.payment_reference ? (
+                      <p className="mt-2 rounded-xl bg-white px-3 py-2 text-xs font-semibold text-emerald-700">
+                        อ้างอิงการโอน: {order.payment_reference}
+                      </p>
+                    ) : null}
                   </div>
                   <div className="flex items-center justify-between gap-4 lg:min-w-[260px] lg:justify-end">
                     <div className="text-right">

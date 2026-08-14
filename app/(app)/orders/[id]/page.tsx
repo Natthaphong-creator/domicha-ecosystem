@@ -125,6 +125,20 @@ export default function OrderDocumentPage() {
           </section>
         ) : null}
 
+        {!showReceipt && order.payment_status !== "Paid" && order.payment_reference ? (
+          <section className="border-b border-slate-100 px-7 py-5">
+            <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-5 text-emerald-900">
+              <p className="text-xs font-bold uppercase tracking-[.16em] text-emerald-700">Payment Notice</p>
+              <p className="mt-2 text-sm leading-6">
+                ลูกค้าแจ้งโอนเงินแล้ว กรุณาตรวจสอบสลิปและยอดเงินจริงก่อนกด “ยืนยันชำระเงิน” ในหลังบ้าน
+              </p>
+              <p className="mt-2 rounded-xl bg-white px-3 py-2 text-sm font-bold text-emerald-800">
+                อ้างอิงการโอน: {order.payment_reference}
+              </p>
+            </div>
+          </section>
+        ) : null}
+
         {showPromptPay ? (
           <section className="border-b border-slate-100 px-5 py-5 sm:px-7">
             <div className="rounded-2xl border border-orange-100 bg-orange-50 p-5">
