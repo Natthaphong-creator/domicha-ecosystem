@@ -6,13 +6,16 @@ import {
   CheckCircle2,
   ClipboardCheck,
   Coffee,
+  ExternalLink,
   HelpCircle,
   LockKeyhole,
   MapPin,
   MessageCircle,
+  MessageSquareQuote,
   ShoppingBag,
   ShieldCheck,
-  Sparkles
+  Sparkles,
+  Star
 } from "lucide-react";
 import { FranchiseLeadForm } from "@/components/FranchiseLeadForm";
 import { PublicContactActions } from "@/components/PublicContactActions";
@@ -66,6 +69,27 @@ const pillars = [
 ];
 
 const drinks = ["Milk Tea", "Brown Sugar", "Thai Tea", "Cocoa", "Pink Milk", "Green Tea"];
+
+const socialLinks = [
+  {
+    label: "Facebook",
+    handle: "domichathailand",
+    href: "https://www.facebook.com/domichathailand",
+    text: "ติดตามโปรโมชัน ภาพร้าน และข่าวสารจากแบรนด์"
+  },
+  {
+    label: "TikTok",
+    handle: "domicha.tea",
+    href: "https://www.tiktok.com/@domicha.tea",
+    text: "ดูเมนู คลิปหน้าร้าน และคอนเทนต์สั้นที่ลูกค้าแชร์ต่อได้ง่าย"
+  }
+];
+
+const reviewHighlights = [
+  "รีวิวจริงช่วยลดความลังเลก่อนตัดสินใจ",
+  "ทีมคัดกรองก่อนนำขึ้นเว็บเพื่อรักษาภาพแบรนด์",
+  "ใช้เป็นหลักฐานความน่าเชื่อถือสำหรับลูกค้าและผู้สนใจแฟรนไชส์"
+];
 
 const orderSteps = [
   {
@@ -382,7 +406,76 @@ function BrandSections() {
           </div>
         </div>
       </section>
+      <SocialAndReviewSection />
     </>
+  );
+}
+
+function SocialAndReviewSection() {
+  return (
+    <section id="social" className="border-y border-[#f0dfc6] bg-white px-4 py-16 sm:px-6 lg:px-8">
+      <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[.9fr_1.1fr]">
+        <div>
+          <p className="text-sm font-black uppercase tracking-[.22em] text-[#f0692f]">Social Proof</p>
+          <h2 className="mt-3 text-4xl font-black leading-tight sm:text-5xl">ตามดูแบรนด์จริง และช่วยส่งรีวิวให้ทีมคัดเลือก</h2>
+          <p className="mt-5 text-lg font-semibold leading-8 text-[#6a4a35]">
+            ลูกค้าส่วนใหญ่ตัดสินใจง่ายขึ้นเมื่อเห็นว่ามีช่องทางจริง มีคอนเทนต์ต่อเนื่อง และมีเสียงจากผู้ใช้จริง รีวิวจึงควรมี แต่ควรผ่านการคัดกรองก่อนขึ้นหน้าเว็บ
+          </p>
+          <div className="mt-7 grid gap-3">
+            {socialLinks.map((item) => (
+              <a key={item.label} href={item.href} target="_blank" rel="noreferrer" className="group rounded-lg border border-[#f0dfc6] bg-[#fff8ed] p-5 transition hover:border-[#f0692f] hover:bg-[#feebc8]">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-black uppercase tracking-[.18em] text-[#f0692f]">{item.label}</p>
+                    <h3 className="mt-2 text-2xl font-black text-[#18120f]">@{item.handle}</h3>
+                    <p className="mt-2 text-sm font-semibold leading-6 text-[#6a4a35]">{item.text}</p>
+                  </div>
+                  <ExternalLink className="mt-1 h-5 w-5 shrink-0 text-[#f0692f] transition group-hover:translate-x-0.5" />
+                </div>
+              </a>
+            ))}
+          </div>
+          <div className="mt-7 grid gap-3">
+            {reviewHighlights.map((item) => (
+              <div key={item} className="flex items-center gap-3 rounded-lg bg-[#fff8ed] p-4">
+                <Star className="h-5 w-5 shrink-0 fill-[#f0692f] text-[#f0692f]" />
+                <p className="text-sm font-black leading-6 text-[#4b3427]">{item}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="rounded-lg border border-[#f0dfc6] bg-white p-6 shadow-xl shadow-orange-950/10">
+          <div className="flex items-start gap-3">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#feebc8] text-[#f0692f]">
+              <MessageSquareQuote className="h-5 w-5" />
+            </span>
+            <div>
+              <h3 className="text-2xl font-black text-[#18120f]">รีวิวช่วยให้ลูกค้าตัดสินใจเร็วขึ้น</h3>
+              <p className="mt-2 text-sm font-semibold leading-6 text-[#7d4b2a]">
+                แนะนำให้ทีม DomiCha ขอรีวิวผ่านช่องทางทางการ แล้วคัดเฉพาะรีวิวที่ได้รับอนุญาตก่อนนำขึ้นเว็บไซต์ เพื่อรักษาความน่าเชื่อถือและภาพลักษณ์แบรนด์
+              </p>
+            </div>
+          </div>
+          <div className="mt-6 grid gap-3">
+            <a href="https://www.facebook.com/domichathailand" target="_blank" rel="noreferrer" className="inline-flex items-center justify-between rounded-lg border border-[#f0dfc6] bg-[#fff8ed] px-5 py-4 font-black text-[#18120f] transition hover:border-[#f0692f] hover:bg-[#feebc8]">
+              รีวิว/แท็ก DomiCha บน Facebook
+              <ExternalLink className="h-5 w-5 text-[#f0692f]" />
+            </a>
+            <a href="https://www.tiktok.com/@domicha.tea" target="_blank" rel="noreferrer" className="inline-flex items-center justify-between rounded-lg border border-[#f0dfc6] bg-[#fff8ed] px-5 py-4 font-black text-[#18120f] transition hover:border-[#f0692f] hover:bg-[#feebc8]">
+              ดูและแชร์คอนเทนต์บน TikTok
+              <ExternalLink className="h-5 w-5 text-[#f0692f]" />
+            </a>
+            <Link href="/franchise#contact" className="inline-flex items-center justify-between rounded-lg bg-[#18120f] px-5 py-4 font-black text-white transition hover:bg-[#f0692f]">
+              ส่งข้อความถึงทีม DomiCha
+              <ArrowRight className="h-5 w-5" />
+            </Link>
+          </div>
+          <p className="mt-5 rounded-lg bg-[#fff8ed] px-4 py-3 text-sm font-bold leading-6 text-[#6a4a35]">
+            เมื่อมีรีวิวจริงเพียงพอ ค่อยเปิดส่วน “เสียงจากลูกค้า” ที่หน้าเว็บ โดยใช้ข้อความสั้น รูปจริง และขออนุญาตเจ้าของรีวิวก่อนเสมอ
+          </p>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -486,6 +579,7 @@ function ProcessAndFaq() {
           </div>
         </div>
       </section>
+      <SocialAndReviewSection />
     </>
   );
 }
@@ -518,7 +612,11 @@ function Footer() {
         </div>
         <div className="flex flex-wrap gap-3 text-sm font-bold text-white/72">
           <Link href="/">หน้าแรก</Link>
+          <a href="/#social">Social / รีวิว</a>
           <Link href="/franchise">แฟรนไชส์</Link>
+          {socialLinks.map((item) => (
+            <a key={item.label} href={item.href} target="_blank" rel="noreferrer">{item.label}</a>
+          ))}
         </div>
       </div>
     </footer>
