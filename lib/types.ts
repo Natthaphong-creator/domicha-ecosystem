@@ -25,6 +25,8 @@ export type Customer = {
   shipping_address: string | null;
   customer_type: CustomerType;
   status: Status;
+  line_user_id?: string | null;
+  auto_send_invoice_line?: boolean | null;
   created_at: string;
 };
 

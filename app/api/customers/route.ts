@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { handleRouteError, requireUser } from "@/lib/supabaseServer";
 
-const columns = "id,customer_name,contact_person,phone,email,tax_id,billing_address,shipping_address,customer_type,status,created_at";
+const columns = "id,customer_name,contact_person,phone,email,tax_id,billing_address,shipping_address,customer_type,status,line_user_id,auto_send_invoice_line,created_at";
 
 export async function GET(request: NextRequest) {
   try {
