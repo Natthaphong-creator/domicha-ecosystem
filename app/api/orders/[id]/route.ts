@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getLineChannelAccessToken } from "@/lib/lineMessaging";
+import { deliverReceiptAutomation } from "@/lib/receiptAutomation";
+import type { FranchiseeOrder } from "@/lib/types";
 import { handleRouteError, requireUserRole } from "@/lib/supabaseServer";
 
 const orderSelect = `
@@ -15,11 +17,25 @@ const orderSelect = `
   payment_status,
   payment_confirmed_at,
   payment_confirmed_by,
+  payment_received_at,
   payment_reference,
   promptpay_payload,
   promptpay_account_name,
+  invoice_number,
+  invoice_issued_at,
+  invoice_due_at,
+  invoice_delivery_status,
+  invoice_email_sent_at,
+  invoice_drive_file_url,
+  invoice_month_folder_name,
+  invoice_delivery_error,
   receipt_number,
   receipt_issued_at,
+  receipt_delivery_status,
+  receipt_email_sent_at,
+  receipt_drive_file_url,
+  receipt_month_folder_name,
+  receipt_delivery_error,
   subtotal,
   delivery_fee,
   grand_total,
@@ -31,10 +47,17 @@ const orderSelect = `
   franchisee_order_items(id,product_id,product_name,unit,quantity,unit_price,line_total,created_at)
 `;
 
-function makeReceiptNumber() {
-  const now = new Date();
+function makeReceiptNumber(dateValue?: string) {
+  const now = dateValue ? new Date(dateValue) : new Date();
   const date = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
   return `RC-${date}-${crypto.randomUUID().slice(0, 6).toUpperCase()}`;
+}
+
+function cleanPaymentReceivedAt(value: unknown) {
+  if (typeof value !== "string" || !value.trim()) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toISOString();
 }
 
 async function notifyPaymentSubmitted(order: {
@@ -97,7 +120,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       return NextResponse.json({ error: "ไม่พบข้อมูลผู้ใช้งาน" }, { status: 403 });
     }
 
-    const payload = await request.json().catch(() => ({})) as { action?: string; paymentReference?: string };
+    const payload = await request.json().catch(() => ({})) as { action?: string; paymentReference?: string; paymentReceivedAt?: string };
     if (!["submit-payment", "confirm-payment"].includes(payload.action || "")) {
       return NextResponse.json({ error: "คำสั่งไม่ถูกต้อง" }, { status: 400 });
     }
@@ -156,14 +179,16 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     }
 
     const now = new Date().toISOString();
+    const paymentReceivedAt = cleanPaymentReceivedAt(payload.paymentReceivedAt) || now;
     const updatePayload = {
       payment_status: "Paid",
       order_status: "Confirmed",
       payment_confirmed_at: now,
       payment_confirmed_by: auth.user.id,
+      payment_received_at: paymentReceivedAt,
       payment_reference: typeof payload.paymentReference === "string" ? payload.paymentReference.trim().slice(0, 120) || null : null,
-      receipt_number: existing.receipt_number || makeReceiptNumber(),
-      receipt_issued_at: existing.payment_status === "Paid" && existing.receipt_number ? undefined : now
+      receipt_number: existing.receipt_number || makeReceiptNumber(paymentReceivedAt),
+      receipt_issued_at: existing.payment_status === "Paid" && existing.receipt_number ? undefined : paymentReceivedAt
     };
 
     const { data, error } = await auth.supabase
@@ -174,7 +199,30 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       .single();
 
     if (error) throw error;
-    return NextResponse.json(data);
+
+    const receiptDelivery = await deliverReceiptAutomation(data as unknown as FranchiseeOrder);
+    const receiptUpdate = {
+      receipt_delivery_status: receiptDelivery.ok
+        ? "Sent"
+        : receiptDelivery.attempted
+          ? "Failed"
+          : receiptDelivery.skippedReason === "missing_email"
+            ? "Missing email"
+            : "Not configured",
+      receipt_email_sent_at: receiptDelivery.emailSent ? new Date().toISOString() : null,
+      receipt_drive_file_url: receiptDelivery.driveFileUrl || null,
+      receipt_month_folder_name: receiptDelivery.monthFolderName || null,
+      receipt_delivery_error: receiptDelivery.error || receiptDelivery.skippedReason || null
+    };
+
+    const { data: finalOrder } = await auth.supabase
+      .from("franchisee_orders")
+      .update(receiptUpdate)
+      .eq("id", params.id)
+      .select(orderSelect)
+      .single();
+
+    return NextResponse.json({ ...(finalOrder || data), receipt_delivery: receiptDelivery });
   } catch (error) {
     return handleRouteError(error);
   }

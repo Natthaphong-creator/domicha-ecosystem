@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Download, Printer } from "lucide-react";
+import { ArrowLeft, Download, ExternalLink, Printer } from "lucide-react";
 import { apiFetch } from "@/lib/apiClient";
 import { dateThai, money } from "@/lib/format";
 import { domichaPromptPay } from "@/lib/promptpay";
@@ -41,10 +41,10 @@ export default function OrderDocumentPage() {
   const items = order.franchisee_order_items || [];
   const printedAt = new Intl.DateTimeFormat("th-TH", { dateStyle: "medium", timeStyle: "short" }).format(new Date());
   const showReceipt = searchParams.get("doc") === "receipt" || Boolean(order.receipt_number);
-  const documentTitle = showReceipt ? "ใบเสร็จรับเงิน" : "ใบสั่งซื้อแฟรนไชส์ซี";
-  const documentSubtitle = showReceipt ? "Official Receipt" : "Franchisee Purchase Order";
-  const documentNumber = showReceipt ? order.receipt_number || "-" : order.order_number;
-  const documentDate = showReceipt ? order.receipt_issued_at || order.payment_confirmed_at || order.updated_at : order.created_at;
+  const documentTitle = showReceipt ? "ใบเสร็จรับเงิน" : "ใบแจ้งหนี้";
+  const documentSubtitle = showReceipt ? "Official Receipt" : "Tax Invoice / Payment Request";
+  const documentNumber = showReceipt ? order.receipt_number || "-" : order.invoice_number || order.order_number;
+  const documentDate = showReceipt ? order.receipt_issued_at || order.payment_received_at || order.payment_confirmed_at || order.updated_at : order.invoice_issued_at || order.created_at;
   const showPromptPay = !showReceipt && order.payment_method === "transfer" && order.payment_status !== "Paid";
 
   return (
@@ -105,10 +105,17 @@ export default function OrderDocumentPage() {
               <dd className="font-bold">{order.payment_status}</dd>
               {showReceipt ? (
                 <>
+                  <dt className="text-slate-500">วันที่ลูกค้าโอน</dt>
+                  <dd className="font-bold">{dateThai(order.payment_received_at || order.payment_confirmed_at)}</dd>
                   <dt className="text-slate-500">รับชำระเมื่อ</dt>
                   <dd className="font-bold">{dateThai(order.payment_confirmed_at)}</dd>
                 </>
-              ) : null}
+              ) : (
+                <>
+                  <dt className="text-slate-500">ครบกำหนด</dt>
+                  <dd className="font-bold">{order.invoice_due_at ? dateThai(order.invoice_due_at) : "-"}</dd>
+                </>
+              )}
             </dl>
           </div>
         </section>
@@ -121,6 +128,45 @@ export default function OrderDocumentPage() {
                 ได้รับชำระเงินสำหรับคำสั่งซื้อ {order.order_number} เรียบร้อยแล้ว
                 {order.payment_reference ? ` • อ้างอิง: ${order.payment_reference}` : ""}
               </p>
+              <div className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
+                <div className="rounded-xl bg-white px-3 py-2">
+                  <p className="text-xs text-slate-400">สถานะส่งใบเสร็จ</p>
+                  <p className="font-bold">{order.receipt_delivery_status || "ยังไม่ส่ง"}</p>
+                </div>
+                <div className="rounded-xl bg-white px-3 py-2">
+                  <p className="text-xs text-slate-400">ส่งอีเมลเมื่อ</p>
+                  <p className="font-bold">{order.receipt_email_sent_at ? dateThai(order.receipt_email_sent_at) : "-"}</p>
+                </div>
+                <div className="rounded-xl bg-white px-3 py-2">
+                  <p className="text-xs text-slate-400">โฟลเดอร์สำเนา</p>
+                  <p className="font-bold">{order.receipt_month_folder_name || "-"}</p>
+                </div>
+              </div>
+              {order.receipt_drive_file_url ? (
+                <a href={order.receipt_drive_file_url} target="_blank" rel="noreferrer" className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white">
+                  เปิดไฟล์สำเนาใน Google Drive <ExternalLink className="h-4 w-4" />
+                </a>
+              ) : null}
+              {order.receipt_delivery_error ? (
+                <p className="mt-3 rounded-xl bg-white px-3 py-2 text-sm font-semibold text-red-700">หมายเหตุระบบ: {order.receipt_delivery_error}</p>
+              ) : null}
+            </div>
+          </section>
+        ) : null}
+
+        {!showReceipt && order.invoice_number ? (
+          <section className="border-b border-slate-100 px-7 py-5">
+            <div className="rounded-2xl border border-orange-100 bg-orange-50 p-5 text-orange-950">
+              <p className="text-xs font-bold uppercase tracking-[.16em] text-orange-600">Invoice Ready</p>
+              <p className="mt-2 text-sm leading-6">
+                ระบบสร้างใบแจ้งหนี้เลขที่ {order.invoice_number} แล้ว
+                {order.invoice_drive_file_url ? " และเก็บสำเนาไว้ใน Google Drive แล้ว" : ""}
+              </p>
+              {order.invoice_drive_file_url ? (
+                <a href={order.invoice_drive_file_url} target="_blank" rel="noreferrer" className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-orange-600 px-4 py-2 text-sm font-bold text-white">
+                  เปิดใบแจ้งหนี้ใน Google Drive <ExternalLink className="h-4 w-4" />
+                </a>
+              ) : null}
             </div>
           </section>
         ) : null}

@@ -2,8 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, Download, Printer } from "lucide-react";
+import { ArrowLeft, Download, Printer, QrCode } from "lucide-react";
 import { money } from "@/lib/format";
+import { domichaPromptPay } from "@/lib/promptpay";
 
 const sampleOrder = {
   orderNumber: "DC-20260708-SAMPLE",
@@ -51,8 +52,8 @@ export default function SampleOrderDocumentPage() {
         </div>
       </div>
 
-      <article className="print-document mx-auto max-w-[960px] overflow-hidden rounded-[30px] border border-slate-200 bg-white shadow-xl shadow-slate-950/5 print:shadow-none">
-        <header className="bg-slate-950 p-7 text-white print:bg-white print:text-slate-950">
+      <article className="print-document mx-auto max-w-[960px] overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-xl shadow-slate-950/5 print:shadow-none sm:rounded-[30px]">
+        <header className="bg-slate-950 p-5 text-white print:bg-white print:text-slate-950 sm:p-7">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex items-center gap-4">
               <Image src="/icons/domicha-original-logo.png" alt="DomiCha" width={74} height={74} className="h-[74px] w-[74px] rounded-2xl bg-white object-contain p-1" />
@@ -70,7 +71,7 @@ export default function SampleOrderDocumentPage() {
           </div>
         </header>
 
-        <section className="grid gap-4 border-b border-slate-100 p-7 md:grid-cols-2">
+        <section className="grid gap-4 border-b border-slate-100 p-5 sm:p-7 md:grid-cols-2">
           <div className="rounded-2xl bg-orange-50 p-5 print:bg-slate-50">
             <p className="text-xs font-bold uppercase tracking-[.16em] text-orange-600">Branch</p>
             <h2 className="mt-2 text-xl font-black">{sampleOrder.branchName}</h2>
@@ -95,9 +96,9 @@ export default function SampleOrderDocumentPage() {
           </div>
         </section>
 
-        <section className="p-7">
-          <div className="overflow-hidden rounded-2xl border border-slate-200">
-            <table className="w-full text-sm">
+        <section className="p-5 sm:p-7">
+          <div className="overflow-x-auto rounded-2xl border border-slate-200">
+            <table className="min-w-[680px] w-full text-sm">
               <thead>
                 <tr className="bg-slate-950 text-white print:bg-slate-100 print:text-slate-700">
                   <th className="w-12 px-4 py-3 text-left">#</th>
@@ -125,10 +126,33 @@ export default function SampleOrderDocumentPage() {
           </div>
 
           <div className="mt-6 grid gap-5 md:grid-cols-[1fr_340px]">
-            <div className="rounded-2xl border border-slate-200 p-5">
-              <p className="text-xs font-bold uppercase tracking-[.16em] text-slate-400">Shipping Address / Note</p>
-              <p className="mt-3 whitespace-pre-line text-sm leading-6 text-slate-700">{sampleOrder.shippingAddress}</p>
-              <p className="mt-4 rounded-xl bg-orange-50 p-3 text-sm text-orange-800">หมายเหตุ: {sampleOrder.note}</p>
+            <div className="space-y-5">
+              <div className="rounded-2xl border border-slate-200 p-5">
+                <p className="text-xs font-bold uppercase tracking-[.16em] text-slate-400">Shipping Address / Note</p>
+                <p className="mt-3 whitespace-pre-line text-sm leading-6 text-slate-700">{sampleOrder.shippingAddress}</p>
+                <p className="mt-4 rounded-xl bg-orange-50 p-3 text-sm text-orange-800">หมายเหตุ: {sampleOrder.note}</p>
+              </div>
+
+              <div className="rounded-2xl border border-orange-100 bg-orange-50 p-5">
+                <div className="flex items-center gap-2 text-sm font-black text-orange-700">
+                  <QrCode className="h-5 w-5" /> ชำระเงินด้วย QR PromptPay
+                </div>
+                <div className="mt-4 grid gap-4 sm:grid-cols-[176px_1fr] sm:items-center">
+                  <img
+                    src={`/api/promptpay?amount=${encodeURIComponent(String(sampleOrder.grandTotal))}`}
+                    alt="QR PromptPay DomiCha"
+                    className="mx-auto h-44 w-44 rounded-2xl bg-white p-3 shadow-sm sm:mx-0"
+                  />
+                  <div className="text-sm text-slate-700">
+                    <p className="text-xs font-bold uppercase tracking-[.16em] text-orange-600">Scan to pay</p>
+                    <h3 className="mt-2 text-lg font-black text-slate-950">{domichaPromptPay.accountName}</h3>
+                    <p className="mt-2">เลขพร้อมเพย์ / เลขผู้เสียภาษี</p>
+                    <p className="font-bold text-slate-950">{domichaPromptPay.target}</p>
+                    <p className="mt-3 text-xl font-black text-orange-600">{money(sampleOrder.grandTotal)}</p>
+                    <p className="mt-2 text-xs leading-5 text-slate-500">หลังโอนเงิน ทีม DomiCha ตรวจสอบยอดและกด “ยืนยันชำระเงิน” เพื่อออกใบเสร็จรับเงิน</p>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div className="rounded-2xl bg-slate-950 p-5 text-white print:bg-slate-50 print:text-slate-950">
@@ -152,7 +176,7 @@ export default function SampleOrderDocumentPage() {
           </div>
         </section>
 
-        <footer className="grid gap-4 border-t border-slate-100 bg-slate-50 p-7 text-xs text-slate-500 md:grid-cols-2">
+        <footer className="grid gap-4 border-t border-slate-100 bg-slate-50 p-5 text-xs text-slate-500 sm:p-7 md:grid-cols-2">
           <p>เอกสารนี้เป็นข้อมูลตัวอย่างจากระบบ Domichathailand • พิมพ์เมื่อ {sampleOrder.printedAt}</p>
           <p className="md:text-right">ผู้จัดทำ ____________________ &nbsp;&nbsp; ผู้อนุมัติ ____________________</p>
         </footer>

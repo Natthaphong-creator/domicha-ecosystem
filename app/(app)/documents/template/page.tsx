@@ -15,6 +15,13 @@ const invoiceItems = [
   { code: "SEAL-01", description: "ม้วนซีล", quantity: 1, unit: "ม้วน", unitPrice: 960, vatRate: 7 }
 ];
 
+const quotationItems = [
+  { code: "PKG-STD", description: "ชุดเปิดร้าน DomiCha Standard Package", quantity: 1, unit: "ชุด", unitPrice: 59000, vatRate: 7 },
+  { code: "TRAIN-01", description: "อบรมสูตร เครื่องดื่ม และมาตรฐานหน้าร้าน", quantity: 1, unit: "คอร์ส", unitPrice: 12000, discountAmount: 12000, vatRate: 7 },
+  { code: "KIT-START", description: "วัตถุดิบเริ่มต้นสำหรับทดลองขาย", quantity: 1, unit: "ชุด", unitPrice: 8500, vatRate: 7 },
+  { code: "BRAND-01", description: "ไฟล์แบรนด์ เมนู และคู่มือปฏิบัติงานเบื้องต้น", quantity: 1, unit: "ชุด", unitPrice: 4500, discountAmount: 4500, vatRate: 7 }
+];
+
 const receiptItems = [
   { code: "TEA-JS", description: "ชามะลิ", quantity: 10, unit: "ห่อ", unitPrice: 40, vatRate: 7 }
 ];
@@ -38,6 +45,25 @@ export default function DocumentTemplatePage() {
           </button>
         </div>
       </div>
+
+      <FlowAccountDocumentTemplate
+        kind="quotation"
+        documentNumber="QT202608140001"
+        documentDate="14/08/2026"
+        dueDate="21/08/2026"
+        seller="ทีมแฟรนไชส์ DomiCha"
+        reference="LEAD-WEB-20260814"
+        poNumber="FRANCHISE-PACKAGE"
+        customerName="คุณลูกค้าแฟรนไชส์ซี ตัวอย่าง"
+        customerAddress="ตำบลเสม็ด อำเภอเมืองชลบุรี จังหวัดชลบุรี 20000"
+        customerBranch="พื้นที่สนใจ: ชลบุรี"
+        customerTaxId="-"
+        items={quotationItems}
+        amountText="เจ็ดหมื่นสองพันสองร้อยยี่สิบห้าบาทถ้วน"
+        creditTerm="ราคานี้มีผล 7 วัน"
+        deliveryMethod="นัดหมายสำรวจพื้นที่และจัดส่งตามเงื่อนไขแพ็กเกจ"
+        note="ใบเสนอราคานี้เป็นตัวอย่างสำหรับนำเสนอแพ็กเกจแฟรนไชส์ ข้อมูลสูตร ต้นทุน รายการอุปกรณ์เชิงลึก และ SOP ฉบับเต็มจะแชร์หลังประเมินและยืนยันสิทธิ์กับแบรนด์"
+      />
 
       <FlowAccountDocumentTemplate
         kind="invoice"

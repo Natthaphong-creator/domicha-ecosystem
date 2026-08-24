@@ -9,7 +9,7 @@ const FIREBASE_STORE_PATH =
   "domicha_v2/store";
 
 export const domichaAppLinks = {
-  stock: normalizeAppUrl(process.env.NEXT_PUBLIC_DOMICHA_STOCK_URL, "/products"),
+  stock: normalizeAppUrl(process.env.NEXT_PUBLIC_DOMICHA_STOCK_URL, "https://domichathailand.com/products"),
   pos: process.env.NEXT_PUBLIC_DOMICHA_POS_URL || "",
   manager: process.env.NEXT_PUBLIC_DOMICHA_POS_MANAGER_URL || ""
 };

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createPromptPayPayload, domichaPromptPay } from "@/lib/promptpay";
+import { deliverInvoiceAutomation } from "@/lib/receiptAutomation";
 import { fetchStockProducts } from "@/lib/stockProducts";
+import type { FranchiseeOrder } from "@/lib/types";
 import { requireUserRole } from "@/lib/supabaseServer";
 
 export const runtime = "nodejs";
@@ -31,11 +33,25 @@ const orderSelect = `
   payment_status,
   payment_confirmed_at,
   payment_confirmed_by,
+  payment_received_at,
   payment_reference,
   promptpay_payload,
   promptpay_account_name,
+  invoice_number,
+  invoice_issued_at,
+  invoice_due_at,
+  invoice_delivery_status,
+  invoice_email_sent_at,
+  invoice_drive_file_url,
+  invoice_month_folder_name,
+  invoice_delivery_error,
   receipt_number,
   receipt_issued_at,
+  receipt_delivery_status,
+  receipt_email_sent_at,
+  receipt_drive_file_url,
+  receipt_month_folder_name,
+  receipt_delivery_error,
   subtotal,
   delivery_fee,
   grand_total,
@@ -68,6 +84,18 @@ function makeOrderNumber() {
   const now = new Date();
   const date = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
   return `DC-${date}-${crypto.randomUUID().slice(0, 6).toUpperCase()}`;
+}
+
+function makeInvoiceNumber() {
+  const now = new Date();
+  const date = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
+  return `INV-${date}-${crypto.randomUUID().slice(0, 6).toUpperCase()}`;
+}
+
+function invoiceDueDate() {
+  const date = new Date();
+  date.setDate(date.getDate() + 3);
+  return date.toISOString();
 }
 
 function buildOrderFlexMessage(order: {
@@ -237,6 +265,9 @@ export async function POST(request: NextRequest) {
   const deliveryFee = deliveryMethod === "delivery" && subtotal > 0 && subtotal < 5_000 ? 80 : 0;
   const total = subtotal + deliveryFee;
   const orderNumber = makeOrderNumber();
+  const invoiceNumber = makeInvoiceNumber();
+  const invoiceIssuedAt = new Date().toISOString();
+  const invoiceDueAt = invoiceDueDate();
   const promptpayPayload = paymentMethod === "transfer"
     ? createPromptPayPayload(domichaPromptPay.target, total)
     : null;
@@ -244,6 +275,9 @@ export async function POST(request: NextRequest) {
     .from("franchisee_orders")
     .insert({
       order_number: orderNumber,
+      invoice_number: invoiceNumber,
+      invoice_issued_at: invoiceIssuedAt,
+      invoice_due_at: invoiceDueAt,
       franchisee_id: franchisee.id,
       user_id: auth.user.id,
       branch_id: franchisee.branch_id,
@@ -280,6 +314,35 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "บันทึกรายการสินค้าไม่สำเร็จ" }, { status: 500 });
   }
 
+  const { data: orderForInvoice } = await auth.supabase
+    .from("franchisee_orders")
+    .select(orderSelect)
+    .eq("id", savedOrder.id)
+    .single();
+
+  const invoiceDelivery = orderForInvoice
+    ? await deliverInvoiceAutomation(orderForInvoice as unknown as FranchiseeOrder)
+    : { attempted: false, ok: false, skippedReason: "not_configured" as const };
+
+  const invoiceDeliveryUpdate = {
+    invoice_delivery_status: invoiceDelivery.ok
+      ? "Sent"
+      : invoiceDelivery.attempted
+        ? "Failed"
+        : invoiceDelivery.skippedReason === "missing_email"
+          ? "Missing email"
+          : "Not configured",
+    invoice_email_sent_at: invoiceDelivery.emailSent ? new Date().toISOString() : null,
+    invoice_drive_file_url: invoiceDelivery.driveFileUrl || null,
+    invoice_month_folder_name: invoiceDelivery.monthFolderName || null,
+    invoice_delivery_error: invoiceDelivery.error || invoiceDelivery.skippedReason || null
+  };
+
+  await auth.supabase
+    .from("franchisee_orders")
+    .update(invoiceDeliveryUpdate)
+    .eq("id", savedOrder.id);
+
   const order = {
     orderNumber,
     customerName,
@@ -303,11 +366,13 @@ export async function POST(request: NextRequest) {
       ok: true,
       orderId: savedOrder.id,
       orderNumber,
+      invoiceNumber,
       promptpayPayload,
       promptpayAccountName: paymentMethod === "transfer" ? domichaPromptPay.accountName : null,
       promptpayTarget: paymentMethod === "transfer" ? domichaPromptPay.target : null,
       total,
       lineNotified: false,
+      invoiceDelivery,
       demoMode: false,
       message: "รับคำสั่งซื้อแล้ว (ยังไม่ได้ตั้งค่า LINE OA)"
     });
@@ -333,10 +398,12 @@ export async function POST(request: NextRequest) {
     ok: true,
     orderId: savedOrder.id,
     orderNumber,
+    invoiceNumber,
     promptpayPayload,
     promptpayAccountName: paymentMethod === "transfer" ? domichaPromptPay.accountName : null,
     promptpayTarget: paymentMethod === "transfer" ? domichaPromptPay.target : null,
     total,
+    invoiceDelivery,
     lineNotified: true,
     requestId: lineResponse.headers.get("x-line-request-id") || ""
   });

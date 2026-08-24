@@ -32,6 +32,7 @@ export default function FranchiseLeadsPage() {
   const [savingId, setSavingId] = useState("");
   const [error, setError] = useState("");
   const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<FranchiseLeadStatus | "All">("All");
 
   async function loadLeads() {
     setLoading(true);
@@ -67,19 +68,30 @@ export default function FranchiseLeadsPage() {
 
   const filtered = useMemo(() => {
     const keyword = query.trim().toLowerCase();
-    if (!keyword) return leads;
-    return leads.filter((lead) => [
+    return leads.filter((lead) => {
+      const statusMatched = statusFilter === "All" || lead.status === statusFilter;
+      if (!statusMatched) return false;
+      if (!keyword) return true;
+      return [
       lead.name,
       lead.contact,
       lead.location,
       lead.budget,
       lead.note,
       statusLabels[lead.status]
-    ].some((value) => String(value || "").toLowerCase().includes(keyword)));
-  }, [leads, query]);
+      ].some((value) => String(value || "").toLowerCase().includes(keyword));
+    });
+  }, [leads, query, statusFilter]);
 
   const activeLeads = leads.filter((lead) => !["Won", "Lost"].includes(lead.status)).length;
-  const contactedLeads = leads.filter((lead) => lead.status !== "New").length;
+  const newLeads = leads.filter((lead) => lead.status === "New").length;
+  const packageSentLeads = leads.filter((lead) => lead.status === "PackageSent").length;
+  const wonLeads = leads.filter((lead) => lead.status === "Won").length;
+  const leadSummary = statuses.map((status) => ({
+    status,
+    label: statusLabels[status],
+    count: leads.filter((lead) => lead.status === status).length
+  }));
 
   return (
     <div className="space-y-6">
@@ -100,18 +112,22 @@ export default function FranchiseLeadsPage() {
         </div>
       </section>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-4">
         <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-sm text-slate-500">Lead ทั้งหมด</p>
           <p className="mt-2 text-3xl font-black">{leads.length}</p>
         </div>
         <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-sm text-slate-500">กำลังติดตาม</p>
-          <p className="mt-2 text-3xl font-black text-orange-600">{activeLeads}</p>
+          <p className="text-sm text-slate-500">Lead ใหม่</p>
+          <p className="mt-2 text-3xl font-black text-orange-600">{newLeads}</p>
         </div>
         <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-sm text-slate-500">ติดต่อแล้ว</p>
-          <p className="mt-2 text-3xl font-black text-emerald-600">{contactedLeads}</p>
+          <p className="text-sm text-slate-500">กำลังติดตาม</p>
+          <p className="mt-2 text-3xl font-black text-blue-600">{activeLeads}</p>
+        </div>
+        <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
+          <p className="text-sm text-slate-500">ปิดการขาย</p>
+          <p className="mt-2 text-3xl font-black text-emerald-600">{wonLeads}</p>
         </div>
       </div>
 
@@ -125,6 +141,39 @@ export default function FranchiseLeadsPage() {
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input value={query} onChange={(event) => setQuery(event.target.value)} className="h-11 rounded-2xl pl-10" placeholder="ค้นหาชื่อ / เบอร์ / จังหวัด / งบ" />
           </label>
+        </div>
+
+        <div className="mt-5 grid gap-3 lg:grid-cols-[1fr_260px]">
+          <div className="rounded-2xl border border-orange-100 bg-orange-50/70 p-4">
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setStatusFilter("All")}
+                className={`rounded-full px-3 py-2 text-xs font-bold ${statusFilter === "All" ? "bg-slate-950 text-white" : "bg-white text-slate-600"}`}
+              >
+                ทั้งหมด {leads.length}
+              </button>
+              {leadSummary.map((item) => (
+                <button
+                  key={item.status}
+                  type="button"
+                  onClick={() => setStatusFilter(item.status)}
+                  className={`rounded-full border px-3 py-2 text-xs font-bold ${statusFilter === item.status ? statusClasses[item.status] : "border-white bg-white text-slate-600"}`}
+                >
+                  {item.label} {item.count}
+                </button>
+              ))}
+            </div>
+            <p className="mt-3 text-xs leading-5 text-orange-900/70">
+              แนวทางใช้งาน: Lead ใหม่ให้โทรหรือทัก LINE ภายในวันเดียวกัน, Lead ที่ผ่านการคัดกรองให้ส่งแพ็กเกจ, และ Lead ที่ส่งแพ็กเกจแล้วให้ติดตามซ้ำเพื่อปิดการขาย
+            </p>
+          </div>
+          <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+            <p className="text-xs font-bold uppercase tracking-[.14em] text-slate-400">Next actions</p>
+            <p className="mt-2 text-sm font-bold text-slate-900">รอติดต่อ {newLeads} ราย</p>
+            <p className="mt-1 text-sm font-bold text-orange-600">ส่งแพ็กเกจแล้ว {packageSentLeads} ราย</p>
+            <p className="mt-1 text-xs leading-5 text-slate-500">ใช้ตัวเลขนี้เช็คงานขายประจำวันได้ทันที</p>
+          </div>
         </div>
 
         {error ? <p className="mt-5 rounded-2xl border border-red-100 bg-red-50 p-4 text-sm text-red-700">{error}</p> : null}

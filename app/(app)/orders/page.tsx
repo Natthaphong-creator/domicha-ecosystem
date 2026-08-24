@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowUpRight, CheckCircle2, ClipboardList, CreditCard, FileText, PackageCheck, ReceiptText, RefreshCcw, Search } from "lucide-react";
+import { ArrowUpRight, CheckCircle2, ClipboardList, CreditCard, FileText, MailCheck, PackageCheck, ReceiptText, RefreshCcw, Search } from "lucide-react";
 import { apiFetch } from "@/lib/apiClient";
 import { dateThai, money } from "@/lib/format";
 import type { FranchiseeOrder } from "@/lib/types";
@@ -17,6 +17,27 @@ function statusClass(status: string) {
     Cancelled: "border-red-100 bg-red-50 text-red-700"
   };
   return map[status] || "border-slate-100 bg-slate-50 text-slate-600";
+}
+
+function receiptDeliveryLabel(status?: string | null) {
+  if (status === "Sent") return "ส่งใบเสร็จแล้ว";
+  if (status === "Failed") return "ส่งใบเสร็จไม่สำเร็จ";
+  if (status === "Missing email") return "ไม่มีอีเมลลูกค้า";
+  if (status === "Not configured") return "ยังไม่ตั้งค่าอัตโนมัติ";
+  return "ยังไม่ส่งใบเสร็จ";
+}
+
+function receiptDeliveryClass(status?: string | null) {
+  if (status === "Sent") return "border-emerald-100 bg-emerald-50 text-emerald-700";
+  if (status === "Failed" || status === "Missing email") return "border-red-100 bg-red-50 text-red-700";
+  if (status === "Not configured") return "border-amber-100 bg-amber-50 text-amber-700";
+  return "border-slate-200 bg-white text-slate-500";
+}
+
+function localDateTimeValue(date = new Date()) {
+  const offset = date.getTimezoneOffset();
+  const local = new Date(date.getTime() - offset * 60_000);
+  return local.toISOString().slice(0, 16);
 }
 
 export default function OrdersPage() {
@@ -60,17 +81,22 @@ export default function OrdersPage() {
   }, [orders, query]);
 
   const totalValue = orders.reduce((sum, order) => sum + Number(order.grand_total || 0), 0);
+  const paymentWaiting = orders.filter((order) => order.payment_method === "transfer" && order.payment_status !== "Paid").length;
+  const paymentSubmitted = orders.filter((order) => order.payment_method === "transfer" && order.payment_status !== "Paid" && order.payment_reference).length;
+  const receiptSent = orders.filter((order) => order.receipt_delivery_status === "Sent").length;
 
   async function confirmPayment(orderId: string) {
     const paymentReference = window.prompt("เลขอ้างอิงสลิป / หมายเหตุการรับชำระเงิน (ถ้ามี)", "");
     if (paymentReference === null) return;
+    const paymentReceivedAt = window.prompt("วันที่และเวลาที่ลูกค้าโอนจริง เช่น 2026-08-24T14:30", localDateTimeValue());
+    if (paymentReceivedAt === null) return;
 
     setUpdatingId(orderId);
     setError("");
     try {
       const updated = await apiFetch<FranchiseeOrder>(`/api/orders/${orderId}`, {
         method: "PATCH",
-        body: JSON.stringify({ action: "confirm-payment", paymentReference })
+        body: JSON.stringify({ action: "confirm-payment", paymentReference, paymentReceivedAt })
       });
       setOrders((current) => current.map((order) => order.id === orderId ? updated : order));
     } catch (updateError) {
@@ -104,7 +130,7 @@ export default function OrdersPage() {
         </div>
       </section>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-4">
         <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-sm text-slate-500">จำนวนเอกสาร</p>
           <p className="mt-2 text-3xl font-black">{orders.length}</p>
@@ -114,8 +140,12 @@ export default function OrdersPage() {
           <p className="mt-2 text-3xl font-black text-orange-600">{money(totalValue)}</p>
         </div>
         <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-sm text-slate-500">เอกสารรอดำเนินการ</p>
-          <p className="mt-2 text-3xl font-black">{orders.filter((order) => !["Completed", "Cancelled"].includes(order.order_status)).length}</p>
+          <p className="text-sm text-slate-500">รอตรวจยอด</p>
+          <p className="mt-2 text-3xl font-black text-emerald-600">{paymentSubmitted}</p>
+        </div>
+        <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
+          <p className="text-sm text-slate-500">ใบเสร็จส่งแล้ว</p>
+          <p className="mt-2 text-3xl font-black">{receiptSent}</p>
         </div>
       </div>
 
@@ -129,6 +159,24 @@ export default function OrdersPage() {
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input value={query} onChange={(event) => setQuery(event.target.value)} className="h-11 rounded-2xl pl-10" placeholder="ค้นหาเลขที่ / สาขา / เบอร์โทร" />
           </label>
+        </div>
+
+        <div className="mt-5 grid gap-3 lg:grid-cols-3">
+          <div className="rounded-2xl border border-orange-100 bg-orange-50 p-4">
+            <p className="text-xs font-bold uppercase tracking-[.14em] text-orange-600">Step 1</p>
+            <h3 className="mt-2 font-black">ลูกค้าสั่งของและสแกน QR</h3>
+            <p className="mt-1 text-sm leading-6 text-orange-900/75">คำสั่งซื้อจาก /shop จะเข้ามาหน้านี้ พร้อมยอดและรายการสินค้า</p>
+          </div>
+          <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
+            <p className="text-xs font-bold uppercase tracking-[.14em] text-emerald-700">Step 2</p>
+            <h3 className="mt-2 font-black">รอตรวจยอด {paymentWaiting} รายการ</h3>
+            <p className="mt-1 text-sm leading-6 text-emerald-900/75">ถ้าลูกค้ากดแจ้งโอนแล้ว ให้ตรวจสลิปใน LINE OA แล้วกด “ยืนยันชำระเงิน”</p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <p className="text-xs font-bold uppercase tracking-[.14em] text-slate-500">Step 3</p>
+            <h3 className="mt-2 font-black">ออกใบเสร็จอัตโนมัติ</h3>
+            <p className="mt-1 text-sm leading-6 text-slate-600">ระบบส่งอีเมลให้ลูกค้าและเก็บสำเนา Google Drive ตามเดือน</p>
+          </div>
         </div>
 
         {error ? <p className="mt-5 rounded-2xl border border-red-100 bg-red-50 p-4 text-sm text-red-700">{error}</p> : null}
@@ -158,6 +206,16 @@ export default function OrdersPage() {
                       <h3 className="font-black">{order.order_number}</h3>
                       <span className={`rounded-full border px-2.5 py-1 text-[11px] font-bold ${statusClass(order.order_status)}`}>{order.order_status}</span>
                       <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-bold text-slate-500">{order.payment_status}</span>
+                      {order.invoice_number ? (
+                        <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-bold ${receiptDeliveryClass(order.invoice_delivery_status)}`}>
+                          <FileText className="h-3 w-3" /> ใบแจ้งหนี้ {order.invoice_delivery_status === "Sent" ? "ส่งแล้ว" : "รอส่ง"}
+                        </span>
+                      ) : null}
+                      {order.payment_status === "Paid" ? (
+                        <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-bold ${receiptDeliveryClass(order.receipt_delivery_status)}`}>
+                          <MailCheck className="h-3 w-3" /> {receiptDeliveryLabel(order.receipt_delivery_status)}
+                        </span>
+                      ) : null}
                       {order.payment_method === "transfer" && order.payment_status !== "Paid" && order.payment_reference ? (
                         <span className="inline-flex items-center gap-1 rounded-full border border-emerald-100 bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700">
                           <CheckCircle2 className="h-3 w-3" /> ลูกค้าแจ้งโอนแล้ว
@@ -174,6 +232,11 @@ export default function OrdersPage() {
                       <p className="mt-2 rounded-xl bg-white px-3 py-2 text-xs font-semibold text-emerald-700">
                         อ้างอิงการโอน: {order.payment_reference}
                       </p>
+                    ) : null}
+                    {order.payment_status === "Paid" && order.receipt_drive_file_url ? (
+                      <a href={order.receipt_drive_file_url} target="_blank" rel="noreferrer" className="mt-2 inline-flex rounded-xl bg-white px-3 py-2 text-xs font-bold text-emerald-700 hover:text-orange-600">
+                        เปิดสำเนาใบเสร็จใน Google Drive
+                      </a>
                     ) : null}
                   </div>
                   <div className="flex items-center justify-between gap-4 lg:min-w-[260px] lg:justify-end">

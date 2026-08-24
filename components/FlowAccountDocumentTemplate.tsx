@@ -1,6 +1,6 @@
 import Image from "next/image";
 
-type DocumentKind = "invoice" | "receipt" | "taxInvoice";
+type DocumentKind = "quotation" | "invoice" | "receipt" | "taxInvoice";
 
 type DocumentLineItem = {
   code?: string;
@@ -54,6 +54,7 @@ const company = {
 };
 
 const themes: Record<DocumentKind, { label: string; subLabel: string; color: string; bg: string; receiver: string; approver: string }> = {
+  quotation: { label: "ใบเสนอราคา", subLabel: "Quotation", color: "#f0692f", bg: "#fff3e8", receiver: "ผู้รับใบเสนอราคา", approver: "ผู้อนุมัติราคา" },
   invoice: { label: "ใบแจ้งหนี้", subLabel: "Invoice", color: "#2488b8", bg: "#eaf6fb", receiver: "ผู้รับสินค้า / บริการ", approver: "ผู้อนุมัติ" },
   receipt: { label: "ใบเสร็จรับเงิน", subLabel: "Receipt", color: "#3f9f28", bg: "#edf8e8", receiver: "ผู้จ่ายเงิน", approver: "ผู้รับเงิน" },
   taxInvoice: { label: "ใบกำกับภาษี", subLabel: "Tax Invoice", color: "#7c3aed", bg: "#f3efff", receiver: "ผู้รับสินค้า / บริการ", approver: "ผู้อนุมัติ" }

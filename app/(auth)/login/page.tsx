@@ -23,14 +23,31 @@ export default function LoginPage() {
     }
     setLoading(true);
     setError("");
-    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
 
     if (signInError) {
       setError("อีเมลหรือรหัสผ่านไม่ถูกต้อง");
       return;
     }
-    router.replace(nextPath || "/dashboard");
+
+    const { data: userProfile } = await supabase
+      .from("users")
+      .select("role")
+      .eq("id", data.user.id)
+      .single();
+
+    if (userProfile?.role === "Franchisee") {
+      router.replace("/shop");
+      return;
+    }
+
+    if (nextPath) {
+      router.replace(nextPath);
+      return;
+    }
+
+    router.replace("/dashboard");
   }
 
   return (
@@ -45,10 +62,10 @@ export default function LoginPage() {
             className="h-[76px] w-[76px] shrink-0 object-contain"
             priority
           />
-          <div><h1 className="text-xl font-bold">Domichathailand</h1><p className="text-xs text-slate-400">Brand Owner, Staff & Franchisee Portal</p></div>
+          <div><h1 className="text-xl font-bold">Domichathailand</h1><p className="text-xs text-slate-400">Staff & Franchisee Login</p></div>
         </div>
         <h2 className="text-2xl font-bold text-slate-950">เข้าสู่ระบบ</h2>
-        <p className="mt-1 text-sm text-slate-500">{demoMode ? "เปิดโหมดตัวอย่างเพื่อทดลองระบบหลังบ้าน" : "เข้าสู่ระบบสำหรับ Brand Owner, พนักงาน และแฟรนไชส์ซี"}</p>
+        <p className="mt-1 text-sm text-slate-500">{demoMode ? "เปิดโหมดตัวอย่างเพื่อทดลองระบบ" : "ใช้บัญชีที่ทีม DomiCha สร้างให้เพื่อเข้าสู่ระบบทีมงานหรือพอร์ทัลสั่งซื้อของสาขา"}</p>
         <div className="mt-6 space-y-4">
           <div>
             <label htmlFor="email">อีเมล</label>
@@ -69,10 +86,7 @@ export default function LoginPage() {
           {loading ? "กำลังเข้าสู่ระบบ..." : demoMode ? "เข้าสู่ระบบตัวอย่าง" : "เข้าสู่ระบบ"}
         </button>
         <p className="mt-4 text-center text-sm text-slate-500">
-          ยังไม่มีบัญชีหลังบ้าน?{" "}
-          <Link className="font-medium text-orange-600" href="/register">
-            สมัครสมาชิก
-          </Link>
+          ยังไม่มีบัญชี? กรุณาติดต่อทีม DomiCha เพื่อเปิดสิทธิ์ใช้งาน
         </p>
       </form>
     </main>

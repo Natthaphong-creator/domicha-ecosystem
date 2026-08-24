@@ -99,8 +99,16 @@ export default function CustomerShopPage() {
   const [success, setSuccess] = useState<{
     orderId?: string;
     orderNumber: string;
+    invoiceNumber?: string;
     total: number;
     lineNotified: boolean;
+    invoiceDelivery?: {
+      ok?: boolean;
+      emailSent?: boolean;
+      driveFileUrl?: string;
+      skippedReason?: string;
+      error?: string;
+    };
     promptpayAccountName?: string | null;
     promptpayTarget?: string | null;
   } | null>(null);
@@ -569,6 +577,17 @@ export default function CustomerShopPage() {
             <h2 className="mt-2 text-2xl font-black">รับคำสั่งซื้อแล้ว</h2>
             <p className="mt-2 text-sm text-stone-500">เลขที่คำสั่งซื้อ</p>
             <strong className="mt-1 block text-lg text-orange-600">{success.orderNumber}</strong>
+            {success.invoiceNumber ? (
+              <div className="mt-4 rounded-2xl bg-orange-50 p-4 text-sm">
+                <p className="text-stone-500">เลขที่ใบแจ้งหนี้</p>
+                <strong className="mt-1 block text-lg text-orange-600">{success.invoiceNumber}</strong>
+                <p className="mt-2 text-xs leading-5 text-stone-500">
+                  {success.invoiceDelivery?.ok
+                    ? "ระบบออกใบแจ้งหนี้ PDF และส่งไปที่อีเมลสาขาแล้ว"
+                    : "ระบบบันทึกใบแจ้งหนี้แล้ว หากยังไม่ส่งอีเมล ทีม DomiCha สามารถตรวจสอบในหลังบ้านได้"}
+                </p>
+              </div>
+            ) : null}
             {success.promptpayAccountName ? (
               <div className="mt-5 rounded-[24px] border border-orange-100 bg-orange-50 p-4">
                 <div className="flex items-center justify-center gap-2 text-sm font-bold text-orange-700">
@@ -612,7 +631,8 @@ export default function CustomerShopPage() {
             ) : null}
             <div className="mt-5 rounded-2xl bg-stone-50 p-4 text-left text-sm text-stone-600">
               <p className="flex items-center gap-2"><Check className="h-4 w-4 text-emerald-500" /> บันทึกคำสั่งซื้อเรียบร้อย</p>
-              <p className="mt-2 flex items-center gap-2"><Check className="h-4 w-4 text-emerald-500" /> หลังโอนเงิน ทีม DomiCha จะตรวจสอบและออกใบเสร็จให้</p>
+              <p className="mt-2 flex items-center gap-2"><Check className="h-4 w-4 text-emerald-500" /> หลังโอนเงิน กดแจ้งทีมและส่งสลิปใน LINE OA</p>
+              <p className="mt-2 flex items-center gap-2"><Check className="h-4 w-4 text-emerald-500" /> ทีม DomiCha ตรวจสอบยอด กดยืนยัน และระบบส่งใบเสร็จไปที่อีเมลสาขา</p>
               <p className="mt-2 flex items-center gap-2"><Check className={`h-4 w-4 ${success.lineNotified ? "text-emerald-500" : "text-amber-500"}`} /> {success.lineNotified ? "แจ้งเตือนทีมงานผ่าน LINE OA แล้ว" : "โหมดตัวอย่าง — รอตั้งค่า LINE OA"}</p>
             </div>
             <button onClick={() => setSuccess(null)} className="mt-5 h-12 w-full rounded-2xl bg-stone-950 font-bold text-white">เลือกซื้อสินค้าต่อ</button>
