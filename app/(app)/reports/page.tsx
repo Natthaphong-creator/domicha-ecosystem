@@ -1,4 +1,5 @@
 import { ArrowRight, FileBarChart, PieChart, ReceiptText, TrendingUp, WalletCards } from "lucide-react";
+import { BranchProfitReport } from "@/components/reports/BranchProfitReport";
 import { money } from "@/lib/format";
 
 export default function ReportsPage() {
@@ -17,6 +18,7 @@ export default function ReportsPage() {
           return <article key={report.title} className="group rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"><div className="flex items-start justify-between gap-4"><span className={`grid h-12 w-12 place-items-center rounded-2xl ${report.color}`}><Icon className="h-6 w-6" /></span><strong className="text-xl">{report.value}</strong></div><h2 className="mt-5 font-semibold">{report.title}</h2><p className="mt-1 text-sm text-slate-500">{report.description}</p><button className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-orange-600">เปิดรายงาน <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" /></button></article>;
         })}
       </section>
+      <BranchProfitReport />
       <section className="rounded-2xl border border-slate-200 bg-slate-950 p-6 text-white">
         <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-center"><div className="flex gap-4"><span className="grid h-12 w-12 flex-none place-items-center rounded-2xl bg-white/10"><FileBarChart className="h-6 w-6 text-orange-400" /></span><div><h2 className="font-semibold">ชุดรายงานสำหรับสำนักงานบัญชี</h2><p className="mt-1 text-sm text-slate-400">ดาวน์โหลดรายงานประจำเดือนพร้อมเอกสารประกอบในครั้งเดียว</p></div></div><button className="rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-slate-950">เตรียมชุดรายงาน</button></div>
       </section>
