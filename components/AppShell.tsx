@@ -40,7 +40,6 @@ const navGroups = [
     label: "งานขาย",
     items: [
       { href: "/shop", label: "พอร์ทัลแฟรนไชส์ซี", icon: Store },
-      { href: "/franchise-leads", label: "Lead แฟรนไชส์", icon: BarChart3 },
       { href: "/franchisees", label: "แฟรนไชส์ซี", icon: UserRoundCog },
       { href: "/orders", label: "ใบสั่งซื้อ", icon: ClipboardList },
       { href: "/documents", label: "เอกสารขาย", icon: FileText },
@@ -63,10 +62,6 @@ const navGroups = [
       { href: "/cashflow", label: "กระแสเงินสด", icon: CircleDollarSign },
       { href: "/reports", label: "รายงาน", icon: FileBarChart }
     ]
-  },
-  {
-    label: "เว็บไซต์",
-    items: [{ href: "/settings", label: "ตั้งค่าเว็บไซต์", icon: Settings }]
   }
 ] as const;
 
@@ -125,7 +120,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             priority
           />
           <span>
-            <strong className="block text-base leading-tight">Domichathailand</strong>
+            <strong className="block text-base leading-tight">DomiCha Portal Site</strong>
             <span className="text-xs text-slate-400">Brand Owner • Staff • Franchisee</span>
           </span>
         </Link>
@@ -157,7 +152,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   height={54}
                   className="h-[54px] w-[54px] object-contain"
                 />
-                <strong className="text-base">Domichathailand</strong>
+                <strong className="text-base">DomiCha Portal Site</strong>
               </Link>
               <button className="rounded-lg p-2 hover:bg-slate-100" aria-label="ปิดเมนู" onClick={() => setOpen(false)}>
                 <X className="h-5 w-5" />
@@ -204,9 +199,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <Plus className="h-4 w-4" />
               <span className="hidden sm:inline">สร้างเอกสาร</span>
             </Link>
-            <Link href="/settings" className="hidden rounded-xl border border-slate-200 p-2.5 text-slate-500 sm:block" aria-label="ตั้งค่าเว็บไซต์">
+            <button className="hidden rounded-xl border border-slate-200 p-2.5 text-slate-500 sm:block" aria-label="ตั้งค่า">
               <Settings className="h-4 w-4" />
-            </Link>
+            </button>
           </div>
         </header>
         <main className="mx-auto max-w-[1500px] px-4 py-6 sm:px-6 lg:px-8">{children}</main>
@@ -218,7 +213,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           { href: "/orders", label: "ออเดอร์", icon: ClipboardList },
           { href: "/expenses", label: "รายจ่าย", icon: WalletCards },
           { href: "/products", label: "สินค้า", icon: PackageOpen },
-          { href: "/settings", label: "เว็บ", icon: Settings }
+          { href: "/customers", label: "ลูกค้า", icon: Store }
         ].map((item) => {
           const Icon = item.icon;
           const active = pathname.startsWith(item.href);

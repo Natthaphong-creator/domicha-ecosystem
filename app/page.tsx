@@ -1,9 +1,5 @@
-import { DomichaHome } from "@/components/DomichaMarketing";
-import { getPublicSiteSettings } from "@/lib/siteSettings";
+import { redirect } from "next/navigation";
 
-export const dynamic = "force-dynamic";
-
-export default async function HomePage() {
-  const settings = await getPublicSiteSettings();
-  return <DomichaHome settings={settings} />;
+export default function HomePage() {
+  redirect("/dashboard");
 }

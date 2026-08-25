@@ -45,7 +45,7 @@ export default function LoginPage() {
             className="h-[76px] w-[76px] shrink-0 object-contain"
             priority
           />
-          <div><h1 className="text-xl font-bold">Domichathailand</h1><p className="text-xs text-slate-400">Brand Owner, Staff & Franchisee Portal</p></div>
+          <div><h1 className="text-xl font-bold">DomiCha Portal Site</h1><p className="text-xs text-slate-400">Brand Owner, Staff & Franchisee Portal</p></div>
         </div>
         <h2 className="text-2xl font-bold text-slate-950">เข้าสู่ระบบ</h2>
         <p className="mt-1 text-sm text-slate-500">{demoMode ? "เปิดโหมดตัวอย่างเพื่อทดลองระบบหลังบ้าน" : "เข้าสู่ระบบสำหรับ Brand Owner, พนักงาน และแฟรนไชส์ซี"}</p>
@@ -55,12 +55,7 @@ export default function LoginPage() {
             <input id="email" type="email" required value={email} onChange={(event) => setEmail(event.target.value)} />
           </div>
           <div>
-            <div className="flex items-center justify-between gap-3">
-              <label htmlFor="password">รหัสผ่าน</label>
-              <Link className="text-sm font-medium text-orange-600 hover:text-orange-700" href="/forgot-password">
-                ลืมรหัสผ่าน?
-              </Link>
-            </div>
+            <label htmlFor="password">รหัสผ่าน</label>
             <input id="password" type="password" required value={password} onChange={(event) => setPassword(event.target.value)} />
           </div>
         </div>

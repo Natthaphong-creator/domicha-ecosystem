@@ -26,11 +26,8 @@ type PullResponse = {
 
 type ProductOverride = {
   product_name: string;
-  category: string | null;
-  unit: string | null;
   selling_price: number | string | null;
   image_url: string | null;
-  status: string | null;
 };
 
 export type StockProductsResult = {
@@ -53,11 +50,6 @@ function slugify(text: string) {
 function numberValue(value: unknown, fallback = 0) {
   const numeric = Number(value);
   return Number.isFinite(numeric) ? numeric : fallback;
-}
-
-function positiveNumber(value: unknown) {
-  const numeric = Number(value);
-  return Number.isFinite(numeric) && numeric > 0 ? numeric : null;
 }
 
 function stockFallbackImage(name: string, category = "สินค้า") {
@@ -135,16 +127,6 @@ function unitFromName(name: string) {
   return "ถุง";
 }
 
-function overrideText(value: unknown, fallback: string) {
-  return typeof value === "string" && value.trim() ? value.trim() : fallback;
-}
-
-function productPrice(stockPrice: unknown, override?: ProductOverride) {
-  const adminPrice = positiveNumber(override?.selling_price);
-  if (adminPrice !== null) return adminPrice;
-  return numberValue(stockPrice);
-}
-
 export function transformStockSnapshot(snapshot: StockSnapshot, overrides: ProductOverride[] = []): ShopProduct[] {
   const seen = new Set<string>();
   const products: ShopProduct[] = [];
@@ -158,22 +140,19 @@ export function transformStockSnapshot(snapshot: StockSnapshot, overrides: Produ
       if (!name || seen.has(name)) continue;
       seen.add(name);
       const override = findProductOverride(name, overrides);
-      if (override?.status === "Inactive") continue;
-      const displayCategory = overrideText(override?.category, categoryName);
-      const unit = overrideText(override?.unit, unitFromName(name));
-      const price = productPrice(prices[name], override);
+      const price = numberValue(prices[name], numberValue(override?.selling_price));
       const hasStockValue = Object.prototype.hasOwnProperty.call(warehouseStock, name);
       const stock = hasStockValue ? numberValue(warehouseStock[name]) : undefined;
-      const fallbackImage = stockFallbackImage(name, displayCategory);
+      const fallbackImage = stockFallbackImage(name, categoryName);
       products.push({
         id: `stock-${slugify(name)}`,
         name,
         description: stock === undefined
           ? "สินค้า DomiCha Stock • รอ HQ ยืนยันราคา/สต็อก"
-          : `สินค้า DomiCha Stock • คลังกลาง ${stock.toLocaleString("th-TH")} ${unit}`,
-        category: displayCategory,
+          : `สินค้า DomiCha Stock • คลังกลาง ${stock.toLocaleString("th-TH")} ${unitFromName(name)}`,
+        category: categoryName,
         price,
-        unit,
+        unit: unitFromName(name),
         image: normalizeImage(override?.image_url, fallbackImage),
         badge: stock === 0 ? "หมด" : price <= 0 ? "รอราคา" : undefined,
         stock,
@@ -187,19 +166,16 @@ export function transformStockSnapshot(snapshot: StockSnapshot, overrides: Produ
     if (!name || seen.has(name)) continue;
     seen.add(name);
     const override = findProductOverride(name, overrides);
-    if (override?.status === "Inactive") continue;
-    const displayCategory = overrideText(override?.category, "สินค้า");
-    const unit = overrideText(override?.unit, unitFromName(name));
-    const price = productPrice(prices[name], override);
+    const price = numberValue(prices[name], numberValue(override?.selling_price));
     const stock = numberValue(warehouseStock[name]);
-    const fallbackImage = stockFallbackImage(name, displayCategory);
+    const fallbackImage = stockFallbackImage(name);
     products.push({
       id: `stock-${slugify(name)}`,
       name,
-      description: `สินค้า DomiCha Stock • คลังกลาง ${stock.toLocaleString("th-TH")} ${unit}`,
-      category: displayCategory,
+      description: `สินค้า DomiCha Stock • คลังกลาง ${stock.toLocaleString("th-TH")} ${unitFromName(name)}`,
+      category: "สินค้า",
       price,
-      unit,
+      unit: unitFromName(name),
       image: normalizeImage(override?.image_url, fallbackImage),
       badge: stock <= 0 ? "หมด" : undefined,
       stock,
@@ -216,7 +192,8 @@ async function fetchProductOverrides(): Promise<ProductOverride[]> {
 
   const { data, error } = await supabase
     .from("products")
-    .select("product_name,category,unit,selling_price,image_url,status");
+    .select("product_name,selling_price,image_url")
+    .eq("status", "Active");
 
   if (error || !data) return [];
   return data as ProductOverride[];
@@ -230,7 +207,7 @@ export async function fetchStockProducts(): Promise<StockProductsResult> {
       method: "POST",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify({ action: "pull" }),
-      cache: "no-store"
+      next: { revalidate: 60 }
     });
 
     if (!response.ok) throw new Error(`DomiCha Stock API ${response.status}`);

@@ -1,4 +1,4 @@
-# วิธี Deploy Domichathailand / พอร์ทัลแฟรนไชส์ซี
+# วิธี Deploy DomiCha Business / พอร์ทัลแฟรนไชส์ซี
 
 โปรเจกต์นี้เป็น Next.js app พร้อมหน้าแอดมินและพอร์ทัลแฟรนไชส์ซี `/shop`
 
@@ -33,13 +33,9 @@ NEXT_PUBLIC_APP_URL=https://your-domain.com
 
 ## หลัง Deploy แล้วใช้งานยังไง
 
-- หน้าเว็บลูกค้าทั่วไป: `https://www.domichathailand.com`
-- หน้าแฟรนไชส์: `https://www.domichathailand.com/franchise`
-- พอร์ทัลแฟรนไชส์ซี: `https://order.domichathailand.com` หรือ `https://www.domichathailand.com/shop`
-- ระบบหลังบ้าน: `https://admin.domichathailand.com` หรือ `https://www.domichathailand.com/dashboard`
+- พอร์ทัลแฟรนไชส์ซี: `https://your-domain.com/shop`
+- ระบบหลังบ้าน: `https://your-domain.com/dashboard`
 - หน้า Login: `https://your-domain.com/login`
-
-ดูรายละเอียด DNS และโครงสร้างโดเมนใน `DOMAIN_STRUCTURE_TH.md`
 
 ## ติดตั้งเป็นแอปบนมือถือ / แท็บเล็ต
 

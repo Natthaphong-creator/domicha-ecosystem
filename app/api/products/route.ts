@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { productPayload } from "@/lib/productPayload";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 import { handleRouteError, requireUser } from "@/lib/supabaseServer";
 
@@ -35,7 +34,7 @@ export async function POST(request: NextRequest) {
     const db = getSupabaseAdmin() || auth.supabase;
 
     const payload = await request.json();
-    const insertPayload = { ...productPayload(payload), created_by: auth.user.id };
+    const insertPayload = { ...payload, supplier_id: payload.supplier_id || null, created_by: auth.user.id };
     const { data, error } = await db
       .from("products")
       .insert(insertPayload)

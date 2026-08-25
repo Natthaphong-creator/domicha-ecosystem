@@ -1,4 +1,4 @@
-export type UserRole = "Admin" | "Executive" | "Manager" | "AssistantManager" | "Sales" | "Accountant" | "Franchisee";
+export type UserRole = "Admin" | "Sales" | "Accountant" | "Franchisee";
 export type Status = "Active" | "Inactive";
 export type CustomerType = "Retail" | "Franchisee" | "Corporate";
 export type VatType = "VAT 7%" | "No VAT" | "VAT Included";
@@ -89,23 +89,6 @@ export type Quotation = {
 
 export type FranchiseeOrderStatus = "Received" | "Confirmed" | "Packing" | "Shipped" | "Completed" | "Cancelled";
 export type PaymentStatus = "Pending" | "Paid" | "Overdue" | "Cancelled";
-export type FranchiseLeadStatus = "New" | "Contacted" | "Qualified" | "PackageSent" | "Won" | "Lost";
-
-export type FranchiseLead = {
-  id: string;
-  name: string;
-  contact: string;
-  location: string | null;
-  budget: string | null;
-  note: string | null;
-  source: string;
-  status: FranchiseLeadStatus;
-  assigned_to: string | null;
-  last_contacted_at: string | null;
-  internal_note: string | null;
-  created_at: string;
-  updated_at: string;
-};
 
 export type FranchiseeOrderItem = {
   id: string;
@@ -129,13 +112,6 @@ export type FranchiseeOrder = {
   payment_method: "transfer" | "cod" | string;
   order_status: FranchiseeOrderStatus;
   payment_status: PaymentStatus;
-  payment_confirmed_at: string | null;
-  payment_confirmed_by: string | null;
-  payment_reference: string | null;
-  promptpay_payload: string | null;
-  promptpay_account_name: string | null;
-  receipt_number: string | null;
-  receipt_issued_at: string | null;
   subtotal: number;
   delivery_fee: number;
   grand_total: number;

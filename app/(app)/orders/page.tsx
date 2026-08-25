@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowUpRight, CheckCircle2, ClipboardList, CreditCard, FileText, PackageCheck, ReceiptText, RefreshCcw, Search } from "lucide-react";
+import { ArrowUpRight, ClipboardList, FileText, PackageCheck, RefreshCcw, Search } from "lucide-react";
 import { apiFetch } from "@/lib/apiClient";
 import { dateThai, money } from "@/lib/format";
 import type { FranchiseeOrder } from "@/lib/types";
@@ -24,7 +24,6 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [query, setQuery] = useState("");
-  const [updatingId, setUpdatingId] = useState("");
 
   async function loadOrders() {
     setLoading(true);
@@ -60,25 +59,6 @@ export default function OrdersPage() {
   }, [orders, query]);
 
   const totalValue = orders.reduce((sum, order) => sum + Number(order.grand_total || 0), 0);
-
-  async function confirmPayment(orderId: string) {
-    const paymentReference = window.prompt("เลขอ้างอิงสลิป / หมายเหตุการรับชำระเงิน (ถ้ามี)", "");
-    if (paymentReference === null) return;
-
-    setUpdatingId(orderId);
-    setError("");
-    try {
-      const updated = await apiFetch<FranchiseeOrder>(`/api/orders/${orderId}`, {
-        method: "PATCH",
-        body: JSON.stringify({ action: "confirm-payment", paymentReference })
-      });
-      setOrders((current) => current.map((order) => order.id === orderId ? updated : order));
-    } catch (updateError) {
-      setError(updateError instanceof Error ? updateError.message : "ยืนยันการชำระเงินไม่สำเร็จ");
-    } finally {
-      setUpdatingId("");
-    }
-  }
 
   return (
     <div className="space-y-6">
@@ -158,42 +138,15 @@ export default function OrdersPage() {
                       <h3 className="font-black">{order.order_number}</h3>
                       <span className={`rounded-full border px-2.5 py-1 text-[11px] font-bold ${statusClass(order.order_status)}`}>{order.order_status}</span>
                       <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-bold text-slate-500">{order.payment_status}</span>
-                      {order.payment_method === "transfer" && order.payment_status !== "Paid" && order.payment_reference ? (
-                        <span className="inline-flex items-center gap-1 rounded-full border border-emerald-100 bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700">
-                          <CheckCircle2 className="h-3 w-3" /> ลูกค้าแจ้งโอนแล้ว
-                        </span>
-                      ) : order.payment_method === "transfer" && order.payment_status !== "Paid" ? (
-                        <span className="inline-flex items-center gap-1 rounded-full border border-orange-100 bg-orange-50 px-2.5 py-1 text-[11px] font-bold text-orange-700">
-                          <CreditCard className="h-3 w-3" /> มี QR รอโอน
-                        </span>
-                      ) : null}
                     </div>
                     <p className="mt-1 text-sm text-slate-600">{profile?.branch_name || "ไม่พบชื่อสาขา"} • {profile?.owner_name || "-"} • {profile?.phone || "-"}</p>
                     <p className="mt-1 text-xs text-slate-400">{dateThai(order.created_at)} • {order.delivery_method === "pickup" ? "รับสินค้าที่ศูนย์" : "จัดส่ง"}</p>
-                    {order.payment_status !== "Paid" && order.payment_reference ? (
-                      <p className="mt-2 rounded-xl bg-white px-3 py-2 text-xs font-semibold text-emerald-700">
-                        อ้างอิงการโอน: {order.payment_reference}
-                      </p>
-                    ) : null}
                   </div>
                   <div className="flex items-center justify-between gap-4 lg:min-w-[260px] lg:justify-end">
                     <div className="text-right">
                       <p className="text-xs text-slate-400">ยอดสุทธิ</p>
                       <p className="text-lg font-black text-orange-600">{money(order.grand_total)}</p>
                     </div>
-                    {order.payment_status !== "Paid" ? (
-                      <button
-                        disabled={updatingId === order.id}
-                        onClick={() => confirmPayment(order.id)}
-                        className="inline-flex h-11 items-center gap-2 rounded-2xl bg-emerald-600 px-4 text-sm font-bold text-white hover:bg-emerald-700 disabled:opacity-60"
-                      >
-                        <CheckCircle2 className="h-4 w-4" /> {updatingId === order.id ? "กำลังยืนยัน..." : "ยืนยันชำระเงิน"}
-                      </button>
-                    ) : (
-                      <Link href={`/orders/${order.id}?doc=receipt`} className="inline-flex h-11 items-center gap-2 rounded-2xl bg-emerald-50 px-4 text-sm font-bold text-emerald-700 hover:bg-emerald-100">
-                        <ReceiptText className="h-4 w-4" /> ใบเสร็จ
-                      </Link>
-                    )}
                     <Link href={`/orders/${order.id}`} className="inline-flex h-11 items-center gap-2 rounded-2xl bg-slate-950 px-4 text-sm font-bold text-white hover:bg-orange-600">
                       เปิดเอกสาร <ArrowUpRight className="h-4 w-4" />
                     </Link>

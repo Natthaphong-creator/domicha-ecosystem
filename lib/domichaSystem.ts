@@ -9,17 +9,10 @@ const FIREBASE_STORE_PATH =
   "domicha_v2/store";
 
 export const domichaAppLinks = {
-  stock: normalizeAppUrl(process.env.NEXT_PUBLIC_DOMICHA_STOCK_URL, "https://domichathailand.com/products"),
+  stock: process.env.NEXT_PUBLIC_DOMICHA_STOCK_URL || "https://domichastore.netlify.app/",
   pos: process.env.NEXT_PUBLIC_DOMICHA_POS_URL || "",
   manager: process.env.NEXT_PUBLIC_DOMICHA_POS_MANAGER_URL || ""
 };
-
-function normalizeAppUrl(value: string | undefined, fallback = ""): string {
-  const url = (value || "").trim();
-  const legacyMissingSites = new Set(["https://domichastore.netlify.app", "https://domichastore.netlify.app/"]);
-  if (!url || legacyMissingSites.has(url)) return fallback;
-  return url;
-}
 
 type AnyRecord = Record<string, any>;
 
