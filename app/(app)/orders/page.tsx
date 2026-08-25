@@ -116,7 +116,7 @@ export default function OrdersPage() {
             </span>
             <h1 className="mt-5 text-3xl font-black tracking-tight sm:text-4xl">เอกสารใบสั่งซื้อแฟรนไชส์ซี</h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">
-              รวมคำสั่งซื้อจากสาขา เปิดดูรูปแบบเอกสาร พิมพ์ หรือบันทึกเป็น PDF เพื่อส่งต่อให้คลังสินค้าและบัญชี
+              รวมคำสั่งซื้อจาก DomiCha System เพื่อให้ทีมบัญชีตรวจยอด เปิดใบแจ้งหนี้ ยืนยันวันโอน และออกใบเสร็จรับเงินเต็มรูปแบบ
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -170,7 +170,7 @@ export default function OrdersPage() {
           <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
             <p className="text-xs font-bold uppercase tracking-[.14em] text-emerald-700">Step 2</p>
             <h3 className="mt-2 font-black">รอตรวจยอด {paymentWaiting} รายการ</h3>
-            <p className="mt-1 text-sm leading-6 text-emerald-900/75">ถ้าลูกค้ากดแจ้งโอนแล้ว ให้ตรวจสลิปใน LINE OA แล้วกด “ยืนยันชำระเงิน”</p>
+            <p className="mt-1 text-sm leading-6 text-emerald-900/75">ตรวจยอดจริงกับวันที่โอนในบัญชีธนาคาร แล้วกด “ยืนยันชำระเงิน” เพื่อปิดลูกหนี้</p>
           </div>
           <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
             <p className="text-xs font-bold uppercase tracking-[.14em] text-slate-500">Step 3</p>

@@ -134,6 +134,21 @@ export default function DocumentsPage() {
         ))}
       </section>
 
+      <section className="rounded-[24px] border border-orange-100 bg-orange-50 p-5 shadow-sm">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[.16em] text-orange-600">DomiCha System Accounting</p>
+            <h2 className="mt-2 text-xl font-black text-slate-950">ออเดอร์แฟรนไชส์ซีจริงสำหรับทำบัญชี</h2>
+            <p className="mt-1 text-sm leading-6 text-orange-950/75">
+              ใช้หน้านี้เพื่อตรวจคำสั่งซื้อจากสาขา เปิดใบแจ้งหนี้พร้อม QR ยืนยันวันที่โอน และออกใบเสร็จรับเงิน PDF อัตโนมัติ
+            </p>
+          </div>
+          <Link href="/orders" className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-slate-950 px-4 text-sm font-bold text-white hover:bg-orange-600">
+            เปิดรายการจริงจาก DomiCha System <ArrowUpRight className="h-4 w-4" />
+          </Link>
+        </div>
+      </section>
+
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="flex flex-col gap-3 border-b border-slate-100 p-4 xl:flex-row">
           <label className="relative min-w-0 flex-1">

@@ -20,6 +20,15 @@ function paymentLabel(value: string) {
   return "โอนเงิน";
 }
 
+const company = {
+  legalName: "บริษัท โดมิพลัสกรุ๊ป จำกัด",
+  branch: "สำนักงานใหญ่",
+  taxId: "0205567033352",
+  address: "77/44 หมู่ 5 หมู่บ้านแกรนด์ดี้เบย์ ต.เสม็ด อ.เมืองชลบุรี จ.ชลบุรี 20000",
+  phone: "0988247849",
+  email: "domicha.tea@gmail.com"
+};
+
 export default function OrderDocumentPage() {
   const params = useParams<{ id: string }>();
   const searchParams = useSearchParams();
@@ -80,6 +89,12 @@ export default function OrderDocumentPage() {
               <p className="mt-2 text-xs text-slate-300 print:text-slate-500">วันที่ {dateThai(documentDate)}</p>
             </div>
           </div>
+          <div className="mt-6 rounded-2xl border border-white/10 bg-white/10 p-4 text-sm leading-6 text-slate-200 print:border-slate-200 print:bg-slate-50 print:text-slate-700">
+            <p className="font-bold text-white print:text-slate-950">{company.legalName} ({company.branch})</p>
+            <p>เลขประจำตัวผู้เสียภาษี {company.taxId}</p>
+            <p>{company.address}</p>
+            <p>โทร. {company.phone} • อีเมล {company.email}</p>
+          </div>
         </header>
 
         <section className="grid gap-4 border-b border-slate-100 p-7 md:grid-cols-2">
@@ -105,10 +120,14 @@ export default function OrderDocumentPage() {
               <dd className="font-bold">{order.payment_status}</dd>
               {showReceipt ? (
                 <>
+                  <dt className="text-slate-500">ใบแจ้งหนี้อ้างอิง</dt>
+                  <dd className="font-bold">{order.invoice_number || "-"}</dd>
                   <dt className="text-slate-500">วันที่ลูกค้าโอน</dt>
                   <dd className="font-bold">{dateThai(order.payment_received_at || order.payment_confirmed_at)}</dd>
                   <dt className="text-slate-500">รับชำระเมื่อ</dt>
                   <dd className="font-bold">{dateThai(order.payment_confirmed_at)}</dd>
+                  <dt className="text-slate-500">เลขอ้างอิง</dt>
+                  <dd className="font-bold">{order.payment_reference || "-"}</dd>
                 </>
               ) : (
                 <>
@@ -125,7 +144,7 @@ export default function OrderDocumentPage() {
             <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-5 text-emerald-900">
               <p className="text-xs font-bold uppercase tracking-[.16em] text-emerald-700">Payment Confirmed</p>
               <p className="mt-2 text-sm leading-6">
-                ได้รับชำระเงินสำหรับคำสั่งซื้อ {order.order_number} เรียบร้อยแล้ว
+                ได้รับชำระเงินสำหรับคำสั่งซื้อ {order.order_number} เรียบร้อยแล้ว เอกสารนี้ใช้บันทึกบัญชีเป็นใบเสร็จรับเงินของบริษัท
                 {order.payment_reference ? ` • อ้างอิง: ${order.payment_reference}` : ""}
               </p>
               <div className="mt-4 grid gap-3 text-sm sm:grid-cols-3">

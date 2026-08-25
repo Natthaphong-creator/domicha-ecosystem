@@ -1,7 +1,13 @@
 const DEFAULT_SHEET_NAME = "Franchise Leads";
 const DEFAULT_SPREADSHEET_NAME = "DomiCha Franchise Leads";
+const DEFAULT_SPREADSHEET_ID = "1Aq9mZc_6Lhh6Gz2dntTjEtlkd3CRqKJbA9oExU8K-EA";
 const DEFAULT_RECEIPT_ROOT_FOLDER_NAME = "DomiCha Receipts";
 const DEFAULT_REPLY_TO_EMAIL = "domicha.tea@gmail.com";
+const COMPANY_LEGAL_NAME = "บริษัท โดมิพลัสกรุ๊ป จำกัด";
+const COMPANY_BRANCH = "สำนักงานใหญ่";
+const COMPANY_TAX_ID = "0205567033352";
+const COMPANY_ADDRESS = "77/44 หมู่ 5 หมู่บ้านแกรนด์ดี้เบย์ ต.เสม็ด อ.เมืองชลบุรี จ.ชลบุรี 20000";
+const COMPANY_PHONE = "0988247849";
 
 function doPost(e) {
   try {
@@ -75,7 +81,7 @@ function parseLeadPayload_(payload) {
 
 function getLeadSpreadsheet_() {
   const properties = PropertiesService.getScriptProperties();
-  const sheetId = properties.getProperty("SHEET_ID");
+  const sheetId = properties.getProperty("SHEET_ID") || DEFAULT_SPREADSHEET_ID;
 
   if (sheetId) {
     return SpreadsheetApp.openById(sheetId);
@@ -219,10 +225,17 @@ function createReceiptPdf_(payload, folder) {
   body.setMarginTop(36).setMarginBottom(36).setMarginLeft(42).setMarginRight(42);
 
   body.appendParagraph("DomiCha Thailand").setHeading(DocumentApp.ParagraphHeading.HEADING1);
+  body.appendParagraph(COMPANY_LEGAL_NAME + " (" + COMPANY_BRANCH + ")");
+  body.appendParagraph("เลขประจำตัวผู้เสียภาษี: " + COMPANY_TAX_ID);
+  body.appendParagraph("ที่อยู่: " + COMPANY_ADDRESS);
+  body.appendParagraph("โทร: " + COMPANY_PHONE + " | อีเมล: " + getReplyToEmail_());
+  body.appendParagraph("");
   body.appendParagraph("ใบเสร็จรับเงิน / Receipt").setHeading(DocumentApp.ParagraphHeading.HEADING2);
   body.appendParagraph("เลขที่ใบเสร็จ: " + receiptNumber);
   body.appendParagraph("เลขที่ออเดอร์: " + (payload.orderNumber || "-"));
+  body.appendParagraph("อ้างอิงใบแจ้งหนี้: " + (payload.invoiceNumber || "-"));
   body.appendParagraph("วันที่ออกเอกสาร: " + formatReceiptDate_(payload.receiptIssuedAt || new Date()));
+  body.appendParagraph("วันที่รับชำระเงินจริง: " + formatReceiptDate_(payload.paymentReceivedAt || payload.receiptIssuedAt || new Date()));
   body.appendParagraph("");
 
   body.appendParagraph("ข้อมูลลูกค้า").setHeading(DocumentApp.ParagraphHeading.HEADING3);
@@ -252,8 +265,14 @@ function createReceiptPdf_(payload, folder) {
   body.appendParagraph("ค่าจัดส่ง: " + formatReceiptMoney_(payload.deliveryFee || 0)).setAlignment(DocumentApp.HorizontalAlignment.RIGHT);
   body.appendParagraph("ยอดสุทธิ: " + formatReceiptMoney_(payload.grandTotal || 0)).setBold(true).setAlignment(DocumentApp.HorizontalAlignment.RIGHT);
   body.appendParagraph("");
-  body.appendParagraph("ช่องทางชำระเงิน: พร้อมเพย์ " + (payload.promptpayAccountName || "บริษัท โดมิพลัสกรุ๊ป จำกัด"));
+  body.appendParagraph("ข้อมูลการรับชำระเงิน").setHeading(DocumentApp.ParagraphHeading.HEADING3);
+  body.appendParagraph("ช่องทางชำระเงิน: โอนเงิน / พร้อมเพย์");
+  body.appendParagraph("ชื่อบัญชี: " + (payload.promptpayAccountName || COMPANY_LEGAL_NAME));
+  body.appendParagraph("เลขพร้อมเพย์: " + (payload.promptpayTarget || COMPANY_TAX_ID));
   body.appendParagraph("เลขอ้างอิงการชำระเงิน: " + (payload.paymentReference || "-"));
+  body.appendParagraph("");
+  body.appendParagraph("ผู้รับเงิน: ________________________________");
+  body.appendParagraph("ผู้อนุมัติ: ________________________________");
   body.appendParagraph("");
   body.appendParagraph("เอกสารนี้ออกโดยระบบ DomiCha หลังทีมตรวจสอบการชำระเงินเรียบร้อยแล้ว");
 
@@ -273,6 +292,11 @@ function createInvoicePdf_(payload, folder) {
   body.setMarginTop(36).setMarginBottom(36).setMarginLeft(42).setMarginRight(42);
 
   body.appendParagraph("DomiCha Thailand").setHeading(DocumentApp.ParagraphHeading.HEADING1);
+  body.appendParagraph(COMPANY_LEGAL_NAME + " (" + COMPANY_BRANCH + ")");
+  body.appendParagraph("เลขประจำตัวผู้เสียภาษี: " + COMPANY_TAX_ID);
+  body.appendParagraph("ที่อยู่: " + COMPANY_ADDRESS);
+  body.appendParagraph("โทร: " + COMPANY_PHONE + " | อีเมล: " + getReplyToEmail_());
+  body.appendParagraph("");
   body.appendParagraph("ใบแจ้งหนี้ / Invoice").setHeading(DocumentApp.ParagraphHeading.HEADING2);
   body.appendParagraph("เลขที่ใบแจ้งหนี้: " + invoiceNumber);
   body.appendParagraph("เลขที่ออเดอร์: " + (payload.orderNumber || "-"));
@@ -309,7 +333,7 @@ function createInvoicePdf_(payload, folder) {
   body.appendParagraph("");
   body.appendParagraph("วิธีชำระเงิน").setHeading(DocumentApp.ParagraphHeading.HEADING3);
   body.appendParagraph("พร้อมเพย์: " + (payload.promptpayTarget || "-"));
-  body.appendParagraph("ชื่อบัญชี: " + (payload.promptpayAccountName || "บริษัท โดมิพลัสกรุ๊ป จำกัด"));
+  body.appendParagraph("ชื่อบัญชี: " + (payload.promptpayAccountName || COMPANY_LEGAL_NAME));
   appendPromptPayQr_(body, payload);
   body.appendParagraph("");
   body.appendParagraph("หลังชำระเงินแล้ว กรุณาส่งสลิปให้ทีม DomiCha ตรวจสอบ เมื่อยืนยันยอดแล้วระบบจะออกใบเสร็จรับเงินให้อัตโนมัติ");
