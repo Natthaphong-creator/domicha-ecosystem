@@ -40,7 +40,6 @@ const navGroups = [
     label: "งานขาย",
     items: [
       { href: "/shop", label: "พอร์ทัลแฟรนไชส์ซี", icon: Store },
-      { href: "/franchise-leads", label: "Lead แฟรนไชส์", icon: BarChart3 },
       { href: "/franchisees", label: "แฟรนไชส์ซี", icon: UserRoundCog },
       { href: "/orders", label: "ใบสั่งซื้อ", icon: ClipboardList },
       { href: "/documents", label: "เอกสารขาย", icon: FileText },
@@ -63,10 +62,6 @@ const navGroups = [
       { href: "/cashflow", label: "กระแสเงินสด", icon: CircleDollarSign },
       { href: "/reports", label: "รายงาน", icon: FileBarChart }
     ]
-  },
-  {
-    label: "เว็บไซต์",
-    items: [{ href: "/settings", label: "ตั้งค่าเว็บไซต์", icon: Settings }]
   }
 ] as const;
 
@@ -125,7 +120,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             priority
           />
           <span>
-            <strong className="block text-base leading-tight">Domichathailand</strong>
+            <strong className="block text-base leading-tight">DomiCha Portal Site</strong>
             <span className="text-xs text-slate-400">Brand Owner • Staff • Franchisee</span>
           </span>
         </Link>
@@ -137,7 +132,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <span className="grid h-9 w-9 place-items-center rounded-full bg-slate-900 text-xs font-bold text-white">NP</span>
             <span className="min-w-0 flex-1">
               <strong className="block truncate text-sm">ณัฐพงษ์ อุทธะ</strong>
-              <span className="block truncate text-xs text-slate-400">{demoMode ? "ยังไม่ได้เชื่อมต่อข้อมูล" : "ผู้ดูแลระบบ"}</span>
+              <span className="block truncate text-xs text-slate-400">{demoMode ? "โหมดตัวอย่าง" : "ผู้ดูแลระบบ"}</span>
             </span>
             <ChevronDown className="h-4 w-4 text-slate-400" />
           </button>
@@ -157,7 +152,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   height={54}
                   className="h-[54px] w-[54px] object-contain"
                 />
-                <strong className="text-base">Domichathailand</strong>
+                <strong className="text-base">DomiCha Portal Site</strong>
               </Link>
               <button className="rounded-lg p-2 hover:bg-slate-100" aria-label="ปิดเมนู" onClick={() => setOpen(false)}>
                 <X className="h-5 w-5" />
@@ -194,7 +189,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="ml-auto flex items-center gap-2">
             <span className="hidden items-center gap-1.5 rounded-full border border-amber-200/70 bg-gradient-to-r from-amber-50 to-orange-50 px-3 py-1.5 text-xs font-semibold text-amber-800 sm:inline-flex">
               <Crown className="h-3.5 w-3.5 text-amber-600" />
-              {demoMode ? "● รอตั้งค่าข้อมูล" : "● ระบบออนไลน์"}
+              {demoMode ? "● ข้อมูลตัวอย่าง" : "● ระบบออนไลน์"}
             </span>
             <Link href="/shop" className="inline-flex h-10 items-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-3 text-sm font-semibold text-orange-700 hover:bg-orange-100" aria-label="เปิดพอร์ทัลแฟรนไชส์ซี">
               <Store className="h-4 w-4" />
@@ -204,9 +199,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <Plus className="h-4 w-4" />
               <span className="hidden sm:inline">สร้างเอกสาร</span>
             </Link>
-            <Link href="/settings" className="hidden rounded-xl border border-slate-200 p-2.5 text-slate-500 sm:block" aria-label="ตั้งค่าเว็บไซต์">
+            <button className="hidden rounded-xl border border-slate-200 p-2.5 text-slate-500 sm:block" aria-label="ตั้งค่า">
               <Settings className="h-4 w-4" />
-            </Link>
+            </button>
           </div>
         </header>
         <main className="mx-auto max-w-[1500px] px-4 py-6 sm:px-6 lg:px-8">{children}</main>
@@ -218,7 +213,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           { href: "/orders", label: "ออเดอร์", icon: ClipboardList },
           { href: "/expenses", label: "รายจ่าย", icon: WalletCards },
           { href: "/products", label: "สินค้า", icon: PackageOpen },
-          { href: "/settings", label: "เว็บ", icon: Settings }
+          { href: "/customers", label: "ลูกค้า", icon: Store }
         ].map((item) => {
           const Icon = item.icon;
           const active = pathname.startsWith(item.href);

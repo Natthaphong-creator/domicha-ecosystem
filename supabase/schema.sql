@@ -1,6 +1,6 @@
 create extension if not exists "pgcrypto";
 
-create type user_role as enum ('Admin', 'Executive', 'Manager', 'AssistantManager', 'Sales', 'Accountant', 'Franchisee');
+create type user_role as enum ('Admin', 'Sales', 'Accountant', 'Franchisee');
 create type status_type as enum ('Active', 'Inactive');
 create type customer_type as enum ('Retail', 'Franchisee', 'Corporate');
 create type vat_type as enum ('VAT 7%', 'No VAT', 'VAT Included');
@@ -13,7 +13,6 @@ create type delivery_status as enum ('Queued', 'Sent', 'Failed', 'Skipped');
 create type franchisee_status as enum ('Pending', 'Active', 'Suspended');
 create type franchisee_order_status as enum ('Received', 'Confirmed', 'Packing', 'Shipped', 'Completed', 'Cancelled');
 create type payment_status as enum ('Pending', 'Paid', 'Overdue', 'Cancelled');
-create type franchise_lead_status as enum ('New', 'Contacted', 'Qualified', 'PackageSent', 'Won', 'Lost');
 
 create table public.users (
   id uuid primary key references auth.users(id) on delete cascade,
@@ -50,22 +49,6 @@ create table public.franchisee_profiles (
   payment_terms text not null default 'ชำระก่อนจัดส่ง',
   status franchisee_status not null default 'Pending',
   created_by uuid references public.users(id),
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-
-create table public.franchise_leads (
-  id uuid primary key default gen_random_uuid(),
-  name text not null,
-  contact text not null,
-  location text,
-  budget text,
-  note text,
-  source text not null default 'DomiCha Website',
-  status franchise_lead_status not null default 'New',
-  assigned_to uuid references public.users(id) on delete set null,
-  last_contacted_at timestamptz,
-  internal_note text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -213,14 +196,6 @@ create table public.line_delivery_logs (
   created_by uuid references public.users(id)
 );
 
-create table public.site_settings (
-  key text primary key,
-  value jsonb not null default '{}'::jsonb,
-  updated_by uuid references public.users(id),
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-
 create table public.franchisee_orders (
   id uuid primary key default gen_random_uuid(),
   order_number text unique not null,
@@ -232,27 +207,6 @@ create table public.franchisee_orders (
   payment_method text not null default 'transfer',
   order_status franchisee_order_status not null default 'Received',
   payment_status payment_status not null default 'Pending',
-  payment_confirmed_at timestamptz,
-  payment_confirmed_by uuid references public.users(id),
-  payment_received_at timestamptz,
-  payment_reference text,
-  promptpay_payload text,
-  promptpay_account_name text,
-  invoice_number text unique,
-  invoice_issued_at timestamptz,
-  invoice_due_at timestamptz,
-  invoice_delivery_status text not null default 'Not sent',
-  invoice_email_sent_at timestamptz,
-  invoice_drive_file_url text,
-  invoice_month_folder_name text,
-  invoice_delivery_error text,
-  receipt_number text unique,
-  receipt_issued_at timestamptz,
-  receipt_delivery_status text not null default 'Not sent',
-  receipt_email_sent_at timestamptz,
-  receipt_drive_file_url text,
-  receipt_month_folder_name text,
-  receipt_delivery_error text,
   subtotal numeric(12,2) not null default 0,
   delivery_fee numeric(12,2) not null default 0,
   grand_total numeric(12,2) not null default 0,
@@ -274,30 +228,6 @@ create table public.franchisee_order_items (
   created_at timestamptz not null default now()
 );
 
-create table public.stock_movements (
-  id uuid primary key default gen_random_uuid(),
-  product_id text not null,
-  product_name text not null,
-  movement_type text not null check (movement_type in ('sale_out', 'adjustment_in', 'adjustment_out', 'return_in')),
-  quantity numeric(12,2) not null check (quantity > 0),
-  unit text,
-  unit_price numeric(12,2) not null default 0,
-  line_total numeric(12,2) not null default 0,
-  reference_type text not null default 'franchisee_order',
-  reference_id uuid,
-  reference_number text,
-  franchisee_order_id uuid references public.franchisee_orders(id) on delete set null,
-  sales_document_id uuid references public.sales_documents(id) on delete set null,
-  note text,
-  created_by uuid references public.users(id),
-  created_at timestamptz not null default now()
-);
-
-create index stock_movements_product_id_idx on public.stock_movements(product_id);
-create index stock_movements_reference_idx on public.stock_movements(reference_type, reference_id);
-create index stock_movements_franchisee_order_id_idx on public.stock_movements(franchisee_order_id);
-create index stock_movements_created_at_idx on public.stock_movements(created_at desc);
-
 create or replace function public.set_updated_at()
 returns trigger
 language plpgsql
@@ -311,14 +241,12 @@ $$;
 create trigger users_set_updated_at before update on public.users for each row execute function public.set_updated_at();
 create trigger branches_set_updated_at before update on public.branches for each row execute function public.set_updated_at();
 create trigger franchisee_profiles_set_updated_at before update on public.franchisee_profiles for each row execute function public.set_updated_at();
-create trigger franchise_leads_set_updated_at before update on public.franchise_leads for each row execute function public.set_updated_at();
 create trigger customers_set_updated_at before update on public.customers for each row execute function public.set_updated_at();
 create trigger suppliers_set_updated_at before update on public.suppliers for each row execute function public.set_updated_at();
 create trigger products_set_updated_at before update on public.products for each row execute function public.set_updated_at();
 create trigger quotations_set_updated_at before update on public.quotations for each row execute function public.set_updated_at();
 create trigger sales_documents_set_updated_at before update on public.sales_documents for each row execute function public.set_updated_at();
 create trigger franchisee_orders_set_updated_at before update on public.franchisee_orders for each row execute function public.set_updated_at();
-create trigger site_settings_set_updated_at before update on public.site_settings for each row execute function public.set_updated_at();
 
 create or replace function public.handle_new_user()
 returns trigger
@@ -341,26 +269,6 @@ $$;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
-
-update auth.users
-set raw_user_meta_data = coalesce(raw_user_meta_data, '{}'::jsonb)
-  || '{"full_name":"DomiCha Owner","role":"Admin"}'::jsonb
-where id = '1148e8d2-679c-4241-ba67-b522a2b50d8b';
-
-insert into public.users (id, email, full_name, role)
-select
-  id,
-  email,
-  coalesce(nullif(raw_user_meta_data ->> 'full_name', ''), email, 'DomiCha Owner'),
-  'Admin'::public.user_role
-from auth.users
-where id = '1148e8d2-679c-4241-ba67-b522a2b50d8b'
-on conflict (id) do update
-set
-  email = coalesce(excluded.email, public.users.email),
-  full_name = coalesce(nullif(public.users.full_name, ''), excluded.full_name),
-  role = 'Admin'::public.user_role,
-  updated_at = now();
 
 create or replace function public.generate_quotation_number()
 returns text
@@ -418,7 +326,6 @@ create trigger quotations_history
 alter table public.users enable row level security;
 alter table public.branches enable row level security;
 alter table public.franchisee_profiles enable row level security;
-alter table public.franchise_leads enable row level security;
 alter table public.customers enable row level security;
 alter table public.suppliers enable row level security;
 alter table public.products enable row level security;
@@ -428,10 +335,8 @@ alter table public.document_files enable row level security;
 alter table public.sales_documents enable row level security;
 alter table public.sales_document_items enable row level security;
 alter table public.line_delivery_logs enable row level security;
-alter table public.site_settings enable row level security;
 alter table public.franchisee_orders enable row level security;
 alter table public.franchisee_order_items enable row level security;
-alter table public.stock_movements enable row level security;
 
 create policy "Users can read own profile" on public.users for select using (auth.uid() = id);
 create policy "Users can update own profile" on public.users for update using (auth.uid() = id);
@@ -440,12 +345,12 @@ create policy "Authenticated users read active branches" on public.branches for 
 create policy "HQ users manage branches" on public.branches for all using (
   exists (
     select 1 from public.users u
-    where u.id = auth.uid() and u.role in ('Admin', 'Manager')
+    where u.id = auth.uid() and u.role in ('Admin', 'Sales', 'Accountant')
   )
 ) with check (
   exists (
     select 1 from public.users u
-    where u.id = auth.uid() and u.role in ('Admin', 'Manager')
+    where u.id = auth.uid() and u.role in ('Admin', 'Sales', 'Accountant')
   )
 );
 
@@ -453,36 +358,18 @@ create policy "Franchisees read own profile" on public.franchisee_profiles for s
 create policy "HQ users read franchisees" on public.franchisee_profiles for select using (
   exists (
     select 1 from public.users u
-    where u.id = auth.uid() and u.role in ('Admin', 'Executive', 'Manager')
+    where u.id = auth.uid() and u.role in ('Admin', 'Sales', 'Accountant')
   )
 );
 create policy "HQ users manage franchisees" on public.franchisee_profiles for all using (
   exists (
     select 1 from public.users u
-    where u.id = auth.uid() and u.role in ('Admin', 'Manager')
+    where u.id = auth.uid() and u.role in ('Admin', 'Sales', 'Accountant')
   )
 ) with check (
   exists (
     select 1 from public.users u
-    where u.id = auth.uid() and u.role in ('Admin', 'Manager')
-  )
-);
-
-create policy "HQ users read franchise leads" on public.franchise_leads for select using (
-  exists (
-    select 1 from public.users u
-    where u.id = auth.uid() and u.role in ('Admin', 'Executive', 'Manager', 'AssistantManager')
-  )
-);
-create policy "HQ users manage franchise leads" on public.franchise_leads for update using (
-  exists (
-    select 1 from public.users u
-    where u.id = auth.uid() and u.role in ('Admin', 'Manager', 'AssistantManager')
-  )
-) with check (
-  exists (
-    select 1 from public.users u
-    where u.id = auth.uid() and u.role in ('Admin', 'Manager', 'AssistantManager')
+    where u.id = auth.uid() and u.role in ('Admin', 'Sales', 'Accountant')
   )
 );
 
@@ -510,43 +397,24 @@ create policy "Authenticated users read sales document items" on public.sales_do
 create policy "Authenticated users write sales document items" on public.sales_document_items for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
 create policy "Authenticated users read LINE delivery logs" on public.line_delivery_logs for select using (auth.role() = 'authenticated');
 create policy "Authenticated users write LINE delivery logs" on public.line_delivery_logs for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
-create policy "Anyone can read public site settings" on public.site_settings for select using (key = 'public_contact');
-create policy "HQ users manage site settings" on public.site_settings for all using (
-  exists (
-    select 1 from public.users u
-    where u.id = auth.uid() and u.role = 'Admin'
-  )
-) with check (
-  exists (
-    select 1 from public.users u
-    where u.id = auth.uid() and u.role = 'Admin'
-  )
-);
-
-insert into public.site_settings (key, value)
-values (
-  'public_contact',
-  '{"brandPhone":"","lineUrl":"https://line.me/R/ti/p/@domicha","lineLabel":"@domicha","contactNote":"ฝากข้อมูลเบื้องต้นเพื่อให้ทีมงานแนะนำแพ็กเกจตามงบ ทำเล และรูปแบบร้านที่ต้องการ"}'::jsonb
-)
-on conflict (key) do nothing;
 
 create policy "Franchisees read own orders" on public.franchisee_orders for select using (user_id = auth.uid());
 create policy "Franchisees create own orders" on public.franchisee_orders for insert with check (user_id = auth.uid());
 create policy "HQ users read franchisee orders" on public.franchisee_orders for select using (
   exists (
     select 1 from public.users u
-    where u.id = auth.uid() and u.role in ('Admin', 'Executive', 'Manager', 'AssistantManager')
+    where u.id = auth.uid() and u.role in ('Admin', 'Sales', 'Accountant')
   )
 );
 create policy "HQ users manage franchisee orders" on public.franchisee_orders for update using (
   exists (
     select 1 from public.users u
-    where u.id = auth.uid() and u.role in ('Admin', 'Manager')
+    where u.id = auth.uid() and u.role in ('Admin', 'Sales', 'Accountant')
   )
 ) with check (
   exists (
     select 1 from public.users u
-    where u.id = auth.uid() and u.role in ('Admin', 'Manager')
+    where u.id = auth.uid() and u.role in ('Admin', 'Sales', 'Accountant')
   )
 );
 
@@ -565,22 +433,7 @@ create policy "Franchisees create own order items" on public.franchisee_order_it
 create policy "HQ users read franchisee order items" on public.franchisee_order_items for select using (
   exists (
     select 1 from public.users u
-    where u.id = auth.uid() and u.role in ('Admin', 'Executive', 'Manager', 'AssistantManager')
-  )
-);
-
-create policy "Back office users read stock movements" on public.stock_movements for select to authenticated using (
-  exists (
-    select 1 from public.users
-    where users.id = (select auth.uid())
-      and users.role::text in ('Admin', 'Executive', 'Manager', 'AssistantManager', 'Sales', 'Accountant')
-  )
-);
-create policy "Back office users insert stock movements" on public.stock_movements for insert to authenticated with check (
-  exists (
-    select 1 from public.users
-    where users.id = (select auth.uid())
-      and users.role::text in ('Admin', 'Executive', 'Manager', 'AssistantManager', 'Sales', 'Accountant')
+    where u.id = auth.uid() and u.role in ('Admin', 'Sales', 'Accountant')
   )
 );
 

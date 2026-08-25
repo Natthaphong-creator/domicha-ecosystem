@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowUpRight, CheckCircle2, ClipboardList, CreditCard, FileText, MailCheck, PackageCheck, ReceiptText, RefreshCcw, Search } from "lucide-react";
+import { ArrowUpRight, ClipboardList, FileText, PackageCheck, RefreshCcw, Search } from "lucide-react";
 import { apiFetch } from "@/lib/apiClient";
 import { dateThai, money } from "@/lib/format";
 import type { FranchiseeOrder } from "@/lib/types";
@@ -19,33 +19,11 @@ function statusClass(status: string) {
   return map[status] || "border-slate-100 bg-slate-50 text-slate-600";
 }
 
-function receiptDeliveryLabel(status?: string | null) {
-  if (status === "Sent") return "ส่งใบเสร็จแล้ว";
-  if (status === "Failed") return "ส่งใบเสร็จไม่สำเร็จ";
-  if (status === "Missing email") return "ไม่มีอีเมลลูกค้า";
-  if (status === "Not configured") return "ยังไม่ตั้งค่าอัตโนมัติ";
-  return "ยังไม่ส่งใบเสร็จ";
-}
-
-function receiptDeliveryClass(status?: string | null) {
-  if (status === "Sent") return "border-emerald-100 bg-emerald-50 text-emerald-700";
-  if (status === "Failed" || status === "Missing email") return "border-red-100 bg-red-50 text-red-700";
-  if (status === "Not configured") return "border-amber-100 bg-amber-50 text-amber-700";
-  return "border-slate-200 bg-white text-slate-500";
-}
-
-function localDateTimeValue(date = new Date()) {
-  const offset = date.getTimezoneOffset();
-  const local = new Date(date.getTime() - offset * 60_000);
-  return local.toISOString().slice(0, 16);
-}
-
 export default function OrdersPage() {
   const [orders, setOrders] = useState<FranchiseeOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [query, setQuery] = useState("");
-  const [updatingId, setUpdatingId] = useState("");
 
   async function loadOrders() {
     setLoading(true);
@@ -81,30 +59,6 @@ export default function OrdersPage() {
   }, [orders, query]);
 
   const totalValue = orders.reduce((sum, order) => sum + Number(order.grand_total || 0), 0);
-  const paymentWaiting = orders.filter((order) => order.payment_method === "transfer" && order.payment_status !== "Paid").length;
-  const paymentSubmitted = orders.filter((order) => order.payment_method === "transfer" && order.payment_status !== "Paid" && order.payment_reference).length;
-  const receiptSent = orders.filter((order) => order.receipt_delivery_status === "Sent").length;
-
-  async function confirmPayment(orderId: string) {
-    const paymentReference = window.prompt("เลขอ้างอิงสลิป / หมายเหตุการรับชำระเงิน (ถ้ามี)", "");
-    if (paymentReference === null) return;
-    const paymentReceivedAt = window.prompt("วันที่และเวลาที่ลูกค้าโอนจริง เช่น 2026-08-24T14:30", localDateTimeValue());
-    if (paymentReceivedAt === null) return;
-
-    setUpdatingId(orderId);
-    setError("");
-    try {
-      const updated = await apiFetch<FranchiseeOrder>(`/api/orders/${orderId}`, {
-        method: "PATCH",
-        body: JSON.stringify({ action: "confirm-payment", paymentReference, paymentReceivedAt })
-      });
-      setOrders((current) => current.map((order) => order.id === orderId ? updated : order));
-    } catch (updateError) {
-      setError(updateError instanceof Error ? updateError.message : "ยืนยันการชำระเงินไม่สำเร็จ");
-    } finally {
-      setUpdatingId("");
-    }
-  }
 
   return (
     <div className="space-y-6">
@@ -116,12 +70,12 @@ export default function OrdersPage() {
             </span>
             <h1 className="mt-5 text-3xl font-black tracking-tight sm:text-4xl">เอกสารใบสั่งซื้อแฟรนไชส์ซี</h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">
-              รวมคำสั่งซื้อจาก DomiCha System เพื่อให้ทีมบัญชีตรวจยอด เปิดใบแจ้งหนี้ ยืนยันวันโอน และออกใบเสร็จรับเงินเต็มรูปแบบ
+              รวมคำสั่งซื้อจากสาขา เปิดดูรูปแบบเอกสาร พิมพ์ หรือบันทึกเป็น PDF เพื่อส่งต่อให้คลังสินค้าและบัญชี
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Link href="/shop" className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-orange-500 px-4 text-sm font-bold text-white hover:bg-orange-600">
-              <FileText className="h-4 w-4" /> เปิดหน้าสั่งซื้อจริง
+            <Link href="/orders/sample" className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-orange-500 px-4 text-sm font-bold text-white hover:bg-orange-600">
+              <FileText className="h-4 w-4" /> ดูตัวอย่างเอกสาร
             </Link>
             <button onClick={loadOrders} className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/10 px-4 text-sm font-bold text-white hover:bg-white/15">
               <RefreshCcw className="h-4 w-4" /> รีเฟรช
@@ -130,7 +84,7 @@ export default function OrdersPage() {
         </div>
       </section>
 
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-3">
         <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-sm text-slate-500">จำนวนเอกสาร</p>
           <p className="mt-2 text-3xl font-black">{orders.length}</p>
@@ -140,12 +94,8 @@ export default function OrdersPage() {
           <p className="mt-2 text-3xl font-black text-orange-600">{money(totalValue)}</p>
         </div>
         <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-sm text-slate-500">รอตรวจยอด</p>
-          <p className="mt-2 text-3xl font-black text-emerald-600">{paymentSubmitted}</p>
-        </div>
-        <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="text-sm text-slate-500">ใบเสร็จส่งแล้ว</p>
-          <p className="mt-2 text-3xl font-black">{receiptSent}</p>
+          <p className="text-sm text-slate-500">เอกสารรอดำเนินการ</p>
+          <p className="mt-2 text-3xl font-black">{orders.filter((order) => !["Completed", "Cancelled"].includes(order.order_status)).length}</p>
         </div>
       </div>
 
@@ -161,24 +111,6 @@ export default function OrdersPage() {
           </label>
         </div>
 
-        <div className="mt-5 grid gap-3 lg:grid-cols-3">
-          <div className="rounded-2xl border border-orange-100 bg-orange-50 p-4">
-            <p className="text-xs font-bold uppercase tracking-[.14em] text-orange-600">Step 1</p>
-            <h3 className="mt-2 font-black">ลูกค้าสั่งของและสแกน QR</h3>
-            <p className="mt-1 text-sm leading-6 text-orange-900/75">คำสั่งซื้อจาก /shop จะเข้ามาหน้านี้ พร้อมยอดและรายการสินค้า</p>
-          </div>
-          <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
-            <p className="text-xs font-bold uppercase tracking-[.14em] text-emerald-700">Step 2</p>
-            <h3 className="mt-2 font-black">รอตรวจยอด {paymentWaiting} รายการ</h3>
-            <p className="mt-1 text-sm leading-6 text-emerald-900/75">ตรวจยอดจริงกับวันที่โอนในบัญชีธนาคาร แล้วกด “ยืนยันชำระเงิน” เพื่อปิดลูกหนี้</p>
-          </div>
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-            <p className="text-xs font-bold uppercase tracking-[.14em] text-slate-500">Step 3</p>
-            <h3 className="mt-2 font-black">ออกใบเสร็จอัตโนมัติ</h3>
-            <p className="mt-1 text-sm leading-6 text-slate-600">ระบบส่งอีเมลให้ลูกค้าและเก็บสำเนา Google Drive ตามเดือน</p>
-          </div>
-        </div>
-
         {error ? <p className="mt-5 rounded-2xl border border-red-100 bg-red-50 p-4 text-sm text-red-700">{error}</p> : null}
         {loading ? <p className="mt-5 rounded-2xl bg-slate-50 p-4 text-sm text-slate-500">กำลังโหลดรายการเอกสาร...</p> : null}
         {!loading && filtered.length === 0 ? (
@@ -186,8 +118,8 @@ export default function OrdersPage() {
             <ClipboardList className="mx-auto h-10 w-10 text-slate-300" />
             <p className="mt-3 font-bold text-slate-700">ยังไม่มีใบสั่งซื้อ</p>
             <p className="mt-1 text-sm text-slate-500">เมื่อแฟรนไชส์ซีสั่งของจาก /shop รายการจะมาแสดงที่นี่</p>
-            <Link href="/shop" className="mt-4 inline-flex h-11 items-center gap-2 rounded-2xl bg-slate-950 px-4 text-sm font-bold text-white hover:bg-orange-600">
-              เปิดหน้าสั่งซื้อจริง <ArrowUpRight className="h-4 w-4" />
+            <Link href="/orders/sample" className="mt-4 inline-flex h-11 items-center gap-2 rounded-2xl bg-slate-950 px-4 text-sm font-bold text-white hover:bg-orange-600">
+              ดูตัวอย่างเอกสาร <ArrowUpRight className="h-4 w-4" />
             </Link>
           </div>
         ) : null}
@@ -206,57 +138,15 @@ export default function OrdersPage() {
                       <h3 className="font-black">{order.order_number}</h3>
                       <span className={`rounded-full border px-2.5 py-1 text-[11px] font-bold ${statusClass(order.order_status)}`}>{order.order_status}</span>
                       <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-bold text-slate-500">{order.payment_status}</span>
-                      {order.invoice_number ? (
-                        <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-bold ${receiptDeliveryClass(order.invoice_delivery_status)}`}>
-                          <FileText className="h-3 w-3" /> ใบแจ้งหนี้ {order.invoice_delivery_status === "Sent" ? "ส่งแล้ว" : "รอส่ง"}
-                        </span>
-                      ) : null}
-                      {order.payment_status === "Paid" ? (
-                        <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-bold ${receiptDeliveryClass(order.receipt_delivery_status)}`}>
-                          <MailCheck className="h-3 w-3" /> {receiptDeliveryLabel(order.receipt_delivery_status)}
-                        </span>
-                      ) : null}
-                      {order.payment_method === "transfer" && order.payment_status !== "Paid" && order.payment_reference ? (
-                        <span className="inline-flex items-center gap-1 rounded-full border border-emerald-100 bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700">
-                          <CheckCircle2 className="h-3 w-3" /> ลูกค้าแจ้งโอนแล้ว
-                        </span>
-                      ) : order.payment_method === "transfer" && order.payment_status !== "Paid" ? (
-                        <span className="inline-flex items-center gap-1 rounded-full border border-orange-100 bg-orange-50 px-2.5 py-1 text-[11px] font-bold text-orange-700">
-                          <CreditCard className="h-3 w-3" /> มี QR รอโอน
-                        </span>
-                      ) : null}
                     </div>
                     <p className="mt-1 text-sm text-slate-600">{profile?.branch_name || "ไม่พบชื่อสาขา"} • {profile?.owner_name || "-"} • {profile?.phone || "-"}</p>
                     <p className="mt-1 text-xs text-slate-400">{dateThai(order.created_at)} • {order.delivery_method === "pickup" ? "รับสินค้าที่ศูนย์" : "จัดส่ง"}</p>
-                    {order.payment_status !== "Paid" && order.payment_reference ? (
-                      <p className="mt-2 rounded-xl bg-white px-3 py-2 text-xs font-semibold text-emerald-700">
-                        อ้างอิงการโอน: {order.payment_reference}
-                      </p>
-                    ) : null}
-                    {order.payment_status === "Paid" && order.receipt_drive_file_url ? (
-                      <a href={order.receipt_drive_file_url} target="_blank" rel="noreferrer" className="mt-2 inline-flex rounded-xl bg-white px-3 py-2 text-xs font-bold text-emerald-700 hover:text-orange-600">
-                        เปิดสำเนาใบเสร็จใน Google Drive
-                      </a>
-                    ) : null}
                   </div>
                   <div className="flex items-center justify-between gap-4 lg:min-w-[260px] lg:justify-end">
                     <div className="text-right">
                       <p className="text-xs text-slate-400">ยอดสุทธิ</p>
                       <p className="text-lg font-black text-orange-600">{money(order.grand_total)}</p>
                     </div>
-                    {order.payment_status !== "Paid" ? (
-                      <button
-                        disabled={updatingId === order.id}
-                        onClick={() => confirmPayment(order.id)}
-                        className="inline-flex h-11 items-center gap-2 rounded-2xl bg-emerald-600 px-4 text-sm font-bold text-white hover:bg-emerald-700 disabled:opacity-60"
-                      >
-                        <CheckCircle2 className="h-4 w-4" /> {updatingId === order.id ? "กำลังยืนยัน..." : "ยืนยันชำระเงิน"}
-                      </button>
-                    ) : (
-                      <Link href={`/orders/${order.id}?doc=receipt`} className="inline-flex h-11 items-center gap-2 rounded-2xl bg-emerald-50 px-4 text-sm font-bold text-emerald-700 hover:bg-emerald-100">
-                        <ReceiptText className="h-4 w-4" /> ใบเสร็จ
-                      </Link>
-                    )}
                     <Link href={`/orders/${order.id}`} className="inline-flex h-11 items-center gap-2 rounded-2xl bg-slate-950 px-4 text-sm font-bold text-white hover:bg-orange-600">
                       เปิดเอกสาร <ArrowUpRight className="h-4 w-4" />
                     </Link>

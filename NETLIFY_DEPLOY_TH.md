@@ -1,4 +1,4 @@
-# Deploy Domichathailand บน Netlify
+# Deploy DomiCha Business บน Netlify
 
 โปรเจกต์นี้เป็น Next.js app มีทั้งหน้าร้าน `/shop`, ระบบหลังบ้าน และ API สำหรับส่ง LINE OA ดังนั้นต้อง deploy แบบ Next.js Runtime ของ Netlify ไม่ใช่ static upload อย่างเดียว
 
@@ -33,16 +33,12 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
 LINE_CHANNEL_ACCESS_TOKEN=your-line-channel-access-token
 LINE_OA_ORDER_TARGET_ID=your-line-user-group-or-room-id
-LINE_FRANCHISE_LEAD_TARGET_ID=your-line-user-group-or-room-id
-DOMICHA_FRANCHISE_LEAD_WEBHOOK_URL=https://script.google.com/macros/s/your-domicha-lead-web-app/exec
 NEXT_PUBLIC_APP_URL=https://your-netlify-site.netlify.app
 ```
 
 `SUPABASE_SERVICE_ROLE_KEY` จำเป็นสำหรับหน้า `/franchisees` ที่ HQ/Admin ใช้สร้างบัญชีแฟรนไชส์ซี ห้ามตั้งชื่อนี้เป็น `NEXT_PUBLIC_*`
 
-ถ้ายังไม่มี LINE token ระบบจะบันทึกออเดอร์/lead ได้ แต่จะยังไม่ส่งเข้า LINE จริง
-
-`DOMICHA_FRANCHISE_LEAD_WEBHOOK_URL` ใช้สำหรับส่งข้อมูลจากฟอร์มแฟรนไชส์ไป Google Sheet/Email ผ่าน Apps Script
+ถ้ายังไม่มี LINE token ระบบจะบันทึกออเดอร์ได้ แต่จะยังไม่ส่งเข้า LINE จริง
 
 ## หน้าใช้งานหลัง Deploy
 

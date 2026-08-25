@@ -16,7 +16,6 @@ import {
   Warehouse
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { apiFetch } from "@/lib/apiClient";
 import type { DomiChaSystemSummary } from "@/lib/domichaSystem";
 import { money } from "@/lib/format";
 
@@ -31,19 +30,13 @@ function timeThai(value: string) {
   return date.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" });
 }
 
-function isExternalUrl(url: string) {
-  return /^https?:\/\//.test(url);
-}
-
-function hasSystemUrl(url: string) {
-  return Boolean(url && (isExternalUrl(url) || url.startsWith("/")));
+function openable(url: string) {
+  return Boolean(url && /^https?:\/\//.test(url));
 }
 
 export function DomiChaSystemPanel({ initial }: { initial: DomiChaSystemSummary }) {
   const [summary, setSummary] = useState(initial);
   const [loading, setLoading] = useState(false);
-  const [syncingHistory, setSyncingHistory] = useState(false);
-  const [syncMessage, setSyncMessage] = useState("");
 
   async function refresh(silent = false) {
     if (!silent) setLoading(true);
@@ -60,27 +53,6 @@ export function DomiChaSystemPanel({ initial }: { initial: DomiChaSystemSummary 
     const timer = window.setInterval(() => refresh(true), 20000);
     return () => window.clearInterval(timer);
   }, []);
-
-  async function syncHistory() {
-    setSyncingHistory(true);
-    setSyncMessage("");
-    try {
-      const result = await apiFetch<{
-        customersCreated: number;
-        documentsCreated: number;
-        documentsUpdated: number;
-        itemsSynced: number;
-        stockMovementsCreated: number;
-        skippedInternal: number;
-      }>("/api/domicha-system/sync-history", { method: "POST" });
-      setSyncMessage(`ดึงย้อนหลังสำเร็จ: เอกสารใหม่ ${result.documentsCreated} / อัปเดต ${result.documentsUpdated} / ตัด Stock ${result.stockMovementsCreated} รายการ`);
-      await refresh(true);
-    } catch (error) {
-      setSyncMessage(error instanceof Error ? error.message : "ดึงข้อมูลย้อนหลังไม่สำเร็จ");
-    } finally {
-      setSyncingHistory(false);
-    }
-  }
 
   const t = summary.totals;
   const apps = [
@@ -120,31 +92,15 @@ export function DomiChaSystemPanel({ initial }: { initial: DomiChaSystemSummary 
             อ่านข้อมูลเดียวกับ Stock / POS / POS Manager จาก Firebase Realtime Database
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <button
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-slate-950 px-3 text-sm font-semibold text-white hover:bg-orange-600 disabled:opacity-60"
-            onClick={syncHistory}
-            disabled={syncingHistory}
-          >
-            <ReceiptText className={`h-4 w-4 ${syncingHistory ? "animate-pulse" : ""}`} />
-            {syncingHistory ? "กำลังดึงย้อนหลัง..." : "ดึงข้อมูลย้อนหลัง"}
-          </button>
-          <button
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-600 hover:bg-slate-50"
-            onClick={() => refresh()}
-            disabled={loading}
-          >
-            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-            รีเฟรช
-          </button>
-        </div>
+        <button
+          className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-600 hover:bg-slate-50"
+          onClick={() => refresh()}
+          disabled={loading}
+        >
+          <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+          รีเฟรช
+        </button>
       </div>
-
-      {syncMessage ? (
-        <div className={`rounded-2xl border p-4 text-sm font-semibold ${syncMessage.includes("สำเร็จ") ? "border-emerald-100 bg-emerald-50 text-emerald-700" : "border-red-100 bg-red-50 text-red-700"}`}>
-          {syncMessage}
-        </div>
-      ) : null}
 
       {!summary.ok ? (
         <div className="rounded-2xl border border-red-100 bg-red-50 p-4 text-sm font-semibold text-red-700">
@@ -167,26 +123,16 @@ export function DomiChaSystemPanel({ initial }: { initial: DomiChaSystemSummary 
                   <p className="mt-1 text-sm leading-6 text-slate-500">{app.detail}</p>
                 </div>
               </div>
-              {hasSystemUrl(app.url) ? (
-                isExternalUrl(app.url) ? (
-                  <a
-                    href={app.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-3 text-sm font-bold text-white hover:bg-orange-600"
-                  >
-                    เปิดระบบ
-                    <ExternalLink className="h-4 w-4" />
-                  </a>
-                ) : (
-                  <Link
-                    href={app.url}
-                    className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-3 text-sm font-bold text-white hover:bg-orange-600"
-                  >
-                    เปิดระบบ
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                )
+              {openable(app.url) ? (
+                <a
+                  href={app.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-3 text-sm font-bold text-white hover:bg-orange-600"
+                >
+                  เปิดระบบ
+                  <ExternalLink className="h-4 w-4" />
+                </a>
               ) : (
                 <Link
                   href="/settings"

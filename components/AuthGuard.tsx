@@ -12,24 +12,12 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (demoMode) return;
-    supabase.auth.getSession().then(async ({ data }) => {
+    supabase.auth.getSession().then(({ data }) => {
       if (!data.session) {
         router.replace("/login");
-        return;
+      } else {
+        setReady(true);
       }
-
-      const { data: userProfile } = await supabase
-        .from("users")
-        .select("role")
-        .eq("id", data.session.user.id)
-        .single();
-
-      if (userProfile?.role === "Franchisee") {
-        router.replace("/shop");
-        return;
-      }
-
-      setReady(true);
     });
   }, [demoMode, router]);
 

@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { productPayload } from "@/lib/productPayload";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 import { handleRouteError, requireUser } from "@/lib/supabaseServer";
 
@@ -35,7 +34,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     const db = getSupabaseAdmin() || auth.supabase;
 
     const payload = await request.json();
-    const updatePayload = productPayload(payload);
+    const updatePayload = { ...payload, supplier_id: payload.supplier_id || null };
     const { data, error } = await db
       .from("products")
       .update(updatePayload)

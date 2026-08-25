@@ -1,10 +1,11 @@
 "use client";
 
 import { supabase } from "@/lib/supabaseClient";
+import { demoApiFetch } from "@/lib/demoApi";
 
 export async function apiFetch<T>(url: string, init?: RequestInit): Promise<T> {
   const demoMode = !process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (demoMode) throw new Error("ยังไม่ได้เชื่อมต่อฐานข้อมูล Supabase");
+  if (demoMode) return demoApiFetch<T>(url, init);
 
   const {
     data: { session }

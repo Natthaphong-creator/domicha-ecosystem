@@ -2,50 +2,46 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
 import { ArrowLeft, Download, Printer } from "lucide-react";
-import { apiFetch } from "@/lib/apiClient";
-import { dateThai, money } from "@/lib/format";
-import type { FranchiseeOrder } from "@/lib/types";
+import { money } from "@/lib/format";
 
-function methodLabel(value: string) {
-  if (value === "pickup") return "รับสินค้าที่ศูนย์";
-  return "จัดส่ง";
-}
+const sampleOrder = {
+  orderNumber: "DC-20260708-SAMPLE",
+  createdAt: "8 ก.ค. 2569",
+  printedAt: "8 ก.ค. 2569 16:45",
+  branchName: "DomiCha สาขาบางนา",
+  ownerName: "คุณณัฐพงษ์",
+  phone: "089-123-4567",
+  email: "bangna@domicha.co",
+  taxId: "0105569000001",
+  deliveryMethod: "จัดส่ง",
+  paymentMethod: "โอนเงิน",
+  orderStatus: "Received",
+  paymentStatus: "Pending",
+  shippingAddress: "99/9 ถนนสุขุมวิท แขวงบางนา เขตบางนา กรุงเทพมหานคร 10260",
+  note: "ขอจัดส่งช่วงเช้า และโทรแจ้งก่อนเข้าพื้นที่",
+  subtotal: 10240,
+  deliveryFee: 0,
+  grandTotal: 10240,
+  items: [
+    { id: "TEA-TAIWAN", name: "ชาไต้หวัน DomiCha", unit: "ถุง", quantity: 20, unitPrice: 220, lineTotal: 4400 },
+    { id: "TEA-GREEN", name: "ชาเขียว DomiCha", unit: "ถุง", quantity: 15, unitPrice: 210, lineTotal: 3150 },
+    { id: "POWDER-BANANA", name: "ผงกล้วย Ding Fong", unit: "ถุง", quantity: 10, unitPrice: 165, lineTotal: 1650 },
+    { id: "SYRUP-STRAWBERRY", name: "ไซรัปสตรอว์เบอร์รี", unit: "ขวด", quantity: 8, unitPrice: 130, lineTotal: 1040 }
+  ]
+};
 
-function paymentLabel(value: string) {
-  if (value === "cod") return "เก็บเงินปลายทาง";
-  return "โอนเงิน";
-}
-
-export default function OrderDocumentPage() {
-  const params = useParams<{ id: string }>();
-  const [order, setOrder] = useState<FranchiseeOrder | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    apiFetch<FranchiseeOrder>(`/api/orders/${params.id}`)
-      .then(setOrder)
-      .catch((loadError) => setError(loadError instanceof Error ? loadError.message : "โหลดเอกสารไม่สำเร็จ"))
-      .finally(() => setLoading(false));
-  }, [params.id]);
-
-  if (loading) return <div className="rounded-2xl bg-white p-6 text-sm text-slate-500">กำลังโหลดเอกสาร...</div>;
-  if (error || !order) return <div className="rounded-2xl border border-red-100 bg-red-50 p-6 text-sm text-red-700">{error || "ไม่พบเอกสาร"}</div>;
-
-  const profile = order.franchisee_profiles;
-  const items = order.franchisee_order_items || [];
-  const printedAt = new Intl.DateTimeFormat("th-TH", { dateStyle: "medium", timeStyle: "short" }).format(new Date());
-
+export default function SampleOrderDocumentPage() {
   return (
     <div className="space-y-5">
       <div className="print-hidden flex flex-col gap-3 rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
         <Link href="/orders" className="inline-flex items-center gap-2 text-sm font-bold text-slate-600 hover:text-orange-600">
           <ArrowLeft className="h-4 w-4" /> กลับรายการเอกสาร
         </Link>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <span className="inline-flex h-11 items-center rounded-2xl border border-orange-100 bg-orange-50 px-4 text-sm font-bold text-orange-700">
+            ตัวอย่างเอกสาร
+          </span>
           <button onClick={() => window.print()} className="inline-flex h-11 items-center gap-2 rounded-2xl bg-slate-950 px-4 text-sm font-bold text-white hover:bg-orange-600">
             <Printer className="h-4 w-4" /> พิมพ์
           </button>
@@ -68,8 +64,8 @@ export default function OrderDocumentPage() {
             </div>
             <div className="rounded-2xl border border-white/10 bg-white/10 p-4 text-right print:border-slate-200 print:bg-slate-50">
               <p className="text-xs text-slate-300 print:text-slate-500">เลขที่เอกสาร</p>
-              <p className="mt-1 text-xl font-black text-orange-300 print:text-orange-600">{order.order_number}</p>
-              <p className="mt-2 text-xs text-slate-300 print:text-slate-500">วันที่ {dateThai(order.created_at)}</p>
+              <p className="mt-1 text-xl font-black text-orange-300 print:text-orange-600">{sampleOrder.orderNumber}</p>
+              <p className="mt-2 text-xs text-slate-300 print:text-slate-500">วันที่ {sampleOrder.createdAt}</p>
             </div>
           </div>
         </header>
@@ -77,24 +73,24 @@ export default function OrderDocumentPage() {
         <section className="grid gap-4 border-b border-slate-100 p-7 md:grid-cols-2">
           <div className="rounded-2xl bg-orange-50 p-5 print:bg-slate-50">
             <p className="text-xs font-bold uppercase tracking-[.16em] text-orange-600">Branch</p>
-            <h2 className="mt-2 text-xl font-black">{profile?.branch_name || "-"}</h2>
-            <p className="mt-2 text-sm text-slate-600">เจ้าของสาขา: {profile?.owner_name || "-"}</p>
-            <p className="mt-1 text-sm text-slate-600">โทร: {profile?.phone || "-"}</p>
-            <p className="mt-1 text-sm text-slate-600">อีเมล: {profile?.email || "-"}</p>
-            {profile?.tax_id ? <p className="mt-1 text-sm text-slate-600">เลขภาษี: {profile.tax_id}</p> : null}
+            <h2 className="mt-2 text-xl font-black">{sampleOrder.branchName}</h2>
+            <p className="mt-2 text-sm text-slate-600">เจ้าของสาขา: {sampleOrder.ownerName}</p>
+            <p className="mt-1 text-sm text-slate-600">โทร: {sampleOrder.phone}</p>
+            <p className="mt-1 text-sm text-slate-600">อีเมล: {sampleOrder.email}</p>
+            <p className="mt-1 text-sm text-slate-600">เลขภาษี: {sampleOrder.taxId}</p>
           </div>
 
           <div className="rounded-2xl bg-slate-50 p-5">
             <p className="text-xs font-bold uppercase tracking-[.16em] text-slate-500">Delivery & Payment</p>
             <dl className="mt-3 grid grid-cols-[120px_1fr] gap-x-3 gap-y-2 text-sm">
               <dt className="text-slate-500">วิธีรับสินค้า</dt>
-              <dd className="font-bold">{methodLabel(order.delivery_method)}</dd>
+              <dd className="font-bold">{sampleOrder.deliveryMethod}</dd>
               <dt className="text-slate-500">ชำระเงิน</dt>
-              <dd className="font-bold">{paymentLabel(order.payment_method)}</dd>
+              <dd className="font-bold">{sampleOrder.paymentMethod}</dd>
               <dt className="text-slate-500">สถานะออเดอร์</dt>
-              <dd className="font-bold">{order.order_status}</dd>
+              <dd className="font-bold">{sampleOrder.orderStatus}</dd>
               <dt className="text-slate-500">สถานะชำระ</dt>
-              <dd className="font-bold">{order.payment_status}</dd>
+              <dd className="font-bold">{sampleOrder.paymentStatus}</dd>
             </dl>
           </div>
         </section>
@@ -112,23 +108,18 @@ export default function OrderDocumentPage() {
                 </tr>
               </thead>
               <tbody>
-                {items.map((item, index) => (
+                {sampleOrder.items.map((item, index) => (
                   <tr key={item.id} className="border-t border-slate-100">
                     <td className="px-4 py-3 text-slate-400">{index + 1}</td>
                     <td className="px-4 py-3">
-                      <p className="font-bold text-slate-900">{item.product_name}</p>
-                      <p className="text-xs text-slate-400">{item.product_id}</p>
+                      <p className="font-bold text-slate-900">{item.name}</p>
+                      <p className="text-xs text-slate-400">{item.id}</p>
                     </td>
-                    <td className="px-4 py-3 text-right">{Number(item.quantity).toLocaleString("th-TH")} {item.unit}</td>
-                    <td className="px-4 py-3 text-right">{money(item.unit_price)}</td>
-                    <td className="px-4 py-3 text-right font-bold">{money(item.line_total)}</td>
+                    <td className="px-4 py-3 text-right">{item.quantity.toLocaleString("th-TH")} {item.unit}</td>
+                    <td className="px-4 py-3 text-right">{money(item.unitPrice)}</td>
+                    <td className="px-4 py-3 text-right font-bold">{money(item.lineTotal)}</td>
                   </tr>
                 ))}
-                {items.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="px-4 py-8 text-center text-slate-400">ไม่มีรายการสินค้า</td>
-                  </tr>
-                ) : null}
               </tbody>
             </table>
           </div>
@@ -136,26 +127,24 @@ export default function OrderDocumentPage() {
           <div className="mt-6 grid gap-5 md:grid-cols-[1fr_340px]">
             <div className="rounded-2xl border border-slate-200 p-5">
               <p className="text-xs font-bold uppercase tracking-[.16em] text-slate-400">Shipping Address / Note</p>
-              <p className="mt-3 whitespace-pre-line text-sm leading-6 text-slate-700">
-                {order.delivery_method === "pickup" ? "รับสินค้าที่ศูนย์ DomiCha" : order.shipping_address || profile?.shipping_address || "-"}
-              </p>
-              {order.note ? <p className="mt-4 rounded-xl bg-orange-50 p-3 text-sm text-orange-800">หมายเหตุ: {order.note}</p> : null}
+              <p className="mt-3 whitespace-pre-line text-sm leading-6 text-slate-700">{sampleOrder.shippingAddress}</p>
+              <p className="mt-4 rounded-xl bg-orange-50 p-3 text-sm text-orange-800">หมายเหตุ: {sampleOrder.note}</p>
             </div>
 
             <div className="rounded-2xl bg-slate-950 p-5 text-white print:bg-slate-50 print:text-slate-950">
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between gap-4">
                   <span className="text-slate-300 print:text-slate-500">ยอดสินค้า</span>
-                  <strong>{money(order.subtotal)}</strong>
+                  <strong>{money(sampleOrder.subtotal)}</strong>
                 </div>
                 <div className="flex justify-between gap-4">
                   <span className="text-slate-300 print:text-slate-500">ค่าจัดส่ง</span>
-                  <strong>{money(order.delivery_fee)}</strong>
+                  <strong>{money(sampleOrder.deliveryFee)}</strong>
                 </div>
                 <div className="border-t border-white/10 pt-4 print:border-slate-200">
                   <div className="flex justify-between gap-4">
                     <span className="font-bold">ยอดสุทธิ</span>
-                    <strong className="text-2xl text-orange-300 print:text-orange-600">{money(order.grand_total)}</strong>
+                    <strong className="text-2xl text-orange-300 print:text-orange-600">{money(sampleOrder.grandTotal)}</strong>
                   </div>
                 </div>
               </div>
@@ -164,7 +153,7 @@ export default function OrderDocumentPage() {
         </section>
 
         <footer className="grid gap-4 border-t border-slate-100 bg-slate-50 p-7 text-xs text-slate-500 md:grid-cols-2">
-          <p>เอกสารนี้สร้างจากระบบ DomiCha Portal Site • พิมพ์เมื่อ {printedAt}</p>
+          <p>เอกสารนี้เป็นข้อมูลตัวอย่างจากระบบ DomiCha Portal Site • พิมพ์เมื่อ {sampleOrder.printedAt}</p>
           <p className="md:text-right">ผู้จัดทำ ____________________ &nbsp;&nbsp; ผู้อนุมัติ ____________________</p>
         </footer>
       </article>

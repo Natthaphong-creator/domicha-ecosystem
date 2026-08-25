@@ -1,4 +1,4 @@
-export type UserRole = "Admin" | "Executive" | "Manager" | "AssistantManager" | "Sales" | "Accountant" | "Franchisee";
+export type UserRole = "Admin" | "Sales" | "Accountant" | "Franchisee";
 export type Status = "Active" | "Inactive";
 export type CustomerType = "Retail" | "Franchisee" | "Corporate";
 export type VatType = "VAT 7%" | "No VAT" | "VAT Included";
@@ -25,8 +25,6 @@ export type Customer = {
   shipping_address: string | null;
   customer_type: CustomerType;
   status: Status;
-  line_user_id?: string | null;
-  auto_send_invoice_line?: boolean | null;
   created_at: string;
 };
 
@@ -91,23 +89,6 @@ export type Quotation = {
 
 export type FranchiseeOrderStatus = "Received" | "Confirmed" | "Packing" | "Shipped" | "Completed" | "Cancelled";
 export type PaymentStatus = "Pending" | "Paid" | "Overdue" | "Cancelled";
-export type FranchiseLeadStatus = "New" | "Contacted" | "Qualified" | "PackageSent" | "Won" | "Lost";
-
-export type FranchiseLead = {
-  id: string;
-  name: string;
-  contact: string;
-  location: string | null;
-  budget: string | null;
-  note: string | null;
-  source: string;
-  status: FranchiseLeadStatus;
-  assigned_to: string | null;
-  last_contacted_at: string | null;
-  internal_note: string | null;
-  created_at: string;
-  updated_at: string;
-};
 
 export type FranchiseeOrderItem = {
   id: string;
@@ -131,27 +112,6 @@ export type FranchiseeOrder = {
   payment_method: "transfer" | "cod" | string;
   order_status: FranchiseeOrderStatus;
   payment_status: PaymentStatus;
-  payment_confirmed_at: string | null;
-  payment_confirmed_by: string | null;
-  payment_received_at: string | null;
-  payment_reference: string | null;
-  promptpay_payload: string | null;
-  promptpay_account_name: string | null;
-  invoice_number: string | null;
-  invoice_issued_at: string | null;
-  invoice_due_at: string | null;
-  invoice_delivery_status: string | null;
-  invoice_email_sent_at: string | null;
-  invoice_drive_file_url: string | null;
-  invoice_month_folder_name: string | null;
-  invoice_delivery_error: string | null;
-  receipt_number: string | null;
-  receipt_issued_at: string | null;
-  receipt_delivery_status: string | null;
-  receipt_email_sent_at: string | null;
-  receipt_drive_file_url: string | null;
-  receipt_month_folder_name: string | null;
-  receipt_delivery_error: string | null;
   subtotal: number;
   delivery_fee: number;
   grand_total: number;

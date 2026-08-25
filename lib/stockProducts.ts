@@ -26,17 +26,8 @@ type PullResponse = {
 
 type ProductOverride = {
   product_name: string;
-  category: string | null;
-  unit: string | null;
   selling_price: number | string | null;
   image_url: string | null;
-  status: string | null;
-};
-
-type StockMovement = {
-  product_id: string;
-  movement_type: "sale_out" | "adjustment_in" | "adjustment_out" | "return_in";
-  quantity: number | string;
 };
 
 export type StockProductsResult = {
@@ -59,11 +50,6 @@ function slugify(text: string) {
 function numberValue(value: unknown, fallback = 0) {
   const numeric = Number(value);
   return Number.isFinite(numeric) ? numeric : fallback;
-}
-
-function positiveNumber(value: unknown) {
-  const numeric = Number(value);
-  return Number.isFinite(numeric) && numeric > 0 ? numeric : null;
 }
 
 function stockFallbackImage(name: string, category = "สินค้า") {
@@ -141,51 +127,6 @@ function unitFromName(name: string) {
   return "ถุง";
 }
 
-function overrideText(value: unknown, fallback: string) {
-  return typeof value === "string" && value.trim() ? value.trim() : fallback;
-}
-
-function productPrice(stockPrice: unknown, override?: ProductOverride) {
-  const adminPrice = positiveNumber(override?.selling_price);
-  if (adminPrice !== null) return adminPrice;
-  return numberValue(stockPrice);
-}
-
-async function fetchStockMovements(): Promise<Record<string, number>> {
-  const supabase = getSupabaseAdmin();
-  if (!supabase) return {};
-
-  const { data, error } = await supabase
-    .from("stock_movements")
-    .select("product_id,movement_type,quantity");
-
-  if (error || !data) return {};
-
-  return (data as StockMovement[]).reduce<Record<string, number>>((acc, movement) => {
-    const sign = movement.movement_type === "adjustment_in" || movement.movement_type === "return_in" ? 1 : -1;
-    acc[movement.product_id] = (acc[movement.product_id] || 0) + numberValue(movement.quantity) * sign;
-    return acc;
-  }, {});
-}
-
-function applyStockMovements(products: ShopProduct[], movements: Record<string, number>) {
-  return products.map((product) => {
-    if (typeof product.stock !== "number") return product;
-    const movementQuantity = movements[product.id] || 0;
-    if (!movementQuantity) return product;
-
-    const stock = Math.max(0, product.stock + movementQuantity);
-    const description = `สินค้า DomiCha Stock • คลังกลาง ${stock.toLocaleString("th-TH")} ${product.unit}`;
-
-    return {
-      ...product,
-      stock,
-      description,
-      badge: stock <= 0 ? "หมด" : product.price <= 0 ? "รอราคา" : product.badge
-    };
-  });
-}
-
 export function transformStockSnapshot(snapshot: StockSnapshot, overrides: ProductOverride[] = []): ShopProduct[] {
   const seen = new Set<string>();
   const products: ShopProduct[] = [];
@@ -199,22 +140,19 @@ export function transformStockSnapshot(snapshot: StockSnapshot, overrides: Produ
       if (!name || seen.has(name)) continue;
       seen.add(name);
       const override = findProductOverride(name, overrides);
-      if (override?.status === "Inactive") continue;
-      const displayCategory = overrideText(override?.category, categoryName);
-      const unit = overrideText(override?.unit, unitFromName(name));
-      const price = productPrice(prices[name], override);
+      const price = numberValue(prices[name], numberValue(override?.selling_price));
       const hasStockValue = Object.prototype.hasOwnProperty.call(warehouseStock, name);
       const stock = hasStockValue ? numberValue(warehouseStock[name]) : undefined;
-      const fallbackImage = stockFallbackImage(name, displayCategory);
+      const fallbackImage = stockFallbackImage(name, categoryName);
       products.push({
         id: `stock-${slugify(name)}`,
         name,
         description: stock === undefined
           ? "สินค้า DomiCha Stock • รอ HQ ยืนยันราคา/สต็อก"
-          : `สินค้า DomiCha Stock • คลังกลาง ${stock.toLocaleString("th-TH")} ${unit}`,
-        category: displayCategory,
+          : `สินค้า DomiCha Stock • คลังกลาง ${stock.toLocaleString("th-TH")} ${unitFromName(name)}`,
+        category: categoryName,
         price,
-        unit,
+        unit: unitFromName(name),
         image: normalizeImage(override?.image_url, fallbackImage),
         badge: stock === 0 ? "หมด" : price <= 0 ? "รอราคา" : undefined,
         stock,
@@ -228,19 +166,16 @@ export function transformStockSnapshot(snapshot: StockSnapshot, overrides: Produ
     if (!name || seen.has(name)) continue;
     seen.add(name);
     const override = findProductOverride(name, overrides);
-    if (override?.status === "Inactive") continue;
-    const displayCategory = overrideText(override?.category, "สินค้า");
-    const unit = overrideText(override?.unit, unitFromName(name));
-    const price = productPrice(prices[name], override);
+    const price = numberValue(prices[name], numberValue(override?.selling_price));
     const stock = numberValue(warehouseStock[name]);
-    const fallbackImage = stockFallbackImage(name, displayCategory);
+    const fallbackImage = stockFallbackImage(name);
     products.push({
       id: `stock-${slugify(name)}`,
       name,
-      description: `สินค้า DomiCha Stock • คลังกลาง ${stock.toLocaleString("th-TH")} ${unit}`,
-      category: displayCategory,
+      description: `สินค้า DomiCha Stock • คลังกลาง ${stock.toLocaleString("th-TH")} ${unitFromName(name)}`,
+      category: "สินค้า",
       price,
-      unit,
+      unit: unitFromName(name),
       image: normalizeImage(override?.image_url, fallbackImage),
       badge: stock <= 0 ? "หมด" : undefined,
       stock,
@@ -257,7 +192,8 @@ async function fetchProductOverrides(): Promise<ProductOverride[]> {
 
   const { data, error } = await supabase
     .from("products")
-    .select("product_name,category,unit,selling_price,image_url,status");
+    .select("product_name,selling_price,image_url")
+    .eq("status", "Active");
 
   if (error || !data) return [];
   return data as ProductOverride[];
@@ -271,7 +207,7 @@ export async function fetchStockProducts(): Promise<StockProductsResult> {
       method: "POST",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify({ action: "pull" }),
-      cache: "no-store"
+      next: { revalidate: 60 }
     });
 
     if (!response.ok) throw new Error(`DomiCha Stock API ${response.status}`);
@@ -279,8 +215,8 @@ export async function fetchStockProducts(): Promise<StockProductsResult> {
     const payload = (await response.json()) as PullResponse;
     if (!payload.ok) throw new Error(payload.error || "DomiCha Stock API returned an error");
 
-    const [overrides, movements] = await Promise.all([fetchProductOverrides(), fetchStockMovements()]);
-    const products = applyStockMovements(transformStockSnapshot(payload.data || {}, overrides), movements);
+    const overrides = await fetchProductOverrides();
+    const products = transformStockSnapshot(payload.data || {}, overrides);
     if (!products.length) throw new Error("ยังไม่มีรายการสินค้าจาก DomiCha Stock");
 
     return {

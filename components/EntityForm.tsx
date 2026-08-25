@@ -31,7 +31,7 @@ export function EntityForm({ title, fields, endpoint, backHref, initialData, ext
     setError("");
 
     try {
-      const payload = Object.fromEntries(fields.map((field) => [field.name, form[field.name]]));
+      const payload = { ...form };
       for (const field of fields) {
         if (field.type === "number") payload[field.name] = Number(payload[field.name] || 0);
       }
