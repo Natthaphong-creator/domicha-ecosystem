@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { recordSalesDocumentStockOut } from "@/lib/franchiseeOrderAccounting";
 import { handleRouteError, requireUserRole } from "@/lib/supabaseServer";
 
 type SalePayload = {
@@ -192,7 +193,7 @@ export async function POST(request: NextRequest) {
       const productName = item.productName || product?.product_name || "สินค้า";
       const lineBeforeVat = Math.max(0, item.quantity * unitPrice - item.discount);
       return {
-        product_id: item.productId,
+        product_id: item.productId || null,
         product_name: productName,
         quantity: item.quantity,
         unit_price: unitPrice,
@@ -235,6 +236,13 @@ export async function POST(request: NextRequest) {
       .insert(normalizedItems.map((item) => ({ ...item, sales_document_id: document.id })));
     if (itemError) throw itemError;
 
+    const stockMovement = await recordSalesDocumentStockOut({
+      salesDocumentId: document.id,
+      documentNumber: document.document_number,
+      createdBy: auth.user.id,
+      items: normalizedItems
+    });
+
     let lineStatus: "sent" | "skipped" | "failed" | "not_configured" = "skipped";
     const targetLineUserId = payload.lineUserId?.trim() || customer.line_user_id || "";
     if (payload.sendLine && targetLineUserId) {
@@ -264,6 +272,7 @@ export async function POST(request: NextRequest) {
       ok: true,
       invoiceNumber: document.document_number,
       saleDocument: document,
+      stockMovement,
       lineStatus
     }, { status: 201 });
   } catch (error) {

@@ -32,6 +32,8 @@ type DashboardPayload = {
     pendingReceivables: number;
     overdueReceivables: number;
     salesDocuments: number;
+    stockMovements: number;
+    stockOutQuantity: number;
   };
   recentSales: Array<{
     id: string;
@@ -64,7 +66,9 @@ const defaultData: DashboardPayload = {
     monthlyRevenue: 0,
     pendingReceivables: 0,
     overdueReceivables: 0,
-    salesDocuments: 0
+    salesDocuments: 0,
+    stockMovements: 0,
+    stockOutQuantity: 0
   },
   recentSales: [],
   monthlySales: [],
@@ -172,6 +176,8 @@ export function DashboardSalesOverview() {
             {[
               ["ลูกค้าทั้งหมด", data.totals.customers],
               ["เอกสารขายใน 6 เดือน", data.totals.salesDocuments],
+              ["รายการตัด Stock", data.totals.stockMovements],
+              ["จำนวนสินค้าออก", data.totals.stockOutQuantity],
               ["สินค้าในระบบ", data.totals.products]
             ].map(([label, value]) => (
               <div key={String(label)} className="flex items-center justify-between rounded-xl bg-white/5 px-3 py-3 text-sm">

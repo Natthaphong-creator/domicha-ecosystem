@@ -57,6 +57,7 @@ function buildDocumentPayload(order: FranchiseeOrder, type: "invoice" | "receipt
     customerTaxId: profile?.tax_id || "",
     customerAddress: profile?.shipping_address || order.shipping_address || "",
     paymentReference: order.payment_reference || "",
+    promptpayPayload: order.promptpay_payload || "",
     promptpayAccountName: order.promptpay_account_name || "",
     promptpayTarget: domichaPromptPay.target,
     subtotal: toNumber(order.subtotal),

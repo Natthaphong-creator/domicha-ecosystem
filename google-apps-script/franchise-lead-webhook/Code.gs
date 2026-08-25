@@ -310,6 +310,7 @@ function createInvoicePdf_(payload, folder) {
   body.appendParagraph("วิธีชำระเงิน").setHeading(DocumentApp.ParagraphHeading.HEADING3);
   body.appendParagraph("พร้อมเพย์: " + (payload.promptpayTarget || "-"));
   body.appendParagraph("ชื่อบัญชี: " + (payload.promptpayAccountName || "บริษัท โดมิพลัสกรุ๊ป จำกัด"));
+  appendPromptPayQr_(body, payload);
   body.appendParagraph("");
   body.appendParagraph("หลังชำระเงินแล้ว กรุณาส่งสลิปให้ทีม DomiCha ตรวจสอบ เมื่อยืนยันยอดแล้วระบบจะออกใบเสร็จรับเงินให้อัตโนมัติ");
 
@@ -320,6 +321,23 @@ function createInvoicePdf_(payload, folder) {
   const pdfFile = folder.createFile(pdfBlob);
   docFile.setTrashed(true);
   return pdfFile;
+}
+
+function appendPromptPayQr_(body, payload) {
+  if (!payload.promptpayPayload) {
+    return;
+  }
+
+  try {
+    const qrUrl = "https://quickchart.io/qr?size=420&margin=1&text=" + encodeURIComponent(payload.promptpayPayload);
+    const blob = UrlFetchApp.fetch(qrUrl, { muteHttpExceptions: true }).getBlob().setName("domicha-promptpay-qr.png");
+    body.appendParagraph("QR พร้อมเพย์สำหรับชำระเงิน").setHeading(DocumentApp.ParagraphHeading.HEADING3);
+    const image = body.appendImage(blob);
+    image.setWidth(180).setHeight(180);
+    body.appendParagraph("ยอดชำระ: " + formatReceiptMoney_(payload.grandTotal || 0)).setBold(true);
+  } catch (error) {
+    body.appendParagraph("QR พร้อมเพย์: ไม่สามารถสร้างรูป QR ได้ กรุณาใช้เลขพร้อมเพย์ด้านบน");
+  }
 }
 
 function sendReceiptEmail_(payload, pdfFile) {

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { recordFranchiseeOrderStockOut } from "@/lib/franchiseeOrderAccounting";
 import { createPromptPayPayload, domichaPromptPay } from "@/lib/promptpay";
 import { deliverInvoiceAutomation } from "@/lib/receiptAutomation";
 import { fetchStockProducts } from "@/lib/stockProducts";
@@ -314,6 +315,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "บันทึกรายการสินค้าไม่สำเร็จ" }, { status: 500 });
   }
 
+  const stockMovement = await recordFranchiseeOrderStockOut({
+    orderId: savedOrder.id,
+    orderNumber,
+    createdBy: auth.user.id,
+    items: validItems
+  });
+
   const { data: orderForInvoice } = await auth.supabase
     .from("franchisee_orders")
     .select(orderSelect)
@@ -373,6 +381,7 @@ export async function POST(request: NextRequest) {
       total,
       lineNotified: false,
       invoiceDelivery,
+      stockMovement,
       demoMode: false,
       message: "รับคำสั่งซื้อแล้ว (ยังไม่ได้ตั้งค่า LINE OA)"
     });
@@ -404,6 +413,7 @@ export async function POST(request: NextRequest) {
     promptpayTarget: paymentMethod === "transfer" ? domichaPromptPay.target : null,
     total,
     invoiceDelivery,
+    stockMovement,
     lineNotified: true,
     requestId: lineResponse.headers.get("x-line-request-id") || ""
   });
