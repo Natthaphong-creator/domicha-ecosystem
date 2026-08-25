@@ -18,7 +18,7 @@ export default function ForgotPasswordPage() {
     setMessage("");
 
     if (demoMode) {
-      setMessage("โหมดตัวอย่างไม่สามารถส่งอีเมล reset password ได้");
+      setMessage("ยังไม่ได้เชื่อมต่อระบบอีเมลสำหรับ reset password");
       return;
     }
 

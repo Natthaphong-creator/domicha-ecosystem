@@ -633,7 +633,7 @@ export default function CustomerShopPage() {
               <p className="flex items-center gap-2"><Check className="h-4 w-4 text-emerald-500" /> บันทึกคำสั่งซื้อเรียบร้อย</p>
               <p className="mt-2 flex items-center gap-2"><Check className="h-4 w-4 text-emerald-500" /> หลังโอนเงิน กดแจ้งทีมและส่งสลิปใน LINE OA</p>
               <p className="mt-2 flex items-center gap-2"><Check className="h-4 w-4 text-emerald-500" /> ทีม DomiCha ตรวจสอบยอด กดยืนยัน และระบบส่งใบเสร็จไปที่อีเมลสาขา</p>
-              <p className="mt-2 flex items-center gap-2"><Check className={`h-4 w-4 ${success.lineNotified ? "text-emerald-500" : "text-amber-500"}`} /> {success.lineNotified ? "แจ้งเตือนทีมงานผ่าน LINE OA แล้ว" : "โหมดตัวอย่าง — รอตั้งค่า LINE OA"}</p>
+              <p className="mt-2 flex items-center gap-2"><Check className={`h-4 w-4 ${success.lineNotified ? "text-emerald-500" : "text-amber-500"}`} /> {success.lineNotified ? "แจ้งเตือนทีมงานผ่าน LINE OA แล้ว" : "บันทึกแล้ว แต่ยังไม่ได้ส่งแจ้งเตือน LINE OA"}</p>
             </div>
             <button onClick={() => setSuccess(null)} className="mt-5 h-12 w-full rounded-2xl bg-stone-950 font-bold text-white">เลือกซื้อสินค้าต่อ</button>
           </section>

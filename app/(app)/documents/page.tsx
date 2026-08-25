@@ -1,14 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowUpRight,
   Check,
-  ChevronDown,
   Download,
   Eye,
-  FilePlus2,
   Filter,
   MoreHorizontal,
   Plus,
@@ -17,15 +15,39 @@ import {
   ShoppingBag,
   X
 } from "lucide-react";
-import {
-  accountingDocuments,
-  documentStatusLabels,
-  documentTypeLabels,
-  type AccountingDocument,
-  type AccountingDocumentStatus,
-  type AccountingDocumentType
-} from "@/lib/accountingDemo";
+import { apiFetch } from "@/lib/apiClient";
 import { dateThai, money } from "@/lib/format";
+
+type AccountingDocumentType = "Quotation" | "Invoice" | "Receipt" | "TaxInvoice";
+type AccountingDocumentStatus = "Draft" | "Pending" | "Paid" | "Overdue" | "Cancelled";
+
+type AccountingDocument = {
+  id: string;
+  source: "sales_document" | "franchisee_order";
+  number: string;
+  type: AccountingDocumentType;
+  customer: string;
+  date: string;
+  dueDate: string;
+  total: number;
+  status: AccountingDocumentStatus;
+  href: string;
+};
+
+const documentTypeLabels: Record<AccountingDocumentType, string> = {
+  Quotation: "ใบเสนอราคา",
+  Invoice: "ใบแจ้งหนี้",
+  Receipt: "ใบเสร็จรับเงิน",
+  TaxInvoice: "ใบกำกับภาษี"
+};
+
+const documentStatusLabels: Record<AccountingDocumentStatus, string> = {
+  Draft: "ร่าง",
+  Pending: "รอรับชำระ",
+  Paid: "รับชำระแล้ว",
+  Overdue: "เกินกำหนด",
+  Cancelled: "ยกเลิก"
+};
 
 const statusClasses: Record<AccountingDocumentStatus, string> = {
   Draft: "bg-slate-100 text-slate-600",
@@ -36,12 +58,29 @@ const statusClasses: Record<AccountingDocumentStatus, string> = {
 };
 
 export default function DocumentsPage() {
-  const [documents, setDocuments] = useState<AccountingDocument[]>(accountingDocuments);
+  const [documents, setDocuments] = useState<AccountingDocument[]>([]);
   const [query, setQuery] = useState("");
   const [type, setType] = useState<AccountingDocumentType | "All">("All");
   const [status, setStatus] = useState<AccountingDocumentStatus | "All">("All");
-  const [showCreate, setShowCreate] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+
+  async function loadDocuments() {
+    setLoading(true);
+    setError("");
+    try {
+      setDocuments(await apiFetch<AccountingDocument[]>("/api/documents"));
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : "โหลดเอกสารไม่สำเร็จ");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadDocuments();
+  }, []);
 
   const filtered = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -50,31 +89,6 @@ export default function DocumentsPage() {
       return matchesQuery && (type === "All" || document.type === type) && (status === "All" || document.status === status);
     });
   }, [documents, query, status, type]);
-
-  function createDemoDocument(documentType: AccountingDocumentType) {
-    const prefix = { Quotation: "QT", Invoice: "INV", Receipt: "RE", TaxInvoice: "TAX" }[documentType];
-    const nextNumber = `${prefix}-202607-${String(documents.length + 49).padStart(4, "0")}`;
-    setDocuments((current) => [
-      {
-        id: crypto.randomUUID(),
-        number: nextNumber,
-        type: documentType,
-        customer: "ลูกค้าใหม่ (ตัวอย่าง)",
-        date: "2026-07-01",
-        dueDate: "2026-07-08",
-        total: 0,
-        status: "Draft"
-      },
-      ...current
-    ]);
-    setShowCreate(false);
-    showNotice(`สร้าง${documentTypeLabels[documentType]}ฉบับร่างแล้ว`);
-  }
-
-  function markPaid(id: string) {
-    setDocuments((current) => current.map((document) => (document.id === id ? { ...document, status: "Paid" } : document)));
-    showNotice("บันทึกรับชำระเงินเรียบร้อย");
-  }
 
   function showNotice(message: string) {
     setNotice(message);
@@ -90,32 +104,16 @@ export default function DocumentsPage() {
               <ShoppingBag className="h-3.5 w-3.5" /> Sales workspace
             </span>
             <h1 className="mt-4 text-3xl font-black tracking-[-.03em] sm:text-4xl">ศูนย์จัดการงานขาย</h1>
-            <p className="mt-2 text-sm leading-6 text-slate-300">ติดตามเอกสาร รับชำระ และรับออเดอร์ใหม่จากหน้าร้าน DomiCha ในพื้นที่เดียว</p>
+            <p className="mt-2 text-sm leading-6 text-slate-300">ติดตามเอกสารจริงจากระบบขาย รับชำระ และเปิดดูใบแจ้งหนี้/ใบเสร็จในพื้นที่เดียว</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Link href="/shop" className="inline-flex h-11 items-center gap-2 rounded-xl border border-white/15 bg-white/10 px-4 text-sm font-semibold text-white backdrop-blur hover:bg-white/15">
-              เปิดหน้าร้านลูกค้า <ArrowUpRight className="h-4 w-4" />
+            <Link href="/orders" className="inline-flex h-11 items-center gap-2 rounded-xl border border-white/15 bg-white/10 px-4 text-sm font-semibold text-white backdrop-blur hover:bg-white/15">
+              ออเดอร์แฟรนไชส์ซี <ArrowUpRight className="h-4 w-4" />
             </Link>
-            <Link href="/documents/template" className="inline-flex h-11 items-center gap-2 rounded-xl border border-white/15 bg-white/10 px-4 text-sm font-semibold text-white backdrop-blur hover:bg-white/15">
-              ดู Template <Eye className="h-4 w-4" />
+            <Link href="/sales/new" className="inline-flex h-11 items-center gap-2 rounded-xl bg-orange-500 px-4 text-sm font-semibold text-white shadow-lg shadow-orange-500/20">
+              <Plus className="h-4 w-4" />
+              สร้างใบแจ้งหนี้
             </Link>
-            <div className="relative">
-              <button className="inline-flex h-11 items-center gap-2 rounded-xl bg-orange-500 px-4 text-sm font-semibold text-white shadow-lg shadow-orange-500/20" onClick={() => setShowCreate((current) => !current)}>
-                <Plus className="h-4 w-4" />
-                สร้างเอกสาร
-                <ChevronDown className="h-4 w-4" />
-              </button>
-              {showCreate ? (
-                <div className="absolute right-0 top-12 z-10 w-64 rounded-2xl border border-slate-200 bg-white p-2 text-slate-900 shadow-2xl">
-                  {(Object.entries(documentTypeLabels) as [AccountingDocumentType, string][]).map(([value, label]) => (
-                    <button key={value} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm hover:bg-slate-50" onClick={() => createDemoDocument(value)}>
-                      <FilePlus2 className="h-4 w-4 text-orange-500" />
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              ) : null}
-            </div>
           </div>
         </div>
       </header>
@@ -138,14 +136,14 @@ export default function DocumentsPage() {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <p className="text-xs font-black uppercase tracking-[.16em] text-orange-600">DomiCha System Accounting</p>
-            <h2 className="mt-2 text-xl font-black text-slate-950">ออเดอร์แฟรนไชส์ซีจริงสำหรับทำบัญชี</h2>
+            <h2 className="mt-2 text-xl font-black text-slate-950">เอกสารจริงจากการขายและคำสั่งซื้อ</h2>
             <p className="mt-1 text-sm leading-6 text-orange-950/75">
-              ใช้หน้านี้เพื่อตรวจคำสั่งซื้อจากสาขา เปิดใบแจ้งหนี้พร้อม QR ยืนยันวันที่โอน และออกใบเสร็จรับเงิน PDF อัตโนมัติ
+              รายการนี้รวมใบแจ้งหนี้ ใบเสร็จ และคำสั่งซื้อแฟรนไชส์ซี เพื่อให้ทีมบัญชีตรวจยอดและเปิดเอกสารย้อนหลังได้ทันที
             </p>
           </div>
-          <Link href="/orders" className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-slate-950 px-4 text-sm font-bold text-white hover:bg-orange-600">
-            เปิดรายการจริงจาก DomiCha System <ArrowUpRight className="h-4 w-4" />
-          </Link>
+          <button onClick={loadDocuments} className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-slate-950 px-4 text-sm font-bold text-white hover:bg-orange-600">
+            รีเฟรชข้อมูล <ArrowUpRight className="h-4 w-4" />
+          </button>
         </div>
       </section>
 
@@ -176,6 +174,9 @@ export default function DocumentsPage() {
           </div>
         </div>
 
+        {error ? <p className="m-4 rounded-2xl border border-red-100 bg-red-50 p-4 text-sm text-red-700">{error}</p> : null}
+        {loading ? <p className="m-4 rounded-2xl bg-slate-50 p-4 text-sm text-slate-500">กำลังโหลดเอกสารจริง...</p> : null}
+
         <div className="overflow-x-auto">
           <table>
             <thead>
@@ -191,7 +192,7 @@ export default function DocumentsPage() {
             </thead>
             <tbody>
               {filtered.map((document) => (
-                <tr key={document.id} className="hover:bg-slate-50/70">
+                <tr key={`${document.source}-${document.id}-${document.number}`} className="hover:bg-slate-50/70">
                   <td>
                     <strong className="block whitespace-nowrap">{document.number}</strong>
                     <span className="text-xs text-slate-400">{documentTypeLabels[document.type]}</span>
@@ -207,18 +208,13 @@ export default function DocumentsPage() {
                   <td className="whitespace-nowrap text-right font-semibold">{money(document.total)}</td>
                   <td>
                     <div className="flex justify-end gap-1.5">
-                      {document.status === "Pending" || document.status === "Overdue" ? (
-                        <button className="rounded-lg border border-emerald-200 p-2 text-emerald-600 hover:bg-emerald-50" aria-label={`รับชำระ ${document.number}`} onClick={() => markPaid(document.id)}>
-                          <Check className="h-4 w-4" />
-                        </button>
-                      ) : null}
-                      <button className="rounded-lg border border-slate-200 p-2 text-slate-500 hover:bg-slate-50" aria-label={`ดู ${document.number}`} onClick={() => showNotice("เปิดดูเอกสารตัวอย่าง")}>
+                      <Link className="rounded-lg border border-slate-200 p-2 text-slate-500 hover:bg-slate-50" aria-label={`ดู ${document.number}`} href={document.href}>
                         <Eye className="h-4 w-4" />
-                      </button>
-                      <button className="rounded-lg border border-slate-200 p-2 text-slate-500 hover:bg-slate-50" aria-label={`ส่ง ${document.number}`} onClick={() => showNotice("เตรียมส่งเอกสารทางอีเมล")}>
+                      </Link>
+                      <button className="rounded-lg border border-slate-200 p-2 text-slate-500 hover:bg-slate-50" aria-label={`ส่ง ${document.number}`} onClick={() => showNotice("ระบบจะส่งเอกสารจากหน้ารายละเอียด")}>
                         <Send className="h-4 w-4" />
                       </button>
-                      <button className="rounded-lg border border-slate-200 p-2 text-slate-500 hover:bg-slate-50" aria-label={`ดาวน์โหลด ${document.number}`} onClick={() => showNotice("เตรียมไฟล์ PDF ตัวอย่าง")}>
+                      <button className="rounded-lg border border-slate-200 p-2 text-slate-500 hover:bg-slate-50" aria-label={`ดาวน์โหลด ${document.number}`} onClick={() => showNotice("เปิดเอกสารก่อนดาวน์โหลด PDF")}>
                         <Download className="h-4 w-4" />
                       </button>
                       <button className="rounded-lg p-2 text-slate-400 hover:bg-slate-100" aria-label={`เมนูเพิ่มเติม ${document.number}`}>
@@ -228,15 +224,15 @@ export default function DocumentsPage() {
                   </td>
                 </tr>
               ))}
-              {filtered.length === 0 ? (
-                <tr><td colSpan={7} className="py-14 text-center text-slate-400">ไม่พบเอกสารที่ค้นหา</td></tr>
+              {!loading && filtered.length === 0 ? (
+                <tr><td colSpan={7} className="py-14 text-center text-slate-400">ยังไม่พบเอกสารจริงในระบบ</td></tr>
               ) : null}
             </tbody>
           </table>
         </div>
         <div className="flex items-center justify-between border-t border-slate-100 px-4 py-3 text-xs text-slate-400">
           <span>แสดง {filtered.length} จาก {documents.length} รายการ</span>
-          <span>ข้อมูลตัวอย่างสำหรับทดสอบระบบ</span>
+          <span>ข้อมูลจริงจากระบบขายและ DomiCha System</span>
         </div>
       </section>
 

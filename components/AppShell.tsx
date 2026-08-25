@@ -137,7 +137,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <span className="grid h-9 w-9 place-items-center rounded-full bg-slate-900 text-xs font-bold text-white">NP</span>
             <span className="min-w-0 flex-1">
               <strong className="block truncate text-sm">ณัฐพงษ์ อุทธะ</strong>
-              <span className="block truncate text-xs text-slate-400">{demoMode ? "โหมดตัวอย่าง" : "ผู้ดูแลระบบ"}</span>
+              <span className="block truncate text-xs text-slate-400">{demoMode ? "ยังไม่ได้เชื่อมต่อข้อมูล" : "ผู้ดูแลระบบ"}</span>
             </span>
             <ChevronDown className="h-4 w-4 text-slate-400" />
           </button>
@@ -194,7 +194,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="ml-auto flex items-center gap-2">
             <span className="hidden items-center gap-1.5 rounded-full border border-amber-200/70 bg-gradient-to-r from-amber-50 to-orange-50 px-3 py-1.5 text-xs font-semibold text-amber-800 sm:inline-flex">
               <Crown className="h-3.5 w-3.5 text-amber-600" />
-              {demoMode ? "● ข้อมูลตัวอย่าง" : "● ระบบออนไลน์"}
+              {demoMode ? "● รอตั้งค่าข้อมูล" : "● ระบบออนไลน์"}
             </span>
             <Link href="/shop" className="inline-flex h-10 items-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-3 text-sm font-semibold text-orange-700 hover:bg-orange-100" aria-label="เปิดพอร์ทัลแฟรนไชส์ซี">
               <Store className="h-4 w-4" />

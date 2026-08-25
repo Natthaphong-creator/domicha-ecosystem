@@ -2,11 +2,20 @@
 
 import { FormEvent, useMemo, useState } from "react";
 import { Check, Download, MoreHorizontal, Paperclip, Plus, Search, WalletCards, X } from "lucide-react";
-import { expenseRecords, type ExpenseRecord } from "@/lib/accountingDemo";
 import { dateThai, money } from "@/lib/format";
 
+type ExpenseRecord = {
+  id: string;
+  number: string;
+  vendor: string;
+  category: string;
+  date: string;
+  total: number;
+  status: "Pending" | "Paid";
+};
+
 export default function ExpensesPage() {
-  const [expenses, setExpenses] = useState<ExpenseRecord[]>(expenseRecords);
+  const [expenses, setExpenses] = useState<ExpenseRecord[]>([]);
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [notice, setNotice] = useState("");

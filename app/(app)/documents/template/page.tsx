@@ -54,7 +54,7 @@ export default function DocumentTemplatePage() {
         seller="ทีมแฟรนไชส์ DomiCha"
         reference="LEAD-WEB-20260814"
         poNumber="FRANCHISE-PACKAGE"
-        customerName="คุณลูกค้าแฟรนไชส์ซี ตัวอย่าง"
+        customerName="คุณลูกค้าแฟรนไชส์ซี"
         customerAddress="ตำบลเสม็ด อำเภอเมืองชลบุรี จังหวัดชลบุรี 20000"
         customerBranch="พื้นที่สนใจ: ชลบุรี"
         customerTaxId="-"
@@ -62,7 +62,7 @@ export default function DocumentTemplatePage() {
         amountText="เจ็ดหมื่นสองพันสองร้อยยี่สิบห้าบาทถ้วน"
         creditTerm="ราคานี้มีผล 7 วัน"
         deliveryMethod="นัดหมายสำรวจพื้นที่และจัดส่งตามเงื่อนไขแพ็กเกจ"
-        note="ใบเสนอราคานี้เป็นตัวอย่างสำหรับนำเสนอแพ็กเกจแฟรนไชส์ ข้อมูลสูตร ต้นทุน รายการอุปกรณ์เชิงลึก และ SOP ฉบับเต็มจะแชร์หลังประเมินและยืนยันสิทธิ์กับแบรนด์"
+        note="ใบเสนอราคานี้ใช้สำหรับนำเสนอแพ็กเกจแฟรนไชส์ ข้อมูลสูตร ต้นทุน รายการอุปกรณ์เชิงลึก และ SOP ฉบับเต็มจะแชร์หลังประเมินและยืนยันสิทธิ์กับแบรนด์"
       />
 
       <FlowAccountDocumentTemplate

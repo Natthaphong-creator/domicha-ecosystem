@@ -120,8 +120,8 @@ export default function OrdersPage() {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Link href="/orders/sample" className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-orange-500 px-4 text-sm font-bold text-white hover:bg-orange-600">
-              <FileText className="h-4 w-4" /> ดูตัวอย่างเอกสาร
+            <Link href="/shop" className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-orange-500 px-4 text-sm font-bold text-white hover:bg-orange-600">
+              <FileText className="h-4 w-4" /> เปิดหน้าสั่งซื้อจริง
             </Link>
             <button onClick={loadOrders} className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/10 px-4 text-sm font-bold text-white hover:bg-white/15">
               <RefreshCcw className="h-4 w-4" /> รีเฟรช
@@ -186,8 +186,8 @@ export default function OrdersPage() {
             <ClipboardList className="mx-auto h-10 w-10 text-slate-300" />
             <p className="mt-3 font-bold text-slate-700">ยังไม่มีใบสั่งซื้อ</p>
             <p className="mt-1 text-sm text-slate-500">เมื่อแฟรนไชส์ซีสั่งของจาก /shop รายการจะมาแสดงที่นี่</p>
-            <Link href="/orders/sample" className="mt-4 inline-flex h-11 items-center gap-2 rounded-2xl bg-slate-950 px-4 text-sm font-bold text-white hover:bg-orange-600">
-              ดูตัวอย่างเอกสาร <ArrowUpRight className="h-4 w-4" />
+            <Link href="/shop" className="mt-4 inline-flex h-11 items-center gap-2 rounded-2xl bg-slate-950 px-4 text-sm font-bold text-white hover:bg-orange-600">
+              เปิดหน้าสั่งซื้อจริง <ArrowUpRight className="h-4 w-4" />
             </Link>
           </div>
         ) : null}

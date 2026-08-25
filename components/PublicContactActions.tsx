@@ -1,24 +1,10 @@
 "use client";
 
 import { MessageCircle, Phone } from "lucide-react";
-import { useEffect, useState } from "react";
-import { cleanSiteSettings, phoneHref, SiteSettings } from "@/lib/siteSettingsShared";
-
-const DEMO_STORAGE_KEY = "domicha-business-demo-v1";
+import { phoneHref, SiteSettings } from "@/lib/siteSettingsShared";
 
 export function PublicContactActions({ initialSettings }: { initialSettings: SiteSettings }) {
-  const [settings, setSettings] = useState(initialSettings);
-
-  useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(DEMO_STORAGE_KEY);
-      if (!raw) return;
-      const database = JSON.parse(raw) as { siteSettings?: Partial<SiteSettings> };
-      if (database.siteSettings) setSettings(cleanSiteSettings(database.siteSettings));
-    } catch {
-      setSettings(initialSettings);
-    }
-  }, [initialSettings]);
+  const settings = initialSettings;
 
   return (
     <>

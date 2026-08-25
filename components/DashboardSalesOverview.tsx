@@ -16,7 +16,6 @@ import {
   WalletCards
 } from "lucide-react";
 import { apiFetch } from "@/lib/apiClient";
-import { documentStatusLabels, documentTypeLabels } from "@/lib/accountingDemo";
 import { dateThai, money } from "@/lib/format";
 
 type SalesStatus = "Draft" | "Pending" | "Paid" | "Overdue" | "Cancelled";
@@ -55,6 +54,20 @@ const statusClasses: Record<SalesStatus, string> = {
   Paid: "bg-emerald-50 text-emerald-700",
   Overdue: "bg-red-50 text-red-700",
   Cancelled: "bg-slate-100 text-slate-500"
+};
+
+const documentTypeLabels: Record<SalesType, string> = {
+  Invoice: "ใบแจ้งหนี้",
+  Receipt: "ใบเสร็จรับเงิน",
+  TaxInvoice: "ใบกำกับภาษี"
+};
+
+const documentStatusLabels: Record<SalesStatus, string> = {
+  Draft: "ร่าง",
+  Pending: "รอรับชำระ",
+  Paid: "รับชำระแล้ว",
+  Overdue: "เกินกำหนด",
+  Cancelled: "ยกเลิก"
 };
 
 const defaultData: DashboardPayload = {

@@ -64,7 +64,7 @@ export default function ResetPasswordPage() {
     }
 
     if (demoMode) {
-      setMessage("โหมดตัวอย่าง: ตั้งรหัสผ่านใหม่สำเร็จ");
+      setMessage("ยังไม่ได้เชื่อมต่อฐานข้อมูลสำหรับตั้งรหัสผ่านใหม่");
       return;
     }
 

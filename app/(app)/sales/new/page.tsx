@@ -36,59 +36,8 @@ type CustomerOption = Customer & {
 
 type DeliveryResult = {
   invoiceNumber: string;
-  lineStatus: "sent" | "simulated" | "skipped" | "failed" | "not_configured";
+  lineStatus: "sent" | "skipped" | "failed" | "not_configured";
 };
-
-const fallbackCustomers: CustomerOption[] = [
-  {
-    id: "customer-demo-1",
-    customer_name: "DomiCha สาขาตัวอย่าง",
-    contact_person: null,
-    phone: null,
-    email: null,
-    tax_id: null,
-    billing_address: null,
-    shipping_address: null,
-    customer_type: "Franchisee",
-    status: "Active",
-    line_user_id: "U-demo-domicha-001",
-    auto_send_invoice_line: true,
-    created_at: new Date().toISOString()
-  }
-];
-
-const fallbackProducts: Product[] = [
-  {
-    id: "product-demo-1",
-    product_code: "DEMO-TEA",
-    product_name: "ชาแดง DomiCha",
-    category: "วัตถุดิบหลัก",
-    unit: "ถุง",
-    cost_price: 0,
-    selling_price: 195,
-    image_url: null,
-    vat_type: "VAT 7%",
-    minimum_stock: 0,
-    supplier_id: null,
-    status: "Active",
-    created_at: new Date().toISOString()
-  },
-  {
-    id: "product-demo-2",
-    product_code: "DEMO-PEARL",
-    product_name: "ไข่มุก",
-    category: "วัตถุดิบหลัก",
-    unit: "ถุง",
-    cost_price: 0,
-    selling_price: 89,
-    image_url: null,
-    vat_type: "VAT 7%",
-    minimum_stock: 0,
-    supplier_id: null,
-    status: "Active",
-    created_at: new Date().toISOString()
-  }
-];
 
 function todayText() {
   return new Date().toISOString().slice(0, 10);
@@ -105,21 +54,17 @@ function newItem(): SaleItem {
 }
 
 export default function NewSalePage() {
-  const demoMode = !process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  const [customers, setCustomers] = useState<CustomerOption[]>(fallbackCustomers);
-  const [products, setProducts] = useState<Product[]>(fallbackProducts);
+  const [customers, setCustomers] = useState<CustomerOption[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loadingData, setLoadingData] = useState(true);
-  const [customerId, setCustomerId] = useState(fallbackCustomers[0].id);
+  const [customerId, setCustomerId] = useState("");
   const [issueDate, setIssueDate] = useState(todayText());
   const [paymentTermDays, setPaymentTermDays] = useState(7);
   const [dueDate, setDueDate] = useState(addDays(todayText(), 7));
-  const [items, setItems] = useState<SaleItem[]>([
-    { id: "sale-item-1", productId: fallbackProducts[0].id, name: fallbackProducts[0].product_name, quantity: 20, unitPrice: fallbackProducts[0].selling_price },
-    { id: "sale-item-2", productId: fallbackProducts[1].id, name: fallbackProducts[1].product_name, quantity: 10, unitPrice: fallbackProducts[1].selling_price }
-  ]);
+  const [items, setItems] = useState<SaleItem[]>([newItem()]);
   const [discount, setDiscount] = useState(0);
   const [sendLine, setSendLine] = useState(true);
-  const [lineUserId, setLineUserId] = useState(fallbackCustomers[0].line_user_id || "");
+  const [lineUserId, setLineUserId] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState<DeliveryResult | null>(null);
@@ -162,7 +107,7 @@ export default function NewSalePage() {
     loadReferenceData();
   }, []);
 
-  const selectedCustomer = customers.find((customer) => customer.id === customerId) || customers[0];
+  const selectedCustomer = customers.find((customer) => customer.id === customerId) || null;
   const subtotal = useMemo(() => items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0), [items]);
   const taxable = Math.max(0, subtotal - discount);
   const vat = taxable * 0.07;
@@ -264,7 +209,7 @@ export default function NewSalePage() {
                 </div>
                 <p className="mt-1 text-sm text-slate-500">
                   {result.lineStatus === "sent"
-                    ? `ส่งใบแจ้งหนี้ให้ ${selectedCustomer.customer_name} แล้ว`
+                    ? `ส่งใบแจ้งหนี้ให้ ${selectedCustomer?.customer_name || "ลูกค้า"} แล้ว`
                     : result.lineStatus === "not_configured"
                       ? "บันทึกขายแล้ว แต่ยังไม่ได้ตั้งค่า LINE_CHANNEL_ACCESS_TOKEN"
                       : result.lineStatus === "failed"
@@ -312,7 +257,10 @@ export default function NewSalePage() {
               <div><h2 className="font-semibold">ข้อมูลการขาย</h2><p className="text-xs text-slate-400">กำหนดลูกค้าและวันครบกำหนดชำระ</p></div>
             </div>
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
-              <label>ลูกค้า<select className="mt-1.5" value={customerId} onChange={(event) => selectCustomer(event.target.value)} disabled={loadingData}>{customers.map((customer) => <option key={customer.id} value={customer.id}>{customer.customer_name}</option>)}</select></label>
+              <label>ลูกค้า<select className="mt-1.5" value={customerId} onChange={(event) => selectCustomer(event.target.value)} disabled={loadingData || customers.length === 0}>
+                {customers.length === 0 ? <option value="">ยังไม่มีลูกค้าในระบบ</option> : null}
+                {customers.map((customer) => <option key={customer.id} value={customer.id}>{customer.customer_name}</option>)}
+              </select></label>
               <label>วันที่ขาย<input className="mt-1.5" type="date" value={issueDate} onChange={(event) => updateIssueDate(event.target.value)} /></label>
               <label>เงื่อนไขการชำระ<select className="mt-1.5" value={paymentTermDays} onChange={(event) => updatePaymentTerm(Number(event.target.value))}><option value="0">ชำระทันที</option><option value="7">ภายใน 7 วัน</option><option value="15">ภายใน 15 วัน</option><option value="30">ภายใน 30 วัน</option></select></label>
               <label>ครบกำหนด<input className="mt-1.5" type="date" value={dueDate} onChange={(event) => setDueDate(event.target.value)} /></label>
@@ -355,13 +303,13 @@ export default function NewSalePage() {
             </div>
             <div className="space-y-4 p-5">
               <div className="flex items-center gap-3 rounded-2xl bg-slate-50 p-3">
-                <span className="grid h-10 w-10 place-items-center rounded-full bg-orange-100 font-bold text-orange-700">{selectedCustomer.customer_name.slice(0, 1)}</span>
-                <div className="min-w-0 flex-1"><strong className="block truncate text-sm">{selectedCustomer.customer_name}</strong><span className={`text-xs ${lineUserId ? "text-emerald-600" : "text-red-500"}`}>{lineUserId ? "LINE เชื่อมต่อแล้ว" : "ยังไม่ได้เชื่อม LINE"}</span></div>
+                <span className="grid h-10 w-10 place-items-center rounded-full bg-orange-100 font-bold text-orange-700">{(selectedCustomer?.customer_name || "D").slice(0, 1)}</span>
+                <div className="min-w-0 flex-1"><strong className="block truncate text-sm">{selectedCustomer?.customer_name || "ยังไม่ได้เลือกลูกค้า"}</strong><span className={`text-xs ${lineUserId ? "text-emerald-600" : "text-red-500"}`}>{lineUserId ? "LINE เชื่อมต่อแล้ว" : "ยังไม่ได้เชื่อม LINE"}</span></div>
                 {lineUserId ? <Check className="h-4 w-4 text-emerald-500" /> : <CircleAlert className="h-4 w-4 text-red-500" />}
               </div>
               <label>LINE User ID<input className="mt-1.5 font-mono text-xs" value={lineUserId} onChange={(event) => setLineUserId(event.target.value)} placeholder="Uxxxxxxxxxxxxxxxx" /></label>
               <div className="flex gap-2 rounded-2xl bg-blue-50 p-3 text-xs leading-5 text-blue-700"><Info className="mt-0.5 h-4 w-4 flex-none" /><p>ลูกค้าต้องเพิ่ม LINE Official Account เป็นเพื่อนก่อน ระบบจึงจะส่ง Push Message ได้</p></div>
-              <div className="flex items-center justify-between text-xs text-slate-500"><span className="flex items-center gap-1.5"><Zap className="h-3.5 w-3.5 text-amber-500" />ส่งหลังบันทึกทันที</span><span>{demoMode ? "โหมดจำลอง" : "พร้อมส่งจริง"}</span></div>
+              <div className="flex items-center justify-between text-xs text-slate-500"><span className="flex items-center gap-1.5"><Zap className="h-3.5 w-3.5 text-amber-500" />ส่งหลังบันทึกทันที</span><span>พร้อมส่งจริง</span></div>
             </div>
           </section>
 
