@@ -33,6 +33,12 @@ type ProductOverride = {
   status: string | null;
 };
 
+type StockMovement = {
+  product_id: string;
+  movement_type: "sale_out" | "adjustment_in" | "adjustment_out" | "return_in";
+  quantity: number | string;
+};
+
 export type StockProductsResult = {
   products: ShopProduct[];
   source: "stock" | "fallback";
@@ -145,6 +151,41 @@ function productPrice(stockPrice: unknown, override?: ProductOverride) {
   return numberValue(stockPrice);
 }
 
+async function fetchStockMovements(): Promise<Record<string, number>> {
+  const supabase = getSupabaseAdmin();
+  if (!supabase) return {};
+
+  const { data, error } = await supabase
+    .from("stock_movements")
+    .select("product_id,movement_type,quantity");
+
+  if (error || !data) return {};
+
+  return (data as StockMovement[]).reduce<Record<string, number>>((acc, movement) => {
+    const sign = movement.movement_type === "adjustment_in" || movement.movement_type === "return_in" ? 1 : -1;
+    acc[movement.product_id] = (acc[movement.product_id] || 0) + numberValue(movement.quantity) * sign;
+    return acc;
+  }, {});
+}
+
+function applyStockMovements(products: ShopProduct[], movements: Record<string, number>) {
+  return products.map((product) => {
+    if (typeof product.stock !== "number") return product;
+    const movementQuantity = movements[product.id] || 0;
+    if (!movementQuantity) return product;
+
+    const stock = Math.max(0, product.stock + movementQuantity);
+    const description = `สินค้า DomiCha Stock • คลังกลาง ${stock.toLocaleString("th-TH")} ${product.unit}`;
+
+    return {
+      ...product,
+      stock,
+      description,
+      badge: stock <= 0 ? "หมด" : product.price <= 0 ? "รอราคา" : product.badge
+    };
+  });
+}
+
 export function transformStockSnapshot(snapshot: StockSnapshot, overrides: ProductOverride[] = []): ShopProduct[] {
   const seen = new Set<string>();
   const products: ShopProduct[] = [];
@@ -238,8 +279,8 @@ export async function fetchStockProducts(): Promise<StockProductsResult> {
     const payload = (await response.json()) as PullResponse;
     if (!payload.ok) throw new Error(payload.error || "DomiCha Stock API returned an error");
 
-    const overrides = await fetchProductOverrides();
-    const products = transformStockSnapshot(payload.data || {}, overrides);
+    const [overrides, movements] = await Promise.all([fetchProductOverrides(), fetchStockMovements()]);
+    const products = applyStockMovements(transformStockSnapshot(payload.data || {}, overrides), movements);
     if (!products.length) throw new Error("ยังไม่มีรายการสินค้าจาก DomiCha Stock");
 
     return {
