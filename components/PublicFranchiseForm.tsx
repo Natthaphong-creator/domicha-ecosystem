@@ -1,0 +1,58 @@
+"use client";
+
+import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { FormEvent, useState } from "react";
+
+const budgets = ["ยังไม่ระบุงบ", "ต่ำกว่า 100,000", "100,000 - 200,000", "200,000 - 300,000", "มากกว่า 300,000"];
+
+export function PublicFranchiseForm() {
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+    setStatus("sending");
+
+    try {
+      const response = await fetch("/api/franchise-leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(Object.fromEntries(formData.entries()))
+      });
+
+      if (!response.ok) throw new Error("Lead submit failed");
+      form.reset();
+      setStatus("sent");
+    } catch {
+      setStatus("error");
+    }
+  }
+
+  return (
+    <form onSubmit={submit} className="rounded-[32px] border border-white/80 bg-white p-6 shadow-2xl shadow-orange-950/10 sm:p-8">
+      <h3 className="text-3xl font-black">ขอข้อมูลแฟรนไชส์</h3>
+      <p className="mt-2 text-sm font-semibold leading-6 text-stone-500">ฝากข้อมูลเบื้องต้น แล้วทีมงานจะติดต่อกลับเพื่อแนะนำแนวทางที่เหมาะสม</p>
+      <div className="mt-6 grid gap-4">
+        <input name="name" required placeholder="ชื่อผู้ติดต่อ" className="h-14 rounded-2xl" />
+        <input name="contact" required placeholder="เบอร์โทร / LINE ID" className="h-14 rounded-2xl" />
+        <input name="location" required placeholder="จังหวัด / ทำเลที่สนใจ" className="h-14 rounded-2xl" />
+        <select name="budget" defaultValue="ยังไม่ระบุงบ" className="h-14 rounded-2xl">
+          {budgets.map((budget) => <option key={budget} value={budget}>{budget}</option>)}
+        </select>
+        <textarea name="note" rows={4} placeholder="รายละเอียดเพิ่มเติม เช่น มีพื้นที่แล้ว / กำลังหาทำเล / อยากเปิดต่างจังหวัด" className="rounded-2xl" />
+      </div>
+      {status === "sent" ? (
+        <p className="mt-4 flex items-center gap-2 rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-black text-emerald-700">
+          <CheckCircle2 className="h-5 w-5" /> รับข้อมูลแล้ว
+        </p>
+      ) : null}
+      {status === "error" ? (
+        <p className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm font-bold text-red-700">ส่งข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง</p>
+      ) : null}
+      <button disabled={status === "sending"} className="mt-5 inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-[#f5662d] px-6 text-base font-black text-white shadow-xl shadow-orange-500/20 disabled:opacity-60">
+        {status === "sending" ? "กำลังส่งข้อมูล..." : "ส่งข้อมูลให้ทีม DomiCha"} <ArrowRight className="h-5 w-5" />
+      </button>
+    </form>
+  );
+}
