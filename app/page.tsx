@@ -3,73 +3,84 @@ import Link from "next/link";
 import {
   ArrowRight,
   BadgeCheck,
-  ClipboardCheck,
+  BookOpenCheck,
   Facebook,
   MapPin,
   MessageCircle,
-  PackageCheck,
   Phone,
   ShieldCheck,
   Sparkles,
   Store,
-  TimerReset,
-  TrendingUp
+  UsersRound
 } from "lucide-react";
 import { PublicFranchiseForm } from "@/components/PublicFranchiseForm";
 
-const decisionPoints = [
+const brandPillars = [
   {
     icon: Store,
-    title: "ภาพจำหน้าร้านชัด",
-    detail: "โลโก้ มาสคอต สีแบรนด์ และเมนูถูกออกแบบให้ลูกค้าจำง่ายตั้งแต่ครั้งแรก"
+    title: "แบรนด์จำง่าย",
+    detail: "มาสคอต สีแบรนด์ และภาพหน้าร้านถูกออกแบบให้ลูกค้าจำได้เร็ว เหมาะกับตลาดเครื่องดื่มที่ต้องแข่งด้วยภาพจำ"
   },
   {
-    icon: ShieldCheck,
-    title: "เริ่มแบบมีมาตรฐาน",
-    detail: "มีแนวทางวัตถุดิบ เมนูหลัก และการจัดการหน้าร้านให้เดินตาม ไม่ต้องเริ่มจากศูนย์"
+    icon: BookOpenCheck,
+    title: "เริ่มแบบมีคู่มือ",
+    detail: "ให้แนวทางเมนู มาตรฐานหน้าร้าน และการเตรียมงานที่จำเป็น เพื่อช่วยลดการลองผิดลองถูกช่วงเริ่มต้น"
   },
   {
-    icon: TrendingUp,
-    title: "คิดจากการขายจริง",
-    detail: "ทีมงานช่วยประเมินงบ ทำเล และรูปแบบร้านก่อนแนะนำแพ็กเกจที่เหมาะสม"
+    icon: UsersRound,
+    title: "ดูจากทำเลจริง",
+    detail: "ทีมงานช่วยประเมินงบ ทำเล และเป้าหมายก่อนแนะนำรูปแบบที่เหมาะสม ไม่ขายแพ็กเกจแบบคำตอบเดียวกับทุกพื้นที่"
   }
 ];
 
-const franchiseTracks = [
+const franchiseModels = [
   {
-    title: "เริ่มต้น",
-    headline: "เริ่มเล็กให้คล่อง",
-    detail: "เหมาะกับพื้นที่จำกัดหรือผู้ที่อยากเริ่มแบบควบคุมงบ ทดลองตลาด และเรียนรู้ระบบก่อนขยาย"
+    name: "Compact Start",
+    title: "เริ่มเล็ก คุมงบง่าย",
+    detail: "เหมาะกับพื้นที่จำกัด จุดขายเสริม หรือผู้เริ่มต้นที่ต้องการเรียนรู้ระบบก่อนขยาย"
   },
   {
-    title: "มาตรฐาน",
-    headline: "หน้าร้านพร้อมขาย",
-    detail: "เหมาะกับทำเลชุมชน โรงเรียน ออฟฟิศ หรือจุดขายที่ต้องการภาพลักษณ์แบรนด์ชัดเจน"
+    name: "Standard Store",
+    title: "หน้าร้านชัด พร้อมขาย",
+    detail: "เหมาะกับทำเลชุมชน หน้าโรงเรียน ออฟฟิศ หรือพื้นที่ที่ต้องการภาพลักษณ์แบรนด์เต็มขึ้น"
   },
   {
-    title: "เติบโต",
-    headline: "ต่อยอดเป็นสาขา",
-    detail: "เหมาะกับผู้ที่ต้องการวางระบบขายซ้ำ จัดการวัตถุดิบ และขยายช่องทางในอนาคต"
+    name: "Growth Plan",
+    title: "วางระบบเพื่อเติบโต",
+    detail: "เหมาะกับผู้ที่ต้องการต่อยอดเป็นหลายสาขา มีระบบสั่งซื้อวัตถุดิบและการจัดการที่ตรวจสอบได้"
   }
 ];
 
-const journey = [
-  { icon: MessageCircle, title: "ฝากข้อมูล", detail: "แจ้งจังหวัด ทำเล งบประมาณ และเป้าหมายเบื้องต้น" },
-  { icon: ClipboardCheck, title: "ประเมินแนวทาง", detail: "ทีมงานช่วยดูความเหมาะสมก่อนเปิดรายละเอียดลึก" },
-  { icon: PackageCheck, title: "เตรียมชุดเริ่มต้น", detail: "จัดวัตถุดิบ อุปกรณ์ เมนู และมาตรฐานที่จำเป็นต่อการเปิดร้าน" },
-  { icon: TimerReset, title: "ดูแลหลังเปิด", detail: "ติดตามการใช้งานสินค้า การขาย และการสั่งซื้อวัตถุดิบต่อเนื่อง" }
+const processSteps = [
+  {
+    title: "ฝากข้อมูลและเป้าหมาย",
+    detail: "ลูกค้าฝากชื่อ เบอร์ จังหวัด ทำเล และงบประมาณเบื้องต้น"
+  },
+  {
+    title: "ประเมินงบกับทำเล",
+    detail: "ทีมงานดูความเหมาะสม เพื่อแนะนำทิศทางที่ตรงกับพื้นที่จริง"
+  },
+  {
+    title: "แนะนำรูปแบบแฟรนไชส์",
+    detail: "คุยรายละเอียดแพ็กเกจ อุปกรณ์ และการเตรียมเปิดร้านแบบเป็นส่วนตัว"
+  },
+  {
+    title: "เตรียมเปิดและดูแลต่อ",
+    detail: "เตรียมวัตถุดิบ มาตรฐานร้าน และแนวทางดูแลหลังเปิด"
+  }
 ];
 
-const menuHighlights = [
-  { name: "กลุ่มชานม", detail: "เมนูหลักที่ลูกค้าเข้าใจง่าย เหมาะกับการขายซ้ำและสร้างฐานลูกค้าประจำ" },
-  { name: "กลุ่มชาไทยและโกโก้", detail: "เมนูรสเข้มที่ช่วยเพิ่มทางเลือกให้หน้าร้านและเข้ากับตลาดไทย" },
-  { name: "กลุ่มเครื่องดื่มสดชื่น", detail: "เมนูสำหรับเพิ่มยอดขายช่วงอากาศร้อนและรองรับลูกค้าหลากหลายวัย" }
+const protectedDetails = [
+  "หน้าเว็บบอกแนวทางแบรนด์ เมนู และการดูแลหลังเปิดร้านในระดับที่ช่วยตัดสินใจ",
+  "สูตร ต้นทุน รายการอุปกรณ์ และ SOP ฉบับเต็มสงวนไว้หลังทีมงานประเมินเบื้องต้น",
+  "ผู้สนใจจะได้รับรายละเอียดที่เหมาะกับงบและทำเลของตัวเอง ไม่ใช่ข้อมูลชุดเดียวสำหรับทุกคน"
 ];
 
-const trustItems = [
-  "เปิดข้อมูลที่ช่วยตัดสินใจ เช่น ภาพรวมแบรนด์ แนวเมนู รูปแบบเริ่มต้น และการดูแลหลังเปิดร้าน",
-  "สงวนสูตร ต้นทุน รายการอุปกรณ์ และ SOP ฉบับเต็มไว้คุยหลังประเมินเบื้องต้น",
-  "เลือกแพ็กเกจจากงบ ทำเล และเป้าหมายของผู้ลงทุน ไม่ใช้คำตอบเดียวกับทุกคน"
+const supportItems = [
+  ["แนวทางแบรนด์", "โลโก้ มาสคอต สีหลัก และรูปแบบสื่อสารหน้าร้าน"],
+  ["แนวทางเมนู", "กลุ่มเมนูหลักที่เข้าใจง่าย พร้อมเปิดรายละเอียดหลังประเมิน"],
+  ["แนวทางการเริ่มต้น", "ประเมินทำเล งบประมาณ และรูปแบบร้านที่เหมาะสม"],
+  ["แนวทางดูแลต่อ", "วัตถุดิบ ระบบสั่งซื้อ และการติดตามหลังเปิดร้าน"]
 ];
 
 const socialLinks = [
@@ -79,216 +90,218 @@ const socialLinks = [
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen bg-[#fff4dd] text-stone-950">
-      <header className="fixed inset-x-0 top-0 z-40 border-b border-orange-100/70 bg-[#fff4dd]/92 backdrop-blur-2xl">
-        <div className="mx-auto flex h-[76px] max-w-7xl items-center gap-4 px-4 sm:px-6">
-          <Link href="/" className="flex items-center gap-3" aria-label="DomichaThailand">
-            <Image src="/icons/domicha-original-logo.png" alt="DomiCha" width={58} height={58} className="h-[58px] w-[58px] object-contain" priority />
+    <main className="min-h-screen bg-[#fff7e8] text-[#17100c]">
+      <header className="fixed inset-x-0 top-0 z-40 border-b border-white/60 bg-[#fff7e8]/88 backdrop-blur-2xl">
+        <div className="mx-auto flex h-[74px] max-w-7xl items-center gap-4 px-4 sm:px-6">
+          <Link href="/" className="flex items-center gap-3" aria-label="DomiCha Thailand">
+            <Image src="/icons/domicha-original-logo.png" alt="DomiCha" width={56} height={56} className="h-14 w-14 object-contain" priority />
             <span className="leading-tight">
-              <strong className="block text-lg">DomichaThailand</strong>
-              <span className="hidden text-xs font-bold text-orange-600 sm:block">Good taste Good fresh Everyday</span>
+              <strong className="block text-lg font-extrabold">DomiCha Thailand</strong>
+              <span className="hidden text-xs font-bold text-[#f5662d] sm:block">Good taste Good fresh Everyday</span>
             </span>
           </Link>
-          <nav className="ml-auto hidden items-center gap-6 text-sm font-black text-stone-700 lg:flex" aria-label="เมนูเว็บไซต์">
+          <nav className="ml-auto hidden items-center gap-7 text-sm font-black text-stone-700 lg:flex" aria-label="เมนูเว็บไซต์">
             <a href="#why">จุดแข็ง</a>
-            <a href="#model">รูปแบบแฟรนไชส์</a>
+            <a href="#model">โมเดล</a>
+            <a href="#support">สิ่งที่ได้</a>
             <a href="#process">ขั้นตอน</a>
-            <a href="#menu">เมนู</a>
             <a href="#contact">ติดต่อ</a>
           </nav>
-          <a href="#contact" className="ml-auto inline-flex h-11 items-center gap-2 rounded-full bg-stone-950 px-5 text-sm font-black text-white shadow-xl shadow-stone-950/15 lg:ml-4">
-            นัดคุยแฟรนไชส์ <ArrowRight className="h-4 w-4" />
+          <a href="#contact" className="ml-auto inline-flex h-11 items-center gap-2 rounded-full bg-[#17100c] px-5 text-sm font-black text-white shadow-xl shadow-stone-950/15 lg:ml-4">
+            ขอข้อมูล <ArrowRight className="h-4 w-4" />
           </a>
         </div>
       </header>
 
-      <section className="relative isolate min-h-[760px] overflow-hidden pt-[76px]">
+      <section className="relative isolate min-h-[780px] overflow-hidden pt-[74px]">
         <Image
           src="/domicha-franchise-counter.png"
-          alt="บรรยากาศแฟรนไชส์ DomiCha"
+          alt="บรรยากาศหน้าร้านแฟรนไชส์ DomiCha"
           fill
           sizes="100vw"
-          className="object-cover object-[56%_43%]"
+          className="object-cover object-[56%_42%]"
           priority
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-stone-950/88 via-stone-950/62 to-stone-950/8" />
-        <div className="absolute inset-x-0 bottom-0 h-52 bg-gradient-to-t from-[#fff4dd] to-transparent" />
-        <div className="relative z-10 mx-auto grid min-h-[684px] max-w-7xl items-center gap-8 px-4 py-16 sm:px-6 lg:grid-cols-[1.05fr_.95fr]">
+        <div className="absolute inset-0 bg-gradient-to-r from-[#17100c]/92 via-[#17100c]/72 to-[#17100c]/18" />
+        <div className="absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-[#fff7e8] to-transparent" />
+
+        <div className="relative z-10 mx-auto flex min-h-[706px] max-w-7xl items-center px-4 py-16 sm:px-6">
           <div className="max-w-3xl text-white">
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/12 px-4 py-2 text-xs font-black text-orange-100 shadow-2xl backdrop-blur">
-              <Sparkles className="h-4 w-4 text-orange-300" /> แฟรนไชส์ชานมไข่มุกสำหรับคนที่อยากเริ่มแบบมีระบบ
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/12 px-4 py-2 text-xs font-extrabold text-orange-100 shadow-2xl backdrop-blur">
+              <Sparkles className="h-4 w-4 text-orange-300" />
+              แฟรนไชส์ชานมไข่มุกที่เริ่มต้นแบบมีระบบ
             </span>
-            <h1 className="mt-7 text-5xl font-black leading-[1.04] sm:text-6xl lg:text-7xl">
-              เปิดร้าน DomiCha
-              <span className="block text-orange-300">เริ่มชัด ดูแลง่าย โตเป็นระบบ</span>
+            <h1 className="mt-7 max-w-4xl text-4xl font-black leading-[1.12] sm:text-5xl lg:text-6xl">
+              DomiCha Franchise
+              <span className="block text-orange-300">เปิดร้านให้ชัด ตั้งแต่วันแรก</span>
             </h1>
-            <p className="mt-6 max-w-2xl text-base font-semibold leading-8 text-orange-50/92 sm:text-lg">
-              แบรนด์ชานมไข่มุกที่มีภาพจำจากมาสคอต เมนูที่เข้าใจง่าย และแนวทางดูแลหลังเริ่มต้น เหมาะสำหรับผู้ที่อยากเปิดร้านเครื่องดื่มโดยไม่ต้องลองผิดลองถูกทั้งหมดเอง
+            <p className="mt-6 max-w-2xl text-base font-medium leading-8 text-orange-50/92 sm:text-lg">
+              สำหรับผู้ที่อยากเริ่มธุรกิจเครื่องดื่มด้วยแบรนด์ที่มีภาพจำ เมนูเข้าใจง่าย และทีมงานช่วยประเมินงบกับทำเลก่อนเริ่มจริง
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <a href="#contact" className="inline-flex h-14 items-center gap-2 rounded-full bg-[#f5662d] px-7 text-base font-black text-white shadow-2xl shadow-orange-950/25">
                 ขอประเมินแพ็กเกจ <ArrowRight className="h-5 w-5" />
               </a>
-              <a href="tel:0988247849" className="inline-flex h-14 items-center gap-2 rounded-full border border-white/20 bg-white/12 px-6 text-base font-black text-white backdrop-blur">
-                <Phone className="h-5 w-5" /> โทรหาแบรนด์
+              <a href="https://line.me/R/ti/p/@domicha" className="inline-flex h-14 items-center gap-2 rounded-full border border-white/20 bg-white/12 px-6 text-base font-black text-white backdrop-blur">
+                <MessageCircle className="h-5 w-5" /> คุย LINE
               </a>
-            </div>
-          </div>
-          <div className="hidden lg:block">
-            <div className="ml-auto max-w-sm rounded-[32px] border border-white/18 bg-white/12 p-5 text-white shadow-2xl backdrop-blur-xl">
-              <p className="text-sm font-black text-orange-200">สำหรับผู้สนใจจริงจัง</p>
-              <h2 className="mt-3 text-3xl font-black leading-tight">คุยจากงบ ทำเล และเป้าหมายจริง</h2>
-              <p className="mt-4 text-sm font-semibold leading-7 text-orange-50/85">
-                ทีมงานช่วยประเมินแนวทางก่อนเปิดรายละเอียดแพ็กเกจ เพื่อให้เริ่มต้นเหมาะกับสถานการณ์ของแต่ละพื้นที่
-              </p>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="relative z-10 -mt-16 px-4 sm:px-6">
-        <div className="mx-auto grid max-w-6xl gap-3 rounded-[28px] border border-white/80 bg-white/92 p-4 shadow-2xl shadow-orange-950/10 backdrop-blur md:grid-cols-3">
+      <section className="relative z-10 -mt-20 px-4 sm:px-6">
+        <div className="mx-auto grid max-w-6xl gap-3 rounded-[28px] border border-white/80 bg-white/94 p-4 shadow-2xl shadow-orange-950/10 backdrop-blur md:grid-cols-3">
           {[
-            ["Brand", "ภาพจำชัด สีแบรนด์จำง่าย"],
-            ["Menu", "เมนูหลักเข้าใจเร็ว ขายซ้ำได้"],
-            ["Support", "มีทีมช่วยประเมินก่อนเริ่ม"]
+            ["Brand", "ภาพจำแบรนด์ชัด"],
+            ["Start", "ช่วยประเมินก่อนเริ่ม"],
+            ["System", "ต่อยอดสู่ระบบสาขา"]
           ].map(([value, label]) => (
-            <div key={value} className="rounded-2xl bg-orange-50/80 px-5 py-4">
-              <p className="text-2xl font-black text-orange-600">{value}</p>
-              <p className="mt-1 text-sm font-bold leading-6 text-stone-700">{label}</p>
+            <div key={value} className="rounded-2xl bg-[#fff1dc] px-5 py-4">
+              <p className="text-2xl font-extrabold text-[#f5662d]">{value}</p>
+              <p className="mt-1 text-sm font-semibold leading-6 text-stone-700">{label}</p>
             </div>
           ))}
         </div>
       </section>
 
       <section id="why" className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
-        <div className="grid gap-8 lg:grid-cols-[.8fr_1.2fr] lg:items-end">
+        <div className="grid gap-8 lg:grid-cols-[.82fr_1.18fr] lg:items-end">
           <div>
-            <p className="text-xs font-black tracking-[.18em] text-orange-600">จุดแข็งของแบรนด์</p>
-            <h2 className="mt-3 text-4xl font-black leading-tight sm:text-5xl">ทำไม DomiCha ถึงเหมาะกับคนที่อยากเริ่มธุรกิจเครื่องดื่ม</h2>
+            <p className="text-xs font-extrabold tracking-[.18em] text-[#f5662d]">WHY DOMICHA</p>
+            <h2 className="mt-3 text-3xl font-black leading-[1.18] sm:text-4xl">หน้าเว็บต้องทำให้ลูกค้าเชื่อก่อน แล้วค่อยให้ทีมขายปิดรายละเอียด</h2>
           </div>
-          <p className="text-base font-semibold leading-8 text-stone-600">
-            สื่อสารให้เห็นว่า DomiCha ไม่ใช่แค่ขายชื่อแบรนด์ แต่เป็นแนวทางเริ่มต้นร้านที่มีภาพจำ เมนู และระบบดูแลต่อเนื่องสำหรับผู้ลงทุน
+          <p className="text-base font-medium leading-8 text-stone-600">
+            โครงใหม่นี้เน้นให้ผู้สนใจเข้าใจแบรนด์ เห็นภาพการเริ่มต้น และฝากข้อมูลเพื่อให้ทีมงานคัดกรองงบกับทำเล โดยไม่เปิดเผยข้อมูลที่เป็นความลับของธุรกิจ
           </p>
         </div>
+
         <div className="mt-8 grid gap-5 lg:grid-cols-3">
-          {decisionPoints.map((item) => {
+          {brandPillars.map((item) => {
             const Icon = item.icon;
             return (
-              <article key={item.title} className="rounded-[28px] border border-orange-100 bg-white/82 p-6 shadow-xl shadow-orange-950/5">
-                <span className="grid h-12 w-12 place-items-center rounded-2xl bg-orange-50 text-orange-600">
+              <article key={item.title} className="rounded-[28px] border border-orange-100 bg-white p-6 shadow-xl shadow-orange-950/5">
+                <span className="grid h-12 w-12 place-items-center rounded-2xl bg-orange-50 text-[#f5662d]">
                   <Icon className="h-6 w-6" />
                 </span>
-                <h3 className="mt-5 text-2xl font-black">{item.title}</h3>
-                <p className="mt-3 text-sm font-semibold leading-7 text-stone-600">{item.detail}</p>
+                <h3 className="mt-5 text-xl font-extrabold">{item.title}</h3>
+                <p className="mt-3 text-sm font-medium leading-7 text-stone-600">{item.detail}</p>
               </article>
             );
           })}
         </div>
       </section>
 
-      <section id="model" className="bg-stone-950 py-16 text-white">
+      <section id="model" className="bg-[#17100c] py-16 text-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="grid gap-8 lg:grid-cols-[.9fr_1.1fr] lg:items-center">
             <div>
-              <p className="text-xs font-black tracking-[.18em] text-orange-300">รูปแบบแฟรนไชส์</p>
-              <h2 className="mt-4 text-4xl font-black leading-tight sm:text-5xl">เปิดภาพรวมให้ตัดสินใจง่าย โดยยังรักษาข้อมูลสำคัญของแบรนด์</h2>
+              <p className="text-xs font-extrabold tracking-[.18em] text-orange-300">FRANCHISE MODEL</p>
+              <h2 className="mt-4 text-3xl font-black leading-[1.18] sm:text-4xl">บอกโมเดลให้เห็นทางเลือก แต่ไม่โชว์ข้อมูลลับของแพ็กเกจ</h2>
             </div>
             <div className="space-y-4">
-              {trustItems.map((item) => (
+              {protectedDetails.map((item) => (
                 <div key={item} className="flex gap-3 rounded-2xl border border-white/10 bg-white/[.06] p-4">
-                  <BadgeCheck className="mt-1 h-5 w-5 shrink-0 text-orange-300" />
-                  <p className="text-sm font-semibold leading-7 text-stone-200">{item}</p>
+                  <ShieldCheck className="mt-1 h-5 w-5 shrink-0 text-orange-300" />
+                  <p className="text-sm font-medium leading-7 text-stone-200">{item}</p>
                 </div>
               ))}
             </div>
           </div>
+
           <div className="mt-10 grid gap-4 lg:grid-cols-3">
-            {franchiseTracks.map((track) => (
-              <article key={track.title} className="rounded-[28px] border border-white/10 bg-white/[.06] p-6">
-                <span className="rounded-full bg-orange-400 px-3 py-1 text-xs font-black text-stone-950">{track.title}</span>
-                <h3 className="mt-5 text-2xl font-black">{track.headline}</h3>
-                <p className="mt-3 text-sm font-semibold leading-7 text-stone-300">{track.detail}</p>
+            {franchiseModels.map((model) => (
+              <article key={model.name} className="rounded-[28px] border border-white/10 bg-white/[.06] p-6">
+                <span className="rounded-full bg-orange-300 px-3 py-1 text-xs font-extrabold text-[#17100c]">{model.name}</span>
+                <h3 className="mt-5 text-xl font-extrabold">{model.title}</h3>
+                <p className="mt-3 text-sm font-medium leading-7 text-stone-300">{model.detail}</p>
               </article>
             ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="support" className="bg-white px-4 py-16 sm:px-6">
+        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[.95fr_1.05fr] lg:items-center">
+          <div className="relative min-h-[420px] overflow-hidden rounded-[34px] bg-[#17100c] shadow-2xl shadow-orange-950/10">
+            <Image
+              src="/domicha-franchise-counter.png"
+              alt="ทีม DomiCha ส่งมอบเครื่องดื่มให้ลูกค้า"
+              fill
+              sizes="(min-width: 1024px) 48vw, 100vw"
+              className="object-cover object-[55%_52%] opacity-95"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#17100c]/80 via-transparent to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+              <p className="text-sm font-extrabold text-orange-200">ภาพที่ควรสื่อสาร</p>
+              <h3 className="mt-2 text-2xl font-black sm:text-3xl">แบรนด์พร้อมขาย ลูกค้าเข้าใจง่าย</h3>
+            </div>
+          </div>
+
+          <div>
+            <p className="text-xs font-extrabold tracking-[.18em] text-[#f5662d]">SUPPORT</p>
+            <h2 className="mt-3 text-3xl font-black leading-[1.18] sm:text-4xl">สิ่งที่ผู้สนใจควรรู้ก่อนฝากข้อมูล</h2>
+            <div className="mt-7 grid gap-4">
+              {supportItems.map(([title, detail]) => (
+                <div key={title} className="flex gap-4 rounded-2xl border border-orange-100 bg-[#fffaf2] p-4">
+                  <BadgeCheck className="mt-1 h-5 w-5 shrink-0 text-[#f5662d]" />
+                  <div>
+                    <h3 className="font-extrabold">{title}</h3>
+                    <p className="mt-1 text-sm font-medium leading-6 text-stone-600">{detail}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
       <section id="process" className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
-        <div className="grid gap-10 lg:grid-cols-[.75fr_1.25fr] lg:items-start">
+        <div className="grid gap-8 lg:grid-cols-[.8fr_1.2fr] lg:items-start">
           <div>
-            <p className="text-xs font-black tracking-[.18em] text-orange-600">ขั้นตอนเริ่มต้น</p>
-            <h2 className="mt-3 text-4xl font-black leading-tight">ขั้นตอนที่ทำให้ลูกค้ารู้ว่าเริ่มอย่างไร</h2>
-            <p className="mt-5 text-base font-semibold leading-8 text-stone-600">
-              ลดความลังเลด้วยขั้นตอนที่ชัดเจน ตั้งแต่ฝากข้อมูลจนถึงการดูแลหลังเปิดร้าน
+            <p className="text-xs font-extrabold tracking-[.18em] text-[#f5662d]">PROCESS</p>
+            <h2 className="mt-3 text-3xl font-black leading-[1.18] sm:text-4xl">ลูกค้าควรรู้ทันทีว่าต้องเริ่มจากอะไร</h2>
+            <p className="mt-5 text-base font-medium leading-8 text-stone-600">
+              ขั้นตอนสั้น ชัด และพาไปสู่การฝากข้อมูล ไม่ทำให้หน้าเว็บดูเหมือนเปิดข้อมูลแพ็กเกจทั้งหมดต่อสาธารณะ
             </p>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            {journey.map((step, index) => {
-              const Icon = step.icon;
-              return (
-                <article key={step.title} className="rounded-[28px] border border-orange-100 bg-white p-6 shadow-xl shadow-orange-950/5">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="grid h-12 w-12 place-items-center rounded-2xl bg-orange-50 text-orange-600">
-                      <Icon className="h-6 w-6" />
-                    </span>
-                    <span className="text-sm font-black text-orange-600">0{index + 1}</span>
-                  </div>
-                  <h3 className="mt-5 text-xl font-black">{step.title}</h3>
-                  <p className="mt-2 text-sm font-semibold leading-7 text-stone-600">{step.detail}</p>
-                </article>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      <section id="menu" className="bg-white px-4 py-16 sm:px-6">
-        <div className="mx-auto max-w-7xl">
-          <div className="grid gap-8 lg:grid-cols-[.85fr_1.15fr] lg:items-end">
-            <div>
-              <p className="text-xs font-black tracking-[.18em] text-orange-600">คอนเซปต์เมนู</p>
-              <h2 className="mt-3 text-4xl font-black leading-tight">เห็นทิศทางเมนู โดยไม่เปิดสินค้าหลักหรือสูตรภายใน</h2>
-            </div>
-            <p className="text-base font-semibold leading-8 text-stone-600">
-              หน้าเว็บควรให้ลูกค้าเห็นว่าแบรนด์มีเมนูพร้อมขายและต่อยอดได้หลายกลุ่ม แต่ไม่ควรโชว์วัตถุดิบหลัก สูตร รายการสินค้า หรือต้นทุนที่เป็นข้อมูลภายในของแบรนด์
-            </p>
-          </div>
-          <div className="mt-8 grid gap-4 sm:grid-cols-3">
-            {menuHighlights.map((menu, index) => (
-              <article key={menu.name} className="rounded-[28px] border border-orange-100 bg-[#fffaf0] p-6 shadow-xl shadow-orange-950/5">
-                <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-500 text-lg font-black text-white">0{index + 1}</span>
-                <h3 className="mt-6 text-2xl font-black">{menu.name}</h3>
-                <p className="mt-3 text-sm font-semibold leading-7 text-stone-600">{menu.detail}</p>
-                <div className="mt-6 rounded-2xl border border-dashed border-orange-200 bg-white/70 p-4 text-xs font-black tracking-[.08em] text-orange-600">
-                  เปิดรายละเอียดหลังประเมินเบื้องต้น
-                </div>
+            {processSteps.map((step, index) => (
+              <article key={step.title} className="rounded-[28px] border border-orange-100 bg-white p-6 shadow-xl shadow-orange-950/5">
+                <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f5662d] text-lg font-extrabold text-white">0{index + 1}</span>
+                <h3 className="mt-6 text-xl font-extrabold">{step.title}</h3>
+                <p className="mt-3 text-sm font-medium leading-7 text-stone-600">{step.detail}</p>
               </article>
             ))}
           </div>
         </div>
       </section>
 
-      <section id="contact" className="bg-[#ffe4b3] px-4 py-16 sm:px-6">
+      <section id="contact" className="bg-[#ffe3b5] px-4 py-16 sm:px-6">
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[.88fr_1.12fr] lg:items-start">
           <div>
-            <p className="text-xs font-black tracking-[.18em] text-orange-600">ติดต่อทีมแฟรนไชส์</p>
-            <h2 className="mt-4 text-4xl font-black leading-tight sm:text-5xl">ฝากข้อมูล แล้วให้ทีม DomiCha ช่วยประเมินแนวทาง</h2>
-            <p className="mt-5 text-base font-semibold leading-8 text-stone-700">
-              เหมาะสำหรับผู้ที่มีทำเลแล้ว กำลังหาทำเล หรืออยากประเมินงบก่อนลงทุน ทีมงานจะติดต่อกลับเพื่อแนะนำแพ็กเกจที่เหมาะสมโดยไม่เปิดข้อมูลสำคัญบนหน้าเว็บ
+            <p className="text-xs font-extrabold tracking-[.18em] text-[#f5662d]">CONTACT</p>
+            <h2 className="mt-4 text-3xl font-black leading-[1.18] sm:text-4xl">ฝากข้อมูลแฟรนไชส์ แล้วให้ทีม DomiCha ประเมินให้เหมาะกับพื้นที่ของคุณ</h2>
+            <p className="mt-5 text-base font-medium leading-8 text-stone-700">
+              เหมาะสำหรับคนที่มีทำเลแล้ว กำลังหาทำเล หรืออยากประเมินงบก่อนลงทุน ทีมงานจะติดต่อกลับเพื่อแนะนำแนวทางที่เหมาะสม
             </p>
             <div className="mt-7 space-y-3 text-sm font-black text-stone-700">
-              <a href="tel:0988247849" className="flex items-center gap-3"><Phone className="h-5 w-5 text-orange-600" /> 098-824-7849</a>
-              <a href="https://line.me/R/ti/p/@domicha" className="flex items-center gap-3"><MessageCircle className="h-5 w-5 text-[#06c755]" /> LINE Official: @domicha</a>
-              <span className="flex items-center gap-3"><MapPin className="h-5 w-5 text-orange-600" /> DomichaThailand</span>
+              <a href="tel:0988247849" className="flex items-center gap-3">
+                <Phone className="h-5 w-5 text-[#f5662d]" /> 098-824-7849
+              </a>
+              <a href="https://line.me/R/ti/p/@domicha" className="flex items-center gap-3">
+                <MessageCircle className="h-5 w-5 text-[#06c755]" /> LINE Official: @domicha
+              </a>
+              <span className="flex items-center gap-3">
+                <MapPin className="h-5 w-5 text-[#f5662d]" /> DomiCha Thailand
+              </span>
             </div>
             <div className="mt-7 flex flex-wrap gap-3">
               {socialLinks.map((item) => {
                 const Icon = item.icon;
                 return (
                   <a key={item.label} href={item.href} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-4 py-2 text-sm font-black text-stone-800">
-                    <Icon className="h-4 w-4 text-orange-600" /> {item.label}: {item.value}
+                    <Icon className="h-4 w-4 text-[#f5662d]" /> {item.label}: {item.value}
                   </a>
                 );
               })}
@@ -298,7 +311,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <footer className="bg-stone-950 px-4 py-8 text-white sm:px-6">
+      <footer className="bg-[#17100c] px-4 py-8 text-white sm:px-6">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 pb-16 text-sm text-stone-400 sm:flex-row sm:items-center sm:justify-between md:pb-0">
           <span>© DomiCha Thailand</span>
           <span>Good taste Good fresh Everyday</span>
@@ -311,7 +324,7 @@ export default function HomePage() {
             <Phone className="h-4 w-4" /> โทร
           </a>
           <a href="#contact" className="inline-flex h-12 flex-[1.4] items-center justify-center gap-2 rounded-full bg-[#f5662d] text-sm font-black text-white">
-            ขอประเมิน <ArrowRight className="h-4 w-4" />
+            ขอข้อมูล <ArrowRight className="h-4 w-4" />
           </a>
         </div>
       </div>
