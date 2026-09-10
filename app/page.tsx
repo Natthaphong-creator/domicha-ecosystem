@@ -113,16 +113,17 @@ export default function HomePage() {
         </div>
       </header>
 
-      <section className="relative isolate min-h-[780px] overflow-hidden pt-[74px]">
+      <section className="relative isolate min-h-[780px] overflow-hidden bg-[#17100c] pt-[74px]">
         <Image
-          src="/domicha-franchise-counter.png"
-          alt="บรรยากาศหน้าร้านแฟรนไชส์ DomiCha"
+          src="/products/taiwan-tea.png"
+          alt="วัตถุดิบชานม DomiCha"
           fill
           sizes="100vw"
-          className="object-cover object-[56%_42%]"
+          className="object-contain object-[78%_50%] opacity-90"
           priority
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#17100c]/92 via-[#17100c]/72 to-[#17100c]/18" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#17100c] via-[#17100c]/82 to-[#17100c]/36" />
+        <div className="absolute inset-y-0 right-0 w-2/3 bg-[radial-gradient(circle_at_70%_45%,rgba(245,102,45,0.34),transparent_42rem)]" />
         <div className="absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-[#fff7e8] to-transparent" />
 
         <div className="relative z-10 mx-auto flex min-h-[706px] max-w-7xl items-center px-4 py-16 sm:px-6">
@@ -225,13 +226,14 @@ export default function HomePage() {
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[.95fr_1.05fr] lg:items-center">
           <div className="relative min-h-[420px] overflow-hidden rounded-[34px] bg-[#17100c] shadow-2xl shadow-orange-950/10">
             <Image
-              src="/domicha-franchise-counter.png"
-              alt="ทีม DomiCha ส่งมอบเครื่องดื่มให้ลูกค้า"
+              src="/products/taiwan-tea.png"
+              alt="วัตถุดิบชานม DomiCha"
               fill
               sizes="(min-width: 1024px) 48vw, 100vw"
-              className="object-cover object-[55%_52%] opacity-95"
+              className="object-contain p-10 opacity-95"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#17100c]/80 via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_64%_35%,rgba(245,102,45,0.28),transparent_20rem)]" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#17100c]/88 via-[#17100c]/20 to-transparent" />
             <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
               <p className="text-sm font-extrabold text-orange-200">ภาพที่ควรสื่อสาร</p>
               <h3 className="mt-2 text-2xl font-black sm:text-3xl">แบรนด์พร้อมขาย ลูกค้าเข้าใจง่าย</h3>
