@@ -23,38 +23,41 @@ const brandPillars = [
   },
   {
     icon: BookOpenCheck,
-    title: "เริ่มแบบมีคู่มือ",
-    detail: "ให้แนวทางเมนู มาตรฐานหน้าร้าน และการเตรียมงานที่จำเป็น เพื่อช่วยลดการลองผิดลองถูกช่วงเริ่มต้น"
+    title: "เริ่มต้นเป็นขั้นตอน",
+    detail: "มีแนวทางเมนู มาตรฐานหน้าร้าน และการเตรียมงานที่ช่วยให้ผู้เริ่มต้นวางแผนได้ง่ายขึ้น"
   },
   {
     icon: UsersRound,
     title: "ดูจากทำเลจริง",
-    detail: "ทีมงานช่วยประเมินงบ ทำเล และเป้าหมายก่อนแนะนำรูปแบบที่เหมาะสม ไม่ขายแพ็กเกจแบบคำตอบเดียวกับทุกพื้นที่"
+    detail: "ทีมงานช่วยประเมินงบ ทำเล และเป้าหมาย เพื่อแนะนำรูปแบบที่เหมาะกับแต่ละพื้นที่มากที่สุด"
   }
 ];
 
 const franchiseModels = [
   {
-    name: "Compact Start",
-    title: "เริ่มเล็ก คุมงบง่าย",
-    detail: "เหมาะกับพื้นที่จำกัด จุดขายเสริม หรือผู้เริ่มต้นที่ต้องการเรียนรู้ระบบก่อนขยาย"
+    name: "Package M",
+    title: "ตั้งหลักไว้",
+    price: "39,000 บาท",
+    detail: "เหมาะกับผู้เริ่มต้นที่ต้องการคุมงบ ทดลองทำเล หรือเปิดจุดขายขนาดกะทัดรัด"
   },
   {
-    name: "Standard Store",
-    title: "หน้าร้านชัด พร้อมขาย",
-    detail: "เหมาะกับทำเลชุมชน หน้าโรงเรียน ออฟฟิศ หรือพื้นที่ที่ต้องการภาพลักษณ์แบรนด์เต็มขึ้น"
+    name: "Package L",
+    title: "โตแบบโปร",
+    price: "69,000 บาท",
+    detail: "เหมาะกับทำเลที่ต้องการภาพหน้าร้านชัดขึ้น มีอุปกรณ์และการเตรียมเปิดร้านที่ครบกว่า"
   },
   {
-    name: "Growth Plan",
-    title: "วางระบบเพื่อเติบโต",
-    detail: "เหมาะกับผู้ที่ต้องการต่อยอดเป็นหลายสาขา มีระบบสั่งซื้อวัตถุดิบและการจัดการที่ตรวจสอบได้"
+    name: "Package XL",
+    title: "เจ้าของกิจการเต็มตัว",
+    price: "89,000 บาท",
+    detail: "เหมาะกับผู้ที่ต้องการวางภาพร้านจริงจังขึ้น และเตรียมต่อยอดเป็นระบบสาขาในอนาคต"
   }
 ];
 
 const processSteps = [
   {
     title: "ฝากข้อมูลและเป้าหมาย",
-    detail: "ลูกค้าฝากชื่อ เบอร์ จังหวัด ทำเล และงบประมาณเบื้องต้น"
+    detail: "ผู้สนใจฝากชื่อ เบอร์ จังหวัด ทำเล และงบประมาณเบื้องต้น"
   },
   {
     title: "ประเมินงบกับทำเล",
@@ -71,16 +74,32 @@ const processSteps = [
 ];
 
 const protectedDetails = [
-  "หน้าเว็บบอกแนวทางแบรนด์ เมนู และการดูแลหลังเปิดร้านในระดับที่ช่วยตัดสินใจ",
-  "สูตร ต้นทุน รายการอุปกรณ์ และ SOP ฉบับเต็มสงวนไว้หลังทีมงานประเมินเบื้องต้น",
-  "ผู้สนใจจะได้รับรายละเอียดที่เหมาะกับงบและทำเลของตัวเอง ไม่ใช่ข้อมูลชุดเดียวสำหรับทุกคน"
+  "ราคาเครื่องดื่มเริ่มต้น 20 บาท/แก้ว พร้อมจุดขายฟรีไข่มุก สื่อสารความคุ้มค่าได้ชัดเจน",
+  "แพ็กเกจแฟรนไชส์เริ่มต้น 39,000-89,000 บาท โดยทีมงานช่วยประเมินให้เหมาะกับงบและทำเล",
+  "รายละเอียดแพ็กเกจและการเตรียมเปิดร้านจะอธิบายให้ครบถ้วนหลังประเมินรูปแบบร้านเบื้องต้น",
+  "ไม่มีค่า Royalty Fee รายเดือน และมีระบบสนับสนุนแฟรนไชส์หลังเปิดร้าน"
 ];
 
 const supportItems = [
   ["แนวทางแบรนด์", "โลโก้ มาสคอต สีหลัก และรูปแบบสื่อสารหน้าร้าน"],
-  ["แนวทางเมนู", "กลุ่มเมนูหลักที่เข้าใจง่าย พร้อมเปิดรายละเอียดหลังประเมิน"],
+  ["แนวทางเมนู", "เครื่องดื่มราคาเริ่มต้น 20 บาท พร้อมไข่มุกฟรี และเมนูครอบคลุมหลายกลุ่มลูกค้า"],
   ["แนวทางการเริ่มต้น", "ประเมินทำเล งบประมาณ และรูปแบบร้านที่เหมาะสม"],
-  ["แนวทางดูแลต่อ", "วัตถุดิบ ระบบสั่งซื้อ และการติดตามหลังเปิดร้าน"]
+  ["แนวทางดูแลต่อ", "ระบบสั่งซื้อวัตถุดิบออนไลน์ การตลาด อบรม และ Line Group สนับสนุนแฟรนไชส์ซี"]
+];
+
+const idealProfiles = [
+  ["มีทำเลอยู่แล้ว", "เหมาะกับผู้ที่มีพื้นที่หน้าบ้าน หน้าอาคาร ร้านค้าเดิม หรือพื้นที่เช่าที่ต้องการต่อยอดเป็นจุดขายเครื่องดื่ม"],
+  ["อยากเริ่มธุรกิจเสริม", "เหมาะกับผู้ที่อยากเริ่มจากงบควบคุมได้ และต้องการแบรนด์ที่มีแนวทางเริ่มต้นชัดเจน"],
+  ["ต้องการแบรนด์พร้อมระบบ", "เหมาะกับคนที่ไม่อยากเริ่มจากศูนย์ ทั้งด้านเมนู ภาพลักษณ์ร้าน วัตถุดิบ และการดูแลหลังเปิด"],
+  ["กำลังเปรียบเทียบแพ็กเกจ", "เหมาะกับผู้ที่อยากให้ทีมงานช่วยดูงบ ทำเล และแนะนำรูปแบบร้านก่อนตัดสินใจลงทุน"]
+];
+
+const faqs = [
+  ["ต้องมีประสบการณ์ร้านเครื่องดื่มมาก่อนไหม?", "ไม่จำเป็นครับ ทีมงานมีแนวทางเริ่มต้นและการอบรมพื้นฐาน เพื่อช่วยให้ผู้เริ่มต้นเข้าใจการเตรียมร้านและการขายได้ง่ายขึ้น"],
+  ["แพ็กเกจรวมค่าตกแต่งร้านหรือไม่?", "แพ็กเกจยังไม่รวมค่าตกแต่งร้านและค่าปรับปรุงพื้นที่ เพราะแต่ละทำเลมีขนาดและรูปแบบต่างกัน ทีมงานจะช่วยประเมินงบเพิ่มเติมตามหน้างานจริง"],
+  ["ต้องมีทำเลก่อนติดต่อไหม?", "ยังไม่มีก็ติดต่อได้ครับ หากมีทำเลแล้วทีมงานจะช่วยประเมินความเหมาะสมเบื้องต้น หากยังไม่มีทำเลสามารถฝากข้อมูลเพื่อคุยแนวทางก่อนได้"],
+  ["หลังฝากข้อมูลแล้วจะเกิดอะไรต่อ?", "ทีมงานจะตรวจข้อมูลเบื้องต้นและติดต่อกลับเพื่อสอบถามงบ ทำเล และเป้าหมาย ก่อนแนะนำแพ็กเกจที่เหมาะสม"],
+  ["มีค่า Royalty Fee รายเดือนไหม?", "ไม่มีค่า Royalty Fee รายเดือนตามข้อมูลแพ็กเกจปัจจุบัน โดยรายละเอียดเงื่อนไขจะสรุปอีกครั้งก่อนตัดสินใจ"]
 ];
 
 const socialLinks = [
@@ -91,7 +110,7 @@ const socialLinks = [
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-[#fff7e8] text-[#17100c]">
-      <header className="fixed inset-x-0 top-0 z-40 border-b border-white/60 bg-[#fff7e8]/88 backdrop-blur-2xl">
+      <header className="fixed inset-x-0 top-0 z-40 border-b border-orange-100 bg-[#fff7e8]/96 shadow-sm shadow-orange-950/5 backdrop-blur-2xl">
         <div className="mx-auto flex h-[74px] max-w-7xl items-center gap-4 px-4 sm:px-6">
           <Link href="/" className="flex items-center gap-3" aria-label="DomiCha Thailand">
             <Image src="/icons/domicha-original-logo.png" alt="DomiCha" width={56} height={56} className="h-14 w-14 object-contain" priority />
@@ -113,16 +132,17 @@ export default function HomePage() {
         </div>
       </header>
 
-      <section className="relative isolate min-h-[780px] overflow-hidden pt-[74px]">
+      <section className="relative isolate min-h-[780px] overflow-hidden bg-[#17100c] pt-[74px]">
         <Image
           src="/domicha-franchise-counter.png"
-          alt="บรรยากาศหน้าร้านแฟรนไชส์ DomiCha"
+          alt="บรรยากาศแฟรนไชส์ DomiCha"
           fill
           sizes="100vw"
           className="object-cover object-[56%_42%]"
           priority
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#17100c]/92 via-[#17100c]/72 to-[#17100c]/18" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#17100c]/92 via-[#17100c]/68 to-[#17100c]/20" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_52%,rgba(245,102,45,0.2),transparent_34rem)]" />
         <div className="absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-[#fff7e8] to-transparent" />
 
         <div className="relative z-10 mx-auto flex min-h-[706px] max-w-7xl items-center px-4 py-16 sm:px-6">
@@ -136,7 +156,7 @@ export default function HomePage() {
               <span className="block text-orange-300">เปิดร้านให้ชัด ตั้งแต่วันแรก</span>
             </h1>
             <p className="mt-6 max-w-2xl text-base font-medium leading-8 text-orange-50/92 sm:text-lg">
-              สำหรับผู้ที่อยากเริ่มธุรกิจเครื่องดื่มด้วยแบรนด์ที่มีภาพจำ เมนูเข้าใจง่าย และทีมงานช่วยประเมินงบกับทำเลก่อนเริ่มจริง
+              สำหรับผู้ที่อยากเริ่มธุรกิจเครื่องดื่มด้วยแบรนด์ที่มีภาพจำ ราคาเริ่มต้นเข้าถึงง่าย และทีมงานช่วยประเมินงบกับทำเลก่อนเริ่มจริง
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <a href="#contact" className="inline-flex h-14 items-center gap-2 rounded-full bg-[#f5662d] px-7 text-base font-black text-white shadow-2xl shadow-orange-950/25">
@@ -154,8 +174,8 @@ export default function HomePage() {
         <div className="mx-auto grid max-w-6xl gap-3 rounded-[28px] border border-white/80 bg-white/94 p-4 shadow-2xl shadow-orange-950/10 backdrop-blur md:grid-cols-3">
           {[
             ["Brand", "ภาพจำแบรนด์ชัด"],
-            ["Start", "ช่วยประเมินก่อนเริ่ม"],
-            ["System", "ต่อยอดสู่ระบบสาขา"]
+            ["20.-", "ราคาเริ่มต้นเข้าถึงง่าย"],
+            ["No Royalty", "ไม่มีค่ารายเดือน"]
           ].map(([value, label]) => (
             <div key={value} className="rounded-2xl bg-[#fff1dc] px-5 py-4">
               <p className="text-2xl font-extrabold text-[#f5662d]">{value}</p>
@@ -169,10 +189,10 @@ export default function HomePage() {
         <div className="grid gap-8 lg:grid-cols-[.82fr_1.18fr] lg:items-end">
           <div>
             <p className="text-xs font-extrabold tracking-[.18em] text-[#f5662d]">WHY DOMICHA</p>
-            <h2 className="mt-3 text-3xl font-black leading-[1.18] sm:text-4xl">หน้าเว็บต้องทำให้ลูกค้าเชื่อก่อน แล้วค่อยให้ทีมขายปิดรายละเอียด</h2>
+            <h2 className="mt-3 text-3xl font-black leading-[1.18] sm:text-4xl">แบรนด์ที่ออกแบบมาให้เริ่มต้นง่ายและจดจำได้</h2>
           </div>
           <p className="text-base font-medium leading-8 text-stone-600">
-            โครงใหม่นี้เน้นให้ผู้สนใจเข้าใจแบรนด์ เห็นภาพการเริ่มต้น และฝากข้อมูลเพื่อให้ทีมงานคัดกรองงบกับทำเล โดยไม่เปิดเผยข้อมูลที่เป็นความลับของธุรกิจ
+            DomiCha มีจุดขายที่ชัด ราคาเริ่มต้นเข้าถึงง่าย ภาพลักษณ์แบรนด์จดจำได้ และมีทีมงานช่วยประเมินแนวทางให้เหมาะกับงบและทำเลของผู้สนใจ
           </p>
         </div>
 
@@ -192,12 +212,34 @@ export default function HomePage() {
         </div>
       </section>
 
+      <section className="bg-white px-4 py-16 sm:px-6">
+        <div className="mx-auto max-w-7xl">
+          <div className="grid gap-8 lg:grid-cols-[.75fr_1.25fr] lg:items-end">
+            <div>
+              <p className="text-xs font-extrabold tracking-[.18em] text-[#f5662d]">GOOD FIT</p>
+              <h2 className="mt-3 text-3xl font-black leading-[1.18] sm:text-4xl">เหมาะกับใคร</h2>
+            </div>
+            <p className="text-base font-medium leading-8 text-stone-600">
+              DomiCha เหมาะกับผู้ที่อยากเริ่มธุรกิจเครื่องดื่มแบบมีแบรนด์ มีแนวทางให้เดิน และต้องการให้ทีมงานช่วยประเมินความเหมาะสมก่อนลงทุนจริง
+            </p>
+          </div>
+          <div className="mt-8 grid gap-4 md:grid-cols-2">
+            {idealProfiles.map(([title, detail]) => (
+              <article key={title} className="rounded-[26px] border border-orange-100 bg-[#fffaf2] p-6 shadow-lg shadow-orange-950/5">
+                <h3 className="text-xl font-extrabold">{title}</h3>
+                <p className="mt-3 text-sm font-medium leading-7 text-stone-600">{detail}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section id="model" className="bg-[#17100c] py-16 text-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="grid gap-8 lg:grid-cols-[.9fr_1.1fr] lg:items-center">
             <div>
               <p className="text-xs font-extrabold tracking-[.18em] text-orange-300">FRANCHISE MODEL</p>
-              <h2 className="mt-4 text-3xl font-black leading-[1.18] sm:text-4xl">บอกโมเดลให้เห็นทางเลือก แต่ไม่โชว์ข้อมูลลับของแพ็กเกจ</h2>
+              <h2 className="mt-4 text-3xl font-black leading-[1.18] sm:text-4xl">แพ็กเกจแฟรนไชส์เริ่มต้นให้เลือกตามงบและทำเล</h2>
             </div>
             <div className="space-y-4">
               {protectedDetails.map((item) => (
@@ -214,33 +256,49 @@ export default function HomePage() {
               <article key={model.name} className="rounded-[28px] border border-white/10 bg-white/[.06] p-6">
                 <span className="rounded-full bg-orange-300 px-3 py-1 text-xs font-extrabold text-[#17100c]">{model.name}</span>
                 <h3 className="mt-5 text-xl font-extrabold">{model.title}</h3>
+                <p className="mt-3 text-3xl font-black text-orange-200">{model.price}</p>
                 <p className="mt-3 text-sm font-medium leading-7 text-stone-300">{model.detail}</p>
               </article>
             ))}
           </div>
+          <p className="mt-5 text-sm font-medium leading-7 text-stone-400">
+            ราคาข้างต้นเป็นราคาแพ็กเกจเบื้องต้น ยังไม่รวม VAT 7% และไม่รวมค่าตกแต่งร้าน / ค่าปรับปรุงพื้นที่ รวมถึงงบเพิ่มเติมบางรายการ เช่น ค่าเช่าพื้นที่ ระบบ POS หรือเงินทุนหมุนเวียน ซึ่งทีมงานจะช่วยประเมินตามรูปแบบร้านจริง
+          </p>
         </div>
       </section>
 
       <section id="support" className="bg-white px-4 py-16 sm:px-6">
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[.95fr_1.05fr] lg:items-center">
-          <div className="relative min-h-[420px] overflow-hidden rounded-[34px] bg-[#17100c] shadow-2xl shadow-orange-950/10">
-            <Image
-              src="/domicha-franchise-counter.png"
-              alt="ทีม DomiCha ส่งมอบเครื่องดื่มให้ลูกค้า"
-              fill
-              sizes="(min-width: 1024px) 48vw, 100vw"
-              className="object-cover object-[55%_52%] opacity-95"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#17100c]/80 via-transparent to-transparent" />
-            <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-              <p className="text-sm font-extrabold text-orange-200">ภาพที่ควรสื่อสาร</p>
-              <h3 className="mt-2 text-2xl font-black sm:text-3xl">แบรนด์พร้อมขาย ลูกค้าเข้าใจง่าย</h3>
+          <div className="relative min-h-[470px] overflow-hidden rounded-[34px] bg-[#28130c] p-8 shadow-2xl shadow-orange-950/10">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_68%_30%,rgba(255,208,183,0.35),transparent_19rem)]" />
+            <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,247,232,0.08)_0_1px,transparent_1px_22px)]" />
+            <div className="relative flex min-h-[410px] flex-col justify-between text-white">
+              <div>
+                <p className="text-sm font-extrabold text-orange-200">DOMICHA FRANCHISE</p>
+                <h3 className="mt-3 text-3xl font-black leading-tight sm:text-4xl">เริ่มต้นธุรกิจเครื่องดื่มด้วยแนวทางที่ชัดเจนกว่าเดิม</h3>
+                <p className="mt-4 max-w-xl text-sm font-medium leading-7 text-orange-50/82">
+                  ทีมงานช่วยให้ผู้สนใจเห็นภาพรวมของแบรนด์ ประเมินงบและทำเลเบื้องต้น แล้วแนะนำรูปแบบแพ็กเกจที่เหมาะกับเป้าหมายของแต่ละพื้นที่
+                </p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {[
+                  ["Brand", "ภาพจำและมาตรฐานการสื่อสาร"],
+                  ["Location", "ประเมินทำเลและงบประมาณ"],
+                  ["Package", "แนะนำรูปแบบที่เหมาะสม"],
+                  ["System", "ต่อยอดสู่การดูแลหลังเปิดร้าน"]
+                ].map(([title, detail]) => (
+                  <div key={title} className="rounded-2xl border border-white/10 bg-white/[.08] p-4 backdrop-blur">
+                    <p className="text-lg font-black text-orange-200">{title}</p>
+                    <p className="mt-1 text-sm font-medium leading-6 text-orange-50/75">{detail}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
           <div>
             <p className="text-xs font-extrabold tracking-[.18em] text-[#f5662d]">SUPPORT</p>
-            <h2 className="mt-3 text-3xl font-black leading-[1.18] sm:text-4xl">สิ่งที่ผู้สนใจควรรู้ก่อนฝากข้อมูล</h2>
+            <h2 className="mt-3 text-3xl font-black leading-[1.18] sm:text-4xl">ทีม DomiCha ช่วยให้การเริ่มต้นเป็นขั้นตอนมากขึ้น</h2>
             <div className="mt-7 grid gap-4">
               {supportItems.map(([title, detail]) => (
                 <div key={title} className="flex gap-4 rounded-2xl border border-orange-100 bg-[#fffaf2] p-4">
@@ -260,9 +318,9 @@ export default function HomePage() {
         <div className="grid gap-8 lg:grid-cols-[.8fr_1.2fr] lg:items-start">
           <div>
             <p className="text-xs font-extrabold tracking-[.18em] text-[#f5662d]">PROCESS</p>
-            <h2 className="mt-3 text-3xl font-black leading-[1.18] sm:text-4xl">ลูกค้าควรรู้ทันทีว่าต้องเริ่มจากอะไร</h2>
+            <h2 className="mt-3 text-3xl font-black leading-[1.18] sm:text-4xl">สนใจแฟรนไชส์ เริ่มได้ใน 4 ขั้นตอน</h2>
             <p className="mt-5 text-base font-medium leading-8 text-stone-600">
-              ขั้นตอนสั้น ชัด และพาไปสู่การฝากข้อมูล ไม่ทำให้หน้าเว็บดูเหมือนเปิดข้อมูลแพ็กเกจทั้งหมดต่อสาธารณะ
+              ฝากข้อมูลเบื้องต้น แล้วให้ทีมงานช่วยดูว่างบ ทำเล และรูปแบบร้านเหมาะกับการเริ่มต้นแบบไหน
             </p>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -271,6 +329,26 @@ export default function HomePage() {
                 <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f5662d] text-lg font-extrabold text-white">0{index + 1}</span>
                 <h3 className="mt-6 text-xl font-extrabold">{step.title}</h3>
                 <p className="mt-3 text-sm font-medium leading-7 text-stone-600">{step.detail}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
+        <div className="grid gap-8 lg:grid-cols-[.75fr_1.25fr] lg:items-start">
+          <div>
+            <p className="text-xs font-extrabold tracking-[.18em] text-[#f5662d]">FAQ</p>
+            <h2 className="mt-3 text-3xl font-black leading-[1.18] sm:text-4xl">คำถามที่พบบ่อยก่อนตัดสินใจ</h2>
+            <p className="mt-5 text-base font-medium leading-8 text-stone-600">
+              รวมคำตอบเบื้องต้นเพื่อช่วยให้ผู้สนใจประเมินภาพรวมก่อนฝากข้อมูล
+            </p>
+          </div>
+          <div className="grid gap-4">
+            {faqs.map(([question, answer]) => (
+              <article key={question} className="rounded-[24px] border border-orange-100 bg-white p-5 shadow-lg shadow-orange-950/5">
+                <h3 className="text-lg font-extrabold">{question}</h3>
+                <p className="mt-2 text-sm font-medium leading-7 text-stone-600">{answer}</p>
               </article>
             ))}
           </div>

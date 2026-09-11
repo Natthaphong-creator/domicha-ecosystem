@@ -65,9 +65,14 @@ export function PublicFranchiseForm() {
         </label>
       </div>
       {status === "sent" ? (
-        <p className="mt-4 flex items-center gap-2 rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-black text-emerald-700">
-          <CheckCircle2 className="h-5 w-5" /> รับข้อมูลแล้ว
-        </p>
+        <div className="mt-4 rounded-2xl bg-emerald-50 px-4 py-3 text-emerald-700">
+          <p className="flex items-center gap-2 text-sm font-black">
+            <CheckCircle2 className="h-5 w-5" /> รับข้อมูลแล้ว
+          </p>
+          <p className="mt-1 text-xs font-semibold leading-5">
+            ทีมงานจะตรวจข้อมูลเบื้องต้นและติดต่อกลับเพื่อประเมินแพ็กเกจที่เหมาะกับงบและทำเลของคุณ
+          </p>
+        </div>
       ) : null}
       {status === "error" ? (
         <p className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm font-bold text-red-700">ส่งข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง</p>
