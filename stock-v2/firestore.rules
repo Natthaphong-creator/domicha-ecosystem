@@ -1,0 +1,46 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function member() {
+      return request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['owner', 'staff'];
+    }
+    function validMovement(m) {
+      return m.keys().hasAll(['id','productId','productName','unit','amount','direction','balance','note','actorName','actorId','createdAt']) &&
+        m.keys().hasOnly(['id','productId','productName','unit','amount','direction','balance','note','actorName','actorId','createdAt']) &&
+        m.amount is int && m.amount > 0 && m.amount <= 1000000000 &&
+        m.balance is int && m.balance >= 0 && m.balance <= 9007199254740991 &&
+        m.direction in ['in','out'] && m.actorId == request.auth.uid &&
+        m.actorName == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.name &&
+        m.note is string && m.note.size() <= 200 && m.createdAt == request.time;
+    }
+    function linkedMovement(productId) {
+      let id = request.resource.data.lastMovementId;
+      let m = getAfter(/databases/$(database)/documents/movements/$(id)).data;
+      return !exists(/databases/$(database)/documents/movements/$(id)) && validMovement(m) &&
+        m.id == id && m.productId == productId && m.productName == resource.data.name && m.unit == resource.data.unit &&
+        m.balance == request.resource.data.stock &&
+        m.balance == resource.data.stock + (m.direction == 'in' ? m.amount : -m.amount);
+    }
+    match /users/{uid} {
+      allow get: if request.auth != null && request.auth.uid == uid;
+      allow list, create, update, delete: if false;
+    }
+    match /products/{productId} {
+      allow read: if member();
+      allow update: if member() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stock','lastMovementId']) && linkedMovement(productId);
+      allow create, delete: if false;
+    }
+    match /movements/{movementId} {
+      allow read: if member();
+      allow create: if member() && validMovement(request.resource.data) &&
+        request.resource.data.id == movementId &&
+        getAfter(/databases/$(database)/documents/products/$(request.resource.data.productId)).data.lastMovementId == movementId &&
+        getAfter(/databases/$(database)/documents/products/$(request.resource.data.productId)).data.stock == request.resource.data.balance &&
+        request.resource.data.productName == get(/databases/$(database)/documents/products/$(request.resource.data.productId)).data.name &&
+        request.resource.data.unit == get(/databases/$(database)/documents/products/$(request.resource.data.productId)).data.unit &&
+        request.resource.data.balance == get(/databases/$(database)/documents/products/$(request.resource.data.productId)).data.stock + (request.resource.data.direction == 'in' ? request.resource.data.amount : -request.resource.data.amount);
+      allow update, delete: if false;
+    }
+  }
+}
