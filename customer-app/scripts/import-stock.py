@@ -4,6 +4,8 @@ import json, base64, hashlib, urllib.request
 from pathlib import Path
 from decimal import Decimal, InvalidOperation
 ROOT=Path(__file__).resolve().parents[1]
+overrides_path=ROOT/'product-image-overrides.json'
+image_overrides=json.loads(overrides_path.read_text()) if overrides_path.exists() else {}
 BASE='https://domichastore-default-rtdb.asia-southeast1.firebasedatabase.app/domicha_v2/store/settings/'
 def read(field):
     with urllib.request.urlopen(BASE+field+'.json',timeout=30) as r:return json.load(r)
@@ -27,6 +29,12 @@ for item in items:
             filename=hashlib.sha256(data).hexdigest()[:20]+'.'+ext
             (images/filename).write_bytes(data);image='assets/products/'+filename;break
     if not image and raw.startswith('https://'):image=raw
+    if image in image_overrides:
+        replacement=image_overrides[image]
+        resolved=(ROOT/replacement).resolve()
+        if not resolved.is_relative_to(images.resolve()) or not resolved.is_file():
+            raise ValueError('Invalid or missing product image override: '+replacement)
+        image=replacement
     rows.append({'id':id,'name':name,'category':item.get('category') or 'อื่น ๆ','unit':'หน่วย','price':price,'image':image,'icon':'📦','source':'stock'})
 from datetime import datetime,timezone
 metadata={'importedAt':datetime.now(timezone.utc).isoformat(),'source':'https://domichasystem.netlify.app/','activeItems':len(rows),'unpricedItems':sum(p['price'] is None for p in rows),'unitNote':'ต้นทางไม่ระบุหน่วยขาย ใช้หน่วยตามคลัง'}
