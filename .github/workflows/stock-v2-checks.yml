@@ -1,0 +1,24 @@
+name: Stock V2 checks
+on:
+  push:
+    paths: ['stock-v2/**', '.github/workflows/stock-v2-checks.yml']
+  pull_request:
+    paths: ['stock-v2/**', '.github/workflows/stock-v2-checks.yml']
+permissions:
+  contents: read
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: stock-v2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: stock-v2/package-lock.json
+      - run: npm ci --ignore-scripts
+      - run: npm test
+      - run: npm run build
