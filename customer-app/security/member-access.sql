@@ -19,3 +19,7 @@ with check (
  and f.id=franchisee_orders.franchisee_id and f.branch_id=franchisee_orders.branch_id)
 );
 commit;
+
+-- Explicitly approved by the owner for franchise login; RLS remains enabled.
+grant select (id,user_id,branch_id,branch_name,status) on public.franchisee_profiles to authenticated;
+grant select (id,branch_name,status) on public.branches to authenticated;
