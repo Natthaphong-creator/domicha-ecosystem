@@ -1,5 +1,7 @@
 # DomiCha customer onboarding
 
+Deployment check (2026-10-31): owner sign-in and first-time form connection completed. The backend bridge is configured and Google Apps Script has both the on-open menu trigger and the form-submit intake trigger installed. No customer applications or real invitation emails were created during deployment verification.
+
 The bound contract spreadsheet is `117qoLgTd1LJnBFwzVcaGVeYiuG0-AXN621pzmtH7eBQ`. Only response tab ID `1923021931` is imported. `ContractData`, ID-card fields, other worksheets and existing contract functions are not read by this integration.
 
 Add `google-apps-script/DomiChaMembers.gs` as a separate file in the existing bound script project. Run `domichaMembersInstall` once and authorize the Google permissions shown. This preserves the existing `onOpen` and contract menu; an installable on-open trigger adds **DomiCha Members → ตรวจและอนุมัติสมาชิก**. The form-submit trigger imports applications only and never grants membership automatically.
