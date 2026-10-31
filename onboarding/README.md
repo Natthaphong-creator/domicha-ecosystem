@@ -1,0 +1,21 @@
+# DomiCha customer onboarding
+
+The bound contract spreadsheet is `117qoLgTd1LJnBFwzVcaGVeYiuG0-AXN621pzmtH7eBQ`. Only response tab ID `1923021931` is imported. `ContractData`, ID-card fields, other worksheets and existing contract functions are not read by this integration.
+
+Add `google-apps-script/DomiChaMembers.gs` as a separate file in the existing bound script project. Run `domichaMembersInstall` once and authorize the Google permissions shown. This preserves the existing `onOpen` and contract menu; an installable on-open trigger adds **DomiCha Members → ตรวจและอนุมัติสมาชิก**. The form-submit trigger imports applications only and never grants membership automatically.
+
+Open that menu, sign in with the linked brand-owner account, then click **เชื่อมฟอร์มกับระบบสมาชิก**. The script creates a private bridge secret in Script Properties and sends only its SHA-256 digest to the private backend configuration. No passwords or Supabase service-role keys are stored in the spreadsheet or browser storage. Sessions in the review dialog stay in memory and are revoked on logout.
+
+The owner reviews the email and contract address, selects an existing active branch or enters a new unique branch code and name, then chooses **อนุมัติและส่งคำเชิญ**. Existing accounts, staff accounts, and conflicting branch codes are not overwritten. Contract address is kept separate from shipping address. Registration is intentionally limited to one assigned branch per account, matching the existing membership model; multiple-branch membership needs a separate schema change.
+
+The Edge Function verifies the owner's JWT against Auth and the server-stored Admin profile on every privileged request. New tables have RLS enabled and no `anon`/`authenticated` grants or policies; only the service role can access them. The transactional finalization RPC is `SECURITY INVOKER`, with execution revoked from PUBLIC/anon/authenticated. Do not add broad SELECT grants to make the review dialog work.
+
+Invitations are generated without sending email, then the branch/profile/application approval is committed atomically. Apps Script MailApp sends the one-use link via the Google account running the approval, with sender display name **DomiCha Members**. Acknowledgement records sent/failed only for the current attempt. Google quotas and delivery failures are shown explicitly; they are not marked as successful or silently retried. A successful MailApp call means accepted for sending, not guaranteed inbox delivery. Resending is explicit and rate limited. For the same approved and already-confirmed account, resend uses a recovery link; it never changes the password automatically.
+
+Customers open `/activate.html#token_hash=…&type=invite` (or recovery), choose their password and confirm it. The hash is removed from the visible URL immediately and kept only in memory. No invitation is consumed on GET/link preview; verification happens only on explicit password submission. The page uses no-referrer/no-store/CSP headers. Password/session data never goes to Google Sheets. After success, the activation session is logged out and the customer signs into the existing app normally.
+
+Retry safety: duplicate imports are ignored by source key; a per-application claim and unique active-email index prevent simultaneous approvals. Uncertain partial failures become `needs_review`, blocking automatic retries. Do not bulk-reset that state; inspect the auth user and membership first. Backfill processes at most 50 rows per manual refresh. The review lists the latest 200 applications; extend pagination before exceeding that operational limit. A changed sheet header fails closed and requires mapping review.
+
+Run `node --test onboarding/tests/*.test.mjs customer-app/tests/*.test.js`. Database tests use synthetic transaction-local records and roll back. No customer is approved and no real email is sent as part of deployment verification.
+
+Sources: [Supabase generateLink](https://supabase.com/docs/reference/javascript/auth-admin-generatelink), [verifyOtp](https://supabase.com/docs/reference/javascript/auth-verifyotp), [Apps Script installable triggers](https://developers.google.com/apps-script/guides/triggers/installable), [MailApp](https://developers.google.com/apps-script/reference/mail/mail-app).
