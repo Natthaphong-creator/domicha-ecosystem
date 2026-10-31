@@ -1,6 +1,8 @@
 # DomiCha customer onboarding
 
-Deployment check (2026-10-31): owner sign-in and first-time form connection completed. The backend bridge is configured and Google Apps Script has both the on-open menu trigger and the form-submit intake trigger installed. No customer applications or real invitation emails were created during deployment verification.
+Deployment check (2026-10-31): owner sign-in and first-time form connection completed. The backend bridge is configured and Google Apps Script has both the on-open menu trigger and the form-submit intake trigger installed.
+
+User-authorized live acceptance test (2026-10-31): a clearly labelled synthetic form response reached the backend automatically, was approved against the dedicated `TEST-MEMBER-01` branch, and sent an actual invitation to the user-provided test inbox. The user completed password setup and reported successful customer sign-in; Auth independently confirmed email verification and a sign-in after the invitation. RLS checks confirmed one own active profile and zero other visible profiles; direct order-table access remains denied. The test membership and dedicated test branch remain active for follow-up testing. No real order, payment or receipt was created.
 
 The bound contract spreadsheet is `117qoLgTd1LJnBFwzVcaGVeYiuG0-AXN621pzmtH7eBQ`. Only response tab ID `1923021931` is imported. `ContractData`, ID-card fields, other worksheets and existing contract functions are not read by this integration.
 
@@ -18,6 +20,6 @@ Customers open `/activate.html#token_hash=…&type=invite` (or recovery), choose
 
 Retry safety: duplicate imports are ignored by source key; a per-application claim and unique active-email index prevent simultaneous approvals. Uncertain partial failures become `needs_review`, blocking automatic retries. Do not bulk-reset that state; inspect the auth user and membership first. Backfill processes at most 50 rows per manual refresh. The review lists the latest 200 applications; extend pagination before exceeding that operational limit. A changed sheet header fails closed and requires mapping review.
 
-Run `node --test onboarding/tests/*.test.mjs customer-app/tests/*.test.js`. Database tests use synthetic transaction-local records and roll back. No customer is approved and no real email is sent as part of deployment verification.
+Run `node --test onboarding/tests/*.test.mjs customer-app/tests/*.test.js`. Automated database smoke tests use synthetic transaction-local records and roll back. Automated tests never send real emails; the separately authorized live acceptance test above used one labelled test membership and one real invitation.
 
 Sources: [Supabase generateLink](https://supabase.com/docs/reference/javascript/auth-admin-generatelink), [verifyOtp](https://supabase.com/docs/reference/javascript/auth-verifyotp), [Apps Script installable triggers](https://developers.google.com/apps-script/guides/triggers/installable), [MailApp](https://developers.google.com/apps-script/reference/mail/mail-app).
