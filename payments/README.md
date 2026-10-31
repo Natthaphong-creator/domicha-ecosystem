@@ -1,0 +1,32 @@
+# DomiCha manual payments and receipts
+
+Customer QR and owner confirmation are deployed in customer-commerce. Payment settings use the merchant details supplied by the owner; never add bank credentials, LINE access tokens or worker capabilities to this repository.
+
+## Workflow
+
+1. An approved franchisee submits an order. Owner checks stock and confirms the quote/delivery fee.
+2. A payment request freezes the exact satang amount, quoted revision and receiving merchant details. QR images are generated locally with pinned qrcode; payload uses pinned promptpay-qr. No receipt/customer data is sent to an external QR image service.
+3. PromptPay QR includes an amount, but does not provide bank reconciliation or a unique bank-side order reference. It is not a bank webhook and cannot detect payment automatically. Owner must check actual bank transactions.
+4. Only the exact linked owner can confirm, with exact amount, bank transaction reference, received time and checked evidence. Canonical reference is globally unique across these receipts (spacing/hyphens/case cannot reuse it). Duplicate identical retries return the same receipt. Pending quotes, cancelled orders, mismatched amounts and future timestamps fail closed.
+5. A single SQL transaction records Paid, creates the immutable receipt snapshot/number, and queues Drive + LINE owner deliveries. Failure rolls everything back. Paid orders cannot be cancelled by the unpaid-order workflow. Refunds/corrections are not implemented; do not edit posted receipts manually.
+6. Customer opens the short receipt; owner opens the full details. Both can print/save PDF through the browser. These are ordinary receipts, explicitly not tax invoices. No VAT is inferred or calculated.
+
+## Worker prepared on Google Apps Script
+
+Project: https://script.google.com/home/projects/1JvzPzf2qUJaVGJ5EsPg3JoLA0UW_YRd3APVbzRzzazKEagUAjURYsYGA/edit
+
+Standalone project leaves member onboarding untouched. Code and manifest are stored under google-apps-script/. The base worker and scoped manifest have been saved in the project; its source was copied back through the editor and matched the tested local source. The diagnostic PDF function still needs publishing to that editor after the owner finishes entering the worker key. Manifest requests drive.file (files created by this project), script.external_request and script.scriptapp. No full-drive read scope, service-role key or public Drive sharing is used.
+
+The linked owner creates a worker capability in owner.html > รับเงินและใบเสร็จ. It appears once; the backend stores SHA-256 only. The backend capability has now been created by the owner; entering/saving it in Google is still awaiting user completion. The owner must enter it into Script properties `DOMICHA_PAYMENT_WORKER_KEY` themselves. Rotation invalidates the old capability. This capability can only claim/acknowledge receipt delivery jobs, never alter money, members, products or orders.
+
+Run `domichaPaymentsInstall`: verifies the credential without claiming a job, creates a private DomiCha Receipts root, stores its ID in DOMICHA_RECEIPT_ROOT, and installs a five-minute trigger. OAuth approval must be completed by the user. Run `domichaPaymentsTestDrive` to create a clearly labelled diagnostic PDF that is not a receipt and does not change payments; inspect Thai rendering before claiming the PDF path verified.
+
+Drive path: DomiCha Receipts / Customer-{user UUID} / Branch-{branch UUID} / YYYY-MM / {receipt number}.pdf. Stable IDs keep same-named branches separate. Branch display name is in the document and file description. A script lock and filename lookup reuse PDFs on retries. Existing duplicate names stop for review. No files/folders are made public. Google quotas can pause delivery; pending/failed state remains visible in the owner order.
+
+For LINE, the user enters `DOMICHA_LINE_ACCESS_TOKEN` and `DOMICHA_LINE_OWNER_TARGET` in Script properties, not in chat/source/Sheets. Verify the target with the owner before enabling. Worker skips LINE claims while either setting is missing. Push includes only branch, amount and receipt number. `X-Line-Retry-Key` uses job UUID; a 409 requires the accepted-request header to count as delivered. Stop retries after 23 hours to avoid exceeding LINE's 24-hour deduplication window. Review stale jobs manually; do not assign a new key blindly. No customer broadcast is implemented.
+
+Jobs are leased for ten minutes, claimed with skip locked, acknowledged with the matching current lease, retried at least five minutes apart with a ten-attempt cap. Delivery failures do not undo confirmed money or issue a second receipt. A successful Drive job requires a Drive file URL. The owner can requeue failed deliveries. A worker being configured is not proof that its trigger, Drive conversion or LINE delivery has succeeded.
+
+## Validation
+
+Run `npm --prefix customer-app ci`, `npm --prefix customer-app run build`, then `node --test customer-app/tests/*.test.js onboarding/tests/*.test.mjs payments/tests/*.test.mjs` (60 tests). SQL rollback suite: supabase/tests/customer-payments.sql. It checks quote/ownership gates, amount/evidence/time, idempotency, duplicate normalized bank reference, atomic receipt/jobs, paid cancellation lock and lease/grants. QR roundtrip decodes the PNG and independently checks EMV CRC and satang amount. Live owner UI generated a QR for a labelled test order; it was cancelled without transfer or receipt. HTML receipt layout was visually reviewed using synthetic data. Actual bank transfer and automatic PDF/LINE delivery remain separate acceptance checks requiring connected credentials.

@@ -2,3 +2,5 @@ dist/
 .netlify/
 
 customer-app.zip
+
+qr.js

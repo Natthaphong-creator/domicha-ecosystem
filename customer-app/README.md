@@ -12,7 +12,7 @@ Separate static cream/orange customer application. Franchisees sign in using app
 - Customer orders persist in `franchisee_orders` and `franchisee_order_items` with `sales_channel=customer-v1`. Customer history is scoped to the verified user; the branch is taken from server-side membership, never the form.
 - Server computes totals from catalog prices in integer satang. The order and lines commit atomically; a request UUID prevents duplicate submission on retry.
 - Orders start pending quote. Owner checks inventory manually and confirms the delivery fee (zero for pickup). The confirmed total is visible on customer refresh. Stale revisions cannot overwrite newer changes. Owner may cancel unpaid orders with a second confirmation click.
-- No payment collection, Paid transition, receipt, LINE alert, Drive export, inventory reservation/deduction or shipment operation in this release. These are later phases. Orders are managed in owner.html; they are not copied into the original Firebase stock UI.
+- Added owner-configured PromptPay QR after quote confirmation, owner-only manual receipt of funds, immutable receipts and queued Drive/LINE delivery. See ../payments/README.md for activation status and acceptance checks. Inventory reservation/deduction and shipment operations remain later phases. Orders are managed in owner.html; they are not copied into the original Firebase stock UI.
 
 ## Catalog imports
 
@@ -30,7 +30,7 @@ After importing: `node scripts/catalog-sales-sql.mjs > /tmp/domicha-catalog-sync
 
 Run `node --test customer-app/tests/*.test.js onboarding/tests/*.test.mjs` from the repository root, and `npm --prefix customer-app run build`. Run `supabase/tests/customer-sales.sql` administratively for rollback-only database tests.
 
-Live acceptance: TEST-MEMBER-01 submitted a clearly synthetic delivery order for tea (40 THB), owner confirmed 35.50 THB delivery, customer saw 75.50 THB and unpaid status, then owner cancelled the test order. Product hide/reopen was verified against the customer catalog. No payment or stock change occurred. The cancelled test record is retained for audit.
+Live acceptance: TEST-MEMBER-01 submitted a clearly synthetic delivery order for tea (40 THB), owner confirmed 35.50 THB delivery, customer saw 75.50 THB and unpaid status, then owner cancelled the test order. Product hide/reopen was verified against the customer catalog. No payment or stock change occurred. The cancelled test record is retained for audit. A second labelled QR-only test order was also cancelled without payment or receipt.
 
 Existing security advisor warnings on older functions' search_path and leaked password protection remain outside this change; new service-only tables intentionally have RLS with no client policies.
 
