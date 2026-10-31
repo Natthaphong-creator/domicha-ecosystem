@@ -5,3 +5,6 @@ test('reject invalid quantities and products',()=>{for(const qty of [-1,0,.5,100
 test('require cart, branch, recipient and valid phone',()=>{assert.throws(()=>createOrder({},details));assert.throws(()=>createOrder({'milk-evap':1},{...details,branch:''}));assert.throws(()=>createOrder({'milk-evap':1},{...details,phone:'x'}))});
 test('trial order can never be paid or become a receipt',()=>{const o=createOrder({'milk-evap':2},details);assert.equal(o.status,'demo');assert.ok(o.id.startsWith('DEMO-'));assert.equal(o.items[0].price,catalog[0].price)});
 test('escape customer text',()=>assert.equal(escapeHtml('<script>'),'&lt;script&gt;'));
+import {fulfillment} from '../domain.js';
+test('shipping requires an address',()=>assert.throws(()=>createOrder({'milk-evap':1},{...details,delivery:'จัดส่ง'})));
+test('shipping and pickup have separate tracking stages; trials never imply payment or delivery',()=>{const pickup=createOrder({'milk-evap':1},details);const shipping=createOrder({'milk-evap':1},{...details,delivery:'จัดส่ง',address:'ที่อยู่สมมติ'});assert.deepEqual(fulfillment(pickup).stages,['รอยืนยันชำระ','เตรียมสินค้า','พร้อมรับสินค้า','รับสินค้าแล้ว']);assert.deepEqual(fulfillment(shipping).stages,['รอยืนยันชำระ','เตรียมสินค้า','จัดส่งแล้ว','ส่งสำเร็จ']);assert.equal(fulfillment(shipping).active,-1);assert.equal(shipping.status,'demo')});
