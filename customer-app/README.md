@@ -1,63 +1,37 @@
-# DomiCha Customer — แอปลูกค้าแยกจากหลังบ้าน
+# DomiCha customer ordering
 
-รุ่นทดลองใช้ข้อมูลและราคาตัวอย่าง 12 รายการ ไม่มีการเชื่อม Firebase ของหลังบ้าน ไม่อ่านรายชื่อพนักงาน PIN ยอดคลัง ต้นทุน หรือเอกสารลูกค้ารายอื่น
+Customer: https://domicha-customer-preview.netlify.app/
+Owner workspace: https://domicha-customer-preview.netlify.app/owner.html
 
-มีหน้าสินค้า ค้นหา/หมวดหมู่ ตะกร้า จำนวนสินค้า แบบฟอร์มผู้รับ/สาขา คำสั่งซื้อทดลอง ประวัติในแท็บ และดาวน์โหลดสรุปข้อความ
+Separate static cream/orange customer application. Franchisees sign in using approved Supabase membership and their assigned Active branch. The owner workspace requires the exact linked owner identity and protected Admin role. No public sign-up, JWT storage or service key in the frontend.
 
-ข้อมูลทดลองอยู่ใน sessionStorage ของเบราว์เซอร์เท่านั้น ไม่ส่งเข้าระบบหลังบ้าน LINE OA หรือ Google Drive ไม่รับเงิน ไม่สร้าง QR ที่ชำระเงินจริง และไม่ออกใบเสร็จโดยอ้างว่าได้รับเงินแล้ว
+## Current behavior
 
-## เปิดและตรวจ
+- 68 imported stock products and images; 63 have positive selling prices. The 5 unpriced items start paused.
+- Owner chooses active / paused / hidden. Hidden products are excluded by the customer API; paused products remain visible but cannot be ordered. Availability is rechecked in the database on submit and confirmation. Stock quantity is not shown.
+- Customer orders persist in `franchisee_orders` and `franchisee_order_items` with `sales_channel=customer-v1`. Customer history is scoped to the verified user; the branch is taken from server-side membership, never the form.
+- Server computes totals from catalog prices in integer satang. The order and lines commit atomically; a request UUID prevents duplicate submission on retry.
+- Orders start pending quote. Owner checks inventory manually and confirms the delivery fee (zero for pickup). The confirmed total is visible on customer refresh. Stale revisions cannot overwrite newer changes. Owner may cancel unpaid orders with a second confirmation click.
+- No payment collection, Paid transition, receipt, LINE alert, Drive export, inventory reservation/deduction or shipment operation in this release. These are later phases. Orders are managed in owner.html; they are not copied into the original Firebase stock UI.
 
-`npm run dev` เปิด http://127.0.0.1:4175
-`npm test` ตรวจยอดเป็นจำนวนเต็มสตางค์ จำนวนสินค้า การสร้างรายการ และสถานะทดลอง
-`npm run build` คัดลอกไฟล์พร้อมเผยแพร่ลง dist
+## Catalog imports
 
-โฮสต์แยก: domicha-customer-preview.netlify.app
+The catalog is an imported snapshot, not continuous stock synchronization. `scripts/import-stock.py` reads only the source itemCatalog and selling prices, saves photos and preserves product-image-overrides.json. No cost/personnel fields are imported. The source does not specify sale units, so the app uses หน่วย.
 
-## ขั้นถัดไปก่อนใช้งานจริง
+After importing: `node scripts/catalog-sales-sql.mjs > /tmp/domicha-catalog-sync.sql` (from customer-app). Review and apply with the service-side SQL tool, then rebuild/deploy updated photos. The sync preserves owner paused/hidden choices, pauses products losing their price, hides removed source products and increments changed row revisions. Never expose the SQL endpoint or service key to the browser.
 
-1. ยืนยันราคาขาย หน่วยขั้นต่ำ ค่าจัดส่ง ภาษี และข้อมูลลูกค้า/สาขาที่อนุญาต
-2. เลือกตรวจสลิปโดยเจ้าหน้าที่ หรือผู้รับชำระ/ธนาคารที่ส่งผลชำระกลับได้
-3. ใช้ API หลังบ้านที่คำนวณราคา/ยอดใหม่ฝั่งเซิร์ฟเวอร์ บันทึกออเดอร์ และตรวจสิทธิ์ลูกค้าเฉพาะของตนเอง ห้ามเชื่อราคาและสถานะจาก browser
-4. ออก payment reference ผูกออเดอร์ เก็บสถานะ pending/paid/expired; ตรวจยอด สกุลเงิน และผู้รับเงินจริงจากบริการรับชำระ ป้องกัน webhook ปลอมและซ้ำ
-5. เมื่อยืนยันเงินเข้าแล้ว ออกเลขใบเสร็จครั้งเดียว ใช้ข้อมูลสแนปช็อตเดียวกันทำฉบับลูกค้าและฉบับเต็ม พร้อมบันทึกสถานะสร้าง/ส่ง/เก็บเอกสารที่ลองใหม่ได้
-6. เชื่อม LINE Messaging API เก็บ token ฝั่งเซิร์ฟเวอร์เท่านั้น ผูก LINE user ID ที่ได้รับอนุญาต และจำกัดข้อมูลแจ้งเตือนตามผู้รับ
-7. Google Drive: ใช้ customerId/branchId เป็นตัวระบุโฟลเดอร์ และเดือน Asia/Bangkok แยกไฟล์ตามเลขเอกสาร ไม่เปิดโฟลเดอร์ลูกค้ารวมเป็นสาธารณะ
-8. กำหนดการจองสต็อก/ตัดสต็อก/คืนเงิน และทดลองในฐานข้อมูลแยกก่อนเชื่อมระบบเดิม
+## Backend
 
-การแยกแอป UI อย่างเดียวไม่ใช่ขอบเขตสิทธิ์ ต้องมี Auth/Rules/API จริงก่อนเปิดข้อมูลจริง
+`supabase/migrations/20261031170654_customer_sales_orders.sql` adds customer_sale_products, customer_sales_events, quote fields and three atomic RPCs. Both new tables use RLS with no browser grants. RPCs are security invoker, service_role only. `supabase/functions/customer-commerce` validates auth.getUser plus protected role/active membership before every action; owner mutation checks are also inside SQL. Legacy orders and financial fields are outside this workflow. Deploy customer-commerce with verify_jwt=false because its handler performs its own auth.getUser verification; never remove the handler authorization.
 
-## ติดตามสินค้า
+`member-auth.js` retains the access token in memory and passes it only to the configured Supabase origin. Refreshing or closing the page requires login again. Cart-only storage is user-scoped sessionStorage; orders always reload from the backend. Expired sessions require signing in again.
 
-เพิ่มขั้น 04 ติดตามสินค้า และการเลือกจัดส่ง/รับที่คลังในรุ่นทดลอง การจัดส่งต้องกรอกที่อยู่ แสดงว่าค่าจัดส่งยังรอยืนยันและไม่รวมในยอดสินค้า หน้ารายละเอียดแสดงขั้นสถานะและข้อมูลขนส่งแบบรอข้อมูล ไม่มีเลขพัสดุสมมติ และไม่มีการเปลี่ยนเป็นชำระแล้ว/ส่งแล้วเอง ต้องเชื่อมข้อมูลหลังบ้านที่มีสิทธิ์ก่อนจึงอัปเดตสถานะจริงได้
+## Validation
 
-## สมาชิกแฟรนไชส์
+Run `node --test customer-app/tests/*.test.js onboarding/tests/*.test.mjs` from the repository root, and `npm --prefix customer-app run build`. Run `supabase/tests/customer-sales.sql` administratively for rollback-only database tests.
 
-เข้าสู่ระบบด้วยบัญชี Supabase เดิม ไม่มีปุ่มข้าม ไม่มีสมัครเองในแอป ตรวจ auth user กับแถว public.users (role Franchisee) และ franchisee_profiles (Active) พร้อม branches (Active) ไม่ใช้ user_metadata เป็นสิทธิ์ ตรวจซ้ำก่อนสร้างคำสั่งซื้อทดลอง ล็อกสาขาตามโปรไฟล์ และแยก sessionStorage ตาม user ID ออกจากระบบแล้วล้างข้อมูลรายการในแท็บ ไม่เก็บ token หรือรหัสผ่านใน storage
+Live acceptance: TEST-MEMBER-01 submitted a clearly synthetic delivery order for tea (40 THB), owner confirmed 35.50 THB delivery, customer saw 75.50 THB and unpaid status, then owner cancelled the test order. Product hide/reopen was verified against the customer catalog. No payment or stock change occurred. The cancelled test record is retained for audit.
 
-`auth-config.json` มีเฉพาะ URL และ publishable key ซึ่งออกแบบให้เป็นค่า public ห้ามใส่ service_role/secret key ไฟล์ security/member-access.sql คือกติกาที่ใช้กับฐานข้อมูลจริง: บัญชีสร้างใหม่ไม่รับ role จาก metadata, ผู้ใช้แก้ role ตัวเองไม่ได้ และ INSERT ออเดอร์ต้องมีสมาชิก/สาขา Active ที่ตรงกับเจ้าของออเดอร์
+Existing security advisor warnings on older functions' search_path and leaked password protection remain outside this change; new service-only tables intentionally have RLS with no client policies.
 
-สถานะออเดอร์ในแอปนี้ยังเป็นรุ่นทดลอง ไม่ส่งรายการขายจริง แม้การเข้าสู่ระบบจะใช้สมาชิกจริง ต้องเชื่อม order API ที่ตรวจสิทธิ์และราคาฝั่งเซิร์ฟเวอร์ให้ครบก่อนรับออเดอร์จริง
-
-การเปิดเชื่อมระบบจริงใช้ enabled=true ใน auth-config.json หลังอนุมัติสิทธิ์ SELECT ขั้นต่ำและตรวจ RLS แล้วเท่านั้น ค่าเริ่มต้นปิดไว้เพื่อไม่ให้ส่งรหัสผ่านไปยังระบบที่ยังตรวจสมาชิกไม่ได้ สิทธิ์ที่จำเป็นคือ SELECT(id,user_id,branch_id,branch_name,status) บน franchisee_profiles และ SELECT(id,branch_name,status) บน branches สำหรับ authenticated โดย RLS เดิมจำกัดสมาชิกให้เห็นโปรไฟล์ตนเอง ไม่มีขอสิทธิ์เบอร์โทร/ที่อยู่
-
-ตรวจฐานข้อมูลจริงแล้ว: มีสมาชิก Active ที่ผูกสาขา Active 12 บัญชี ทดสอบบัญชีชั่วคราวที่ไม่มีสมาชิกถูกปฏิเสธ และทดสอบ RLS สมาชิกจริงเห็นโปรไฟล์ตนเองเพียง 1 รายการ ไม่เพิ่มสิทธิ์อ่าน phone หรือ shipping_address บัญชีทดสอบและข้อมูลทดสอบทั้งหมด rollback ไม่คงอยู่ในระบบ
-
-## เจ้าของแบรนด์
-
-ผูกบัญชี DomiCha Owner (domicha.tea@gmail.com) โดยตรวจ auth user ID ตรง ownerUserId และ role Admin จาก public.users ไม่ใช้ user_metadata และไม่อนุญาต Admin อื่นอัตโนมัติ แสดงป้ายเจ้าของแบรนด์และโหมดเจ้าของ สาขาไม่ผูกกับแฟรนไชส์ รายการยังเป็น demo ในเบราว์เซอร์เท่านั้น ไม่เปลี่ยนสิทธิ์ฐานข้อมูลและไม่เพิ่มข้อยกเว้นให้ส่งออเดอร์จริง ต้องตรวจสิทธิ์เจ้าของฝั่ง order API ก่อนเชื่อมออเดอร์จริง
-
-## รายการสินค้าจากคลัง
-
-นำเข้าเฉพาะ settings/itemCatalog และ settings/salePrices จาก Firebase ของ domichasystem เก็บรูปเป็นไฟล์ใน assets/products ไม่มีอ่านต้นทุนหรือข้อมูลพนักงาน รายการ active 68 รายการ มีราคาขายบวก 63 รายการ อีก 5 รายการไม่เปิดสั่ง ต้นทางไม่มีหน่วยขายจึงแสดงเป็นหน่วย ไม่เดาหน่วยเอง ข้อมูลเป็นสำเนา ณ เวลานำเข้า ไม่ใช่การซิงค์ต่อเนื่อง รัน scripts/import-stock.py และ build/deploy อีกครั้งเมื่อต้องการอัปเดต รายการสั่งซื้อยังเป็น demo
-
-
-## รูปพื้นหลังโปร่งใส
-
-ลบพื้นหลังภายนอก 24 ไฟล์ ใช้ใน 28 รายการสินค้าที่มีภาพร่วมกัน เก็บภาพต้นฉบับไว้ ใช้ WebP มี alpha และ product-image-overrides.json เพื่อคงภาพที่แก้แล้วเมื่อนำเข้ารูปเดิมซ้ำ ดูคำสั่งที่ใช้และข้อกำหนดใน product-image-edit-notes.md รูปเป็นสำเนาสำหรับแอปลูกค้า ไม่แก้รูปในระบบสต๊อกต้นทาง
-
-## ตรวจสมาชิกและคำเชิญตั้งรหัสผ่าน
-
-เพิ่มเมนู DomiCha Members ใน Google Sheet สัญญา ใช้บัญชีเจ้าของแบรนด์ตรวจคำตอบและผูกสาขาก่อนอนุมัติ ดูการติดตั้งและขั้นเชื่อมฟอร์มใน ../onboarding/README.md เมนูต้องเข้าสู่ระบบเจ้าของแบรนด์และกดเชื่อมฟอร์มครั้งแรกก่อนรับคำตอบอัตโนมัติ ไม่ใช้คอลัมน์ Password ในชีตเก็บรหัสผ่านจริง
-
-หน้า activate.html รับลิงก์ใช้ครั้งเดียวจากอีเมลเพื่อให้ลูกค้าตั้งรหัสผ่านเอง ไม่เก็บ token ใน browser storage ไม่ใช้ข้อมูลจากฟอร์มเป็นสิทธิ์สมาชิก และไม่เปลี่ยนสถานะออเดอร์ทดลองให้เป็นการรับเงินจริง การติดตั้งส่วนนี้ยังไม่ใช่การเปิดรับชำระเงินหรือออกใบเสร็จจริง
+Member onboarding and invitations: see ../onboarding/README.md. `activate.html` uses a one-time email link, removes its fragment and does not store credentials. Product image cutouts and overrides: product-image-edit-notes.md.

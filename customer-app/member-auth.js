@@ -22,5 +22,9 @@ export function createMemberAuth(config,request=fetch){
     if(!approvedMember(u,p,f,branches[0]))throw new Error('บัญชีนี้ยังไม่ได้รับสิทธิ์แฟรนไชส์ที่เปิดใช้งาน กรุณาติดต่อทีม DomiCha');
     return{id:u.id,role:'Franchisee',franchiseId:f.id,branchId:f.branch_id,name:p.full_name||'สมาชิกแฟรนไชส์',branch:f.branch_name,phone:'',address:''};
   }
-  return{ready,verify,async signIn(email,password){if(!ready)throw new Error('ระบบสมาชิกยังไม่พร้อมใช้งาน กรุณาติดต่อทีม DomiCha');const s=await api('/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email:email.trim(),password})});token=s.access_token||'';try{return await verify();}catch(e){token='';throw e;}},async signOut(){try{if(token)await api('/auth/v1/logout',{method:'POST'});}finally{token='';}}};
+  return{ready,verify,async commerce(body){
+    if(!token)throw new Error('กรุณาเข้าสู่ระบบใหม่');
+    const r=await request(config.url+'/functions/v1/customer-commerce',{method:'POST',headers:{apikey:config.publishableKey,Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify(body),cache:'no-store'});
+    const result=await r.json();if(!r.ok){const e=new Error(result.error||'เชื่อมต่อระบบไม่สำเร็จ');e.code=result.code;throw e;}return result.data;
+  },async signIn(email,password){if(!ready)throw new Error('ระบบสมาชิกยังไม่พร้อมใช้งาน กรุณาติดต่อทีม DomiCha');const s=await api('/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email:email.trim(),password})});token=s.access_token||'';try{return await verify();}catch(e){token='';throw e;}},async signOut(){try{if(token)await api('/auth/v1/logout',{method:'POST'});}finally{token='';}}};
 }
