@@ -12,7 +12,7 @@ function domichaPaymentsRun(){
  try{
   var p=PropertiesService.getScriptProperties();var kinds=[];
   if(p.getProperty('DOMICHA_RECEIPT_ROOT'))kinds.push('drive');
-  if(p.getProperty('DOMICHA_LINE_ACCESS_TOKEN')&&p.getProperty('DOMICHA_LINE_OWNER_TARGET'))kinds.push('line-owner');
+  if(p.getProperty('DOMICHA_LINE_ACCESS_TOKEN')&&p.getProperty('DOMICHA_LINE_OWNER_TARGET')){try{domichaLineCheck_();kinds.push('line-owner');}catch(e){console.log('LINE configuration needs verification; Drive processing continues');}}
   for(var n=0;n<6;n++){
    var work=domichaPaymentApi_({action:'claim-job',kinds:kinds});if(!work)return;
    var job=work.job;var url=null;var success=false;
@@ -74,4 +74,29 @@ function domichaPaymentsTestDrive(){
  var head=Utilities.newBlob('--'+boundary+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'+meta+'\r\n--'+boundary+'\r\nContent-Type: application/pdf\r\n\r\n').getBytes();var tail=Utilities.newBlob('\r\n--'+boundary+'--').getBytes();
  var file=domichaDriveRequest_('upload/drive/v3/files?uploadType=multipart&fields=id',{method:'post',contentType:'multipart/related; boundary='+boundary,payload:head.concat(pdf.getBytes(),tail)});
  console.log('TEST PDF: https://drive.google.com/file/d/'+file.id+'/view');
+}
+// Checks the selected OA and owner friendship without sending any message.
+function domichaPaymentsCheckLine(){
+ var info=domichaLineCheck_();console.log('LINE configuration: '+JSON.stringify(info));
+}
+function domichaLineCheck_(){
+ var p=PropertiesService.getScriptProperties(),token=p.getProperty('DOMICHA_LINE_ACCESS_TOKEN'),target=p.getProperty('DOMICHA_LINE_OWNER_TARGET');
+ if(!token||!target)throw new Error('LINE token or owner target missing');
+ var headers={Authorization:'Bearer '+token};var bot=UrlFetchApp.fetch('https://api.line.me/v2/bot/info',{headers:headers,muteHttpExceptions:true});
+ if(bot.getResponseCode()!==200)throw new Error('LINE bot verification failed: '+bot.getResponseCode());var b=JSON.parse(bot.getContentText());
+ if(b.basicId!=='@136zwjux')throw new Error('LINE OA does not match the selected Domicha admin account');
+ if(!/^U[0-9a-f]{32}$/.test(target))throw new Error('Invalid owner user ID');
+ var owner=UrlFetchApp.fetch('https://api.line.me/v2/bot/profile/'+target,{headers:headers,muteHttpExceptions:true});
+ if(owner.getResponseCode()!==200)throw new Error('Owner profile unavailable; add the OA as a friend and unblock it before testing');
+ return {oa:b.basicId,oaName:b.displayName,ownerName:JSON.parse(owner.getContentText()).displayName};
+}
+// Run only after the owner explicitly approves one clearly labelled test message.
+function domichaPaymentsTestLine(){
+ domichaLineCheck_();var p=PropertiesService.getScriptProperties();var id=p.getProperty('DOMICHA_LINE_TEST_RETRY_ID');var created=Number(p.getProperty('DOMICHA_LINE_TEST_RETRY_AT')||0);
+ if(id&&Date.now()-created>23*60*60*1000)throw new Error('Test retry window expired; review before creating a new test');
+ if(!id){id=Utilities.getUuid();p.setProperties({DOMICHA_LINE_TEST_RETRY_ID:id,DOMICHA_LINE_TEST_RETRY_AT:String(Date.now())});}
+ var text='DomiCha — ทดสอบการเชื่อมต่อแจ้งเตือนเจ้าของ\nข้อความทดสอบเท่านั้น ไม่มีการรับชำระเงินจริง\nระบบจะส่งแจ้งเตือนเมื่อเจ้าของตรวจเงินเข้าและยืนยันรับเงินในออเดอร์';
+ var response=UrlFetchApp.fetch('https://api.line.me/v2/bot/message/push',{method:'post',contentType:'application/json',headers:{Authorization:'Bearer '+p.getProperty('DOMICHA_LINE_ACCESS_TOKEN'),'X-Line-Retry-Key':id},payload:JSON.stringify({to:p.getProperty('DOMICHA_LINE_OWNER_TARGET'),messages:[{type:'text',text:text}]}),muteHttpExceptions:true});
+ var accepted=response.getResponseCode()===200||(response.getResponseCode()===409&&Object.keys(response.getHeaders()).some(function(k){return k.toLowerCase()==='x-line-accepted-request-id';}));
+ if(!accepted)throw new Error('LINE test delivery failed: '+response.getResponseCode());console.log('LINE owner test accepted; no order or payment was changed');
 }
