@@ -71,7 +71,7 @@ export function makeHandler(db){return async req=>{
    case 'confirm-payment':
     if(!owner&&!reviewer)return reply({error:errors.OWNER_REQUIRED},403);
     if(!uuid(b.id)||!Number.isInteger(b.version)||!Number.isSafeInteger(b.amount)||b.amount<=0||b.checked!==true||typeof b.reference!=='string'||typeof b.receivedAt!=='string'||!Number.isFinite(Date.parse(b.receivedAt)))throw Error('PAYMENT_EVIDENCE_REQUIRED');
-    data={receiptId:await db.confirmPayment({p_actor:user.id,p_order:b.id,p_version:b.version,p_amount_satang:b.amount,p_reference:b.reference,p_received_at:b.receivedAt,p_checked:true})};break;
+    {const receiptId=await db.confirmPayment({p_actor:user.id,p_order:b.id,p_version:b.version,p_amount_satang:b.amount,p_reference:b.reference,p_received_at:b.receivedAt,p_checked:true});data={receiptId};if(db.receiptConfirmation){try{Object.assign(data,await db.receiptConfirmation(receiptId));}catch{/* The payment already committed: a display lookup must never turn success into failure. */}}}break;
    case 'worker-configure':
     if(!owner)return reply({error:errors.OWNER_REQUIRED},403);
     if(typeof b.secret!=='string'||!/^[-_A-Za-z0-9]{64,128}$/.test(b.secret))throw Error('INVALID_SECRET');await db.configureWorker(b.secret,user.id);data={saved:true};break;
