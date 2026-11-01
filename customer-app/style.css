@@ -27,3 +27,5 @@
 .receipt-logo{display:block;width:110px;height:110px;object-fit:contain;margin:0 auto 14px}.receipt-paper.short .receipt-logo{width:95px;height:95px}
 
 .receipt-paper.short th,.receipt-paper.short td{padding:9px 4px;font-size:11px}.receipt-paper.short th:nth-child(n+2),.receipt-paper.short td:nth-child(n+2){text-align:right;white-space:nowrap}.receipt-paper.short td:first-child{overflow-wrap:anywhere}
+
+.manual-line{border:1px solid #edcfad;border-radius:12px;padding:14px;margin-bottom:12px;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:10px}.manual-line input{width:100%;min-width:0}.receipt-manual-source{font-size:11px;color:#72543c}@media(max-width:650px){.manual-line{grid-template-columns:1fr 1fr}}@media print{#manual-create,#manual-receive,#manual-new,#manual-refresh,#manual-notice,.page-title{display:none}#manual-content>.card{display:none}}

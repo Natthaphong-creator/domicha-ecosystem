@@ -10,6 +10,15 @@ async function sha(secret:string){return Array.from(new Uint8Array(await crypto.
 const paymentFields='id,order_number,recipient_name,branch_id,grand_total,quote_state,order_status,payment_status,sales_revision,created_at';
 function paymentOrders(actor:string){let q=admin.from('franchisee_orders').select(paymentFields).eq('sales_channel','customer-v1').eq('quote_state','confirmed').eq('order_status','Confirmed').eq('payment_status','Pending').eq('stock_checked',true);if(actor!=='1148e8d2-679c-4241-ba67-b522a2b50d8b')q=q.neq('user_id',actor);return q;}
 const db={
+ manualPackages:()=>check(admin.from('manual_franchise_packages').select('id,name,description,price_satang,active,version').order('id')),
+ manualPackageSave:(p:any)=>check(admin.rpc('save_manual_franchise_package',p)),
+ manualConvert:(p:any)=>check(admin.rpc('convert_manual_quotation',p)),
+ manualCustomers:(actor:string)=>check(admin.rpc('manual_document_customers',{p_actor:actor})),
+ manualList:(offset:number)=>check(admin.from('manual_sales_documents').select('id,number,status,document_kind,version,created_at,snapshot->buyer_name,snapshot->branch_name,snapshot->total_satang').order('created_at',{ascending:false}).order('id',{ascending:false}).range(offset,offset+25)),
+ manualDetail:async(id:string)=>{const d=await check(admin.from('manual_sales_documents').select('id,number,status,document_kind,parent_document_id,version,snapshot,created_by,created_at').eq('id',id).maybeSingle());if(!d)return null;d.child=await check(admin.from('manual_sales_documents').select('id,number').eq('parent_document_id',id).maybeSingle());d.receipt=await check(admin.from('customer_receipts').select('id,number,issued_at,received_at,bank_reference,snapshot').eq('manual_document_id',id).maybeSingle());if(d.receipt)d.receipt_jobs=await check(admin.from('customer_receipt_jobs').select('kind,status,result_url').eq('receipt_id',d.receipt.id));return d;},
+ manualCreate:(p:any)=>check(admin.rpc('create_manual_sales_document',p)),
+ manualReceive:(p:any)=>check(admin.rpc('receive_manual_sales_document',p)),
+ manualCancel:(p:any)=>check(admin.rpc('cancel_manual_sales_document',p)),
  ...reviewerAccounts(admin,check),
  paymentQueue:(actor:string,offset:number)=>check(paymentOrders(actor).order('created_at',{ascending:false}).order('id',{ascending:false}).range(offset,offset+25)),
  paymentReviewDetail:async(actor:string,id:string)=>{const o=await check(paymentOrders(actor).eq('id',id).maybeSingle());if(!o)return null;const b=await check(admin.from('branches').select('branch_name').eq('id',o.branch_id).maybeSingle());o.branch_name=b?.branch_name||'';o.payment_request=await check(admin.from('customer_payment_requests').select('amount_satang,quote_revision').eq('order_id',id).maybeSingle());return o;},
