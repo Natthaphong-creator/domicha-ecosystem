@@ -33,7 +33,7 @@ export function makeHandler(db){return async req=>{
     if(!owner)return reply({error:errors.OWNER_REQUIRED},403);
     if(typeof b.email!=='string'||b.email.length>254||!/^\S+@\S+\.\S+$/.test(b.email.trim())||typeof b.name!=='string'||b.name.trim().length<1||b.name.length>160||b.approved!==true)throw Error('INVALID_REVIEWER');
     const invite=await db.claimReviewerInvite({p_actor:user.id,p_email:b.email.trim().toLowerCase(),p_name:b.name.trim(),p_attempt:crypto.randomUUID()});
-    const generated=await db.generateReviewerInvite(invite.email,invite.name);
+    const generated=await db.generateReviewerInvite(invite.email,invite.name,invite.user_id);
     if(!uuid(generated.user?.id)||generated.user.email?.toLowerCase()!==invite.email||generated.user.email_confirmed_at||typeof generated.hash!=='string'||!/^[-_A-Za-z0-9]{32,256}$/.test(generated.hash))throw Error('REVIEWER_INVITE_CONFLICT');
     await db.completeReviewerInvite({p_actor:user.id,p_email:invite.email,p_attempt:invite.attempt,p_user:generated.user.id});
     data={email:invite.email,activationUrl:'https://domicha-customer-preview.netlify.app/activate.html#token_hash='+encodeURIComponent(generated.hash)+'&type=invite&next=payment-review'};break;}

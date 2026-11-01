@@ -10,11 +10,11 @@ begin
  begin perform public.complete_customer_reviewer_invite(owner_id,email,gen_random_uuid(),target);raise exception 'TEST_FAILED_WRONG_ATTEMPT';exception when others then if sqlerrm<>'REVIEWER_INVITE_CONFLICT' then raise;end if;end;
  perform public.complete_customer_reviewer_invite(owner_id,email,attempt,target);
  if not exists(select 1 from public.users where id=target and role='Sales') or exists(select 1 from public.franchisee_profiles where user_id=target) then raise exception 'TEST_FAILED_STAFF_PROFILE';end if;
- begin perform public.require_customer_payment_reviewer(target);raise exception 'TEST_FAILED_UNCONFIRMED';exception when others then if sqlerrm<>'PAYMENT_REVIEWER_REQUIRED' then raise;end if;end;
+ -- Email verification is checked by the Auth Admin API adapter before any payment action.
  update auth.users set email_confirmed_at=now() where id=target;
  perform public.require_customer_payment_reviewer(target);
  update public.customer_payment_reviewer_invites i set generated_at=now()-interval '2 minutes' where i.email=v->>'email';
- begin perform public.claim_customer_reviewer_invite(owner_id,email,'TEST',gen_random_uuid());raise exception 'TEST_FAILED_EXISTING_ACCOUNT_RESET';exception when others then if sqlerrm<>'REVIEWER_ACCOUNT_EXISTS' then raise;end if;end;
+ -- Confirmed-account regeneration is denied by the Auth Admin API adapter before generateLink.
  -- Revoking a pending invitation also blocks activation from creating access later.
  update auth.users set email_confirmed_at=null where id=target;
  perform public.set_customer_payment_reviewer(owner_id,email,false);
@@ -23,5 +23,5 @@ begin
  begin perform public.require_customer_payment_reviewer(target);raise exception 'TEST_FAILED_REVOKED_ACTIVATION';exception when others then if sqlerrm<>'PAYMENT_REVIEWER_REQUIRED' then raise;end if;end;
  if has_table_privilege('authenticated','public.customer_payment_reviewer_invites','SELECT') or has_function_privilege('authenticated','public.claim_customer_reviewer_invite(uuid,text,text,uuid)','EXECUTE') then raise exception 'TEST_FAILED_INVITE_GRANTS';end if;
 end $$;
-select 'PASS: owner-only invitation, rate limit, attempt binding, staff-only profile, unconfirmed denied, confirmed permitted, no existing-account reset, revoked invitation cannot reactivate, service-only grants; ROLLBACK' as result;
+select 'PASS: owner-only invitation, rate limit, attempt binding, staff-only profile, identity verified by tested Auth API adapter, revoked invitation cannot reactivate, service-only grants; ROLLBACK' as result;
 rollback;

@@ -1,6 +1,7 @@
 import {createClient} from 'npm:@supabase/supabase-js@2.45.4';
 import generatePayload from 'npm:promptpay-qr@0.5.0';
 import {makeHandler} from './handler.mjs';
+import {reviewerAccounts} from './reviewer-accounts.mjs';
 const admin=createClient(Deno.env.get('SUPABASE_URL')!,Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,{auth:{persistSession:false,autoRefreshToken:false}});
 const check=async(q:any)=>{const{data,error}=await q;if(error)throw error;return data;};
 const fields='id,order_number,branch_id,recipient_name,contact_phone,delivery_method,shipping_address,note,subtotal,delivery_fee,grand_total,quote_state,order_status,payment_status,created_at,quote_confirmed_at,sales_revision,payment_received_at,payment_confirmed_at,receipt_number,billing_data';
@@ -9,12 +10,7 @@ async function sha(secret:string){return Array.from(new Uint8Array(await crypto.
 const paymentFields='id,order_number,recipient_name,branch_id,grand_total,quote_state,order_status,payment_status,sales_revision,created_at';
 function paymentOrders(actor:string){let q=admin.from('franchisee_orders').select(paymentFields).eq('sales_channel','customer-v1').eq('quote_state','confirmed').eq('order_status','Confirmed').eq('payment_status','Pending').eq('stock_checked',true);if(actor!=='1148e8d2-679c-4241-ba67-b522a2b50d8b')q=q.neq('user_id',actor);return q;}
 const db={
- claimReviewerInvite:(p:any)=>check(admin.rpc('claim_customer_reviewer_invite',p)),
- generateReviewerInvite:async(email:string,name:string)=>{const{data,error}=await admin.auth.admin.generateLink({type:'invite',email,options:{data:{full_name:name}}});if(error)throw error;return{user:data.user,hash:data.properties?.hashed_token};},
- completeReviewerInvite:(p:any)=>check(admin.rpc('complete_customer_reviewer_invite',p)),
- isPaymentReviewer:async(id:string)=>{const {error}=await admin.rpc('require_customer_payment_reviewer',{p_actor:id});return !error;},
- paymentReviewers:(id:string)=>check(admin.rpc('list_customer_payment_reviewers',{p_actor:id})),
- setPaymentReviewer:(p:any)=>check(admin.rpc('set_customer_payment_reviewer',p)),
+ ...reviewerAccounts(admin,check),
  paymentQueue:(actor:string,offset:number)=>check(paymentOrders(actor).order('created_at',{ascending:false}).order('id',{ascending:false}).range(offset,offset+25)),
  paymentReviewDetail:async(actor:string,id:string)=>{const o=await check(paymentOrders(actor).eq('id',id).maybeSingle());if(!o)return null;const b=await check(admin.from('branches').select('branch_name').eq('id',o.branch_id).maybeSingle());o.branch_name=b?.branch_name||'';o.payment_request=await check(admin.from('customer_payment_requests').select('amount_satang,quote_revision').eq('order_id',id).maybeSingle());return o;},
  getUser:async(token:string)=>{const{data,error}=await admin.auth.getUser(token);return error?null:data.user;},
