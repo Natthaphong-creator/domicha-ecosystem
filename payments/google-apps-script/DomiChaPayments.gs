@@ -29,7 +29,7 @@ function domichaPaymentApi_(body){
 }
 function domichaDriveRequest_(path,options){
  options=options||{};options.headers={Authorization:'Bearer '+ScriptApp.getOAuthToken()};options.muteHttpExceptions=true;
- var r=UrlFetchApp.fetch('https://www.googleapis.com/'+path,options);if(r.getResponseCode()<200||r.getResponseCode()>=300)throw new Error('Drive request failed: '+r.getResponseCode());return JSON.parse(r.getContentText());
+ var r=UrlFetchApp.fetch('https://www.googleapis.com/'+path,options);if(r.getResponseCode()<200||r.getResponseCode()>=300){var reason='unknown';try{var err=JSON.parse(r.getContentText()).error;reason=err.errors&&err.errors[0]&&err.errors[0].reason||err.status||reason;}catch(e){}throw new Error('Drive request failed: '+r.getResponseCode()+' ('+reason+')');}return JSON.parse(r.getContentText());
 }
 function domichaDriveCreate_(meta){return domichaDriveRequest_('drive/v3/files?fields=id',{method:'post',contentType:'application/json',payload:JSON.stringify(meta)});}
 function domichaDriveChild_(parent,name,folder){
