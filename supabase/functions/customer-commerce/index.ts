@@ -9,6 +9,9 @@ async function sha(secret:string){return Array.from(new Uint8Array(await crypto.
 const paymentFields='id,order_number,recipient_name,branch_id,grand_total,quote_state,order_status,payment_status,sales_revision,created_at';
 function paymentOrders(actor:string){let q=admin.from('franchisee_orders').select(paymentFields).eq('sales_channel','customer-v1').eq('quote_state','confirmed').eq('order_status','Confirmed').eq('payment_status','Pending').eq('stock_checked',true);if(actor!=='1148e8d2-679c-4241-ba67-b522a2b50d8b')q=q.neq('user_id',actor);return q;}
 const db={
+ claimReviewerInvite:(p:any)=>check(admin.rpc('claim_customer_reviewer_invite',p)),
+ generateReviewerInvite:async(email:string,name:string)=>{const{data,error}=await admin.auth.admin.generateLink({type:'invite',email,options:{data:{full_name:name}}});if(error)throw error;return{user:data.user,hash:data.properties?.hashed_token};},
+ completeReviewerInvite:(p:any)=>check(admin.rpc('complete_customer_reviewer_invite',p)),
  isPaymentReviewer:async(id:string)=>{const {error}=await admin.rpc('require_customer_payment_reviewer',{p_actor:id});return !error;},
  paymentReviewers:(id:string)=>check(admin.rpc('list_customer_payment_reviewers',{p_actor:id})),
  setPaymentReviewer:(p:any)=>check(admin.rpc('set_customer_payment_reviewer',p)),
