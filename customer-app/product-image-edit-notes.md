@@ -1,0 +1,9 @@
+# Product background edits
+
+Edited using the built-in imagegen tool (background-extraction), with one source image per call and transparent_background=true. Original imported JPG files are retained. Selected outputs are optimized as alpha-enabled WebP at 780 px high for the storefront; source PNG outputs remain in the generated-images archive.
+
+Prompt set: remove only the external photographic/advertising/abstract background, floor and external shadow; isolate the whole original foreground on genuinely transparent alpha. Preserve the original product silhouette, colors, logos, packaging text and illustrations; no redesign, recoloring, text corrections or added objects. Keep a modest transparent margin.
+
+Subject-specific instructions: retain the cream identification labels on dome lids and blue bag graphics, including their Thai names and sizes; retain the seal-roll logo graphic without inventing a physical roll; retain all packages in the Nescafe and Trojan groups, and any original watermark; retain the Smoosh pouch, drink and fruit; retain the four existing shirt views in their 2×2 arrangement; retain the printed paper and dispenser. For taro and cantaloupe advertising artwork, retain the pouches and remove external promotional text/decorations. For syrup bottles, retain the bottle and cap while removing the external green/orange advertising frame.
+
+`product-image-overrides.json` maps source image paths to selected cutouts and is used by the importer, so importing the same stock image again preserves the edited version. A changed source photo has a different content hash and must be reviewed separately. Customer catalog names, prices and product IDs are not changed by these image edits. AI-assisted cutouts are display assets; the imported originals remain available for comparison.

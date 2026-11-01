@@ -1,0 +1,65 @@
+# DomiCha customer ordering
+
+Customer: https://domicha-customer-preview.netlify.app/
+Owner workspace: https://domicha-customer-preview.netlify.app/owner.html
+
+Separate static cream/orange customer application. Franchisees sign in using approved Supabase membership and their assigned Active branch. The owner workspace requires the exact linked owner identity and protected Admin role. No public sign-up, JWT storage or service key in the frontend.
+
+## Current behavior
+
+- 68 imported stock products and images; 63 have positive selling prices. The 5 unpriced items start paused.
+- Owner chooses active / paused / hidden. Hidden products are excluded by the customer API; paused products remain visible but cannot be ordered. Availability is rechecked in the database on submit and confirmation. Stock quantity is not shown.
+- Customer orders persist in `franchisee_orders` and `franchisee_order_items` with `sales_channel=customer-v1`. Customer history is scoped to the verified user; the branch is taken from server-side membership, never the form.
+- Server computes totals from catalog prices in integer satang. The order and lines commit atomically; a request UUID prevents duplicate submission on retry.
+- Orders start pending quote. Owner checks inventory manually and confirms the delivery fee (zero for pickup). The confirmed total is visible on customer refresh. Stale revisions cannot overwrite newer changes. Owner may cancel unpaid orders with a second confirmation click.
+- Added owner-configured PromptPay QR after quote confirmation, owner-only manual receipt of funds, immutable receipts and queued Drive/LINE delivery. See ../payments/README.md for activation status and acceptance checks. Inventory reservation/deduction and shipment operations remain later phases. Orders are managed in owner.html; they are not copied into the original Firebase stock UI.
+
+## Catalog imports
+
+The catalog is an imported snapshot, not continuous stock synchronization. `scripts/import-stock.py` reads only the source itemCatalog and selling prices, saves photos and preserves product-image-overrides.json. No cost/personnel fields are imported. The source does not specify sale units, so the app uses หน่วย.
+
+After importing: `node scripts/catalog-sales-sql.mjs > /tmp/domicha-catalog-sync.sql` (from customer-app). Review and apply with the service-side SQL tool, then rebuild/deploy updated photos. The sync preserves owner paused/hidden choices, pauses products losing their price, hides removed source products and increments changed row revisions. Never expose the SQL endpoint or service key to the browser.
+
+## Backend
+
+`supabase/migrations/20261031170654_customer_sales_orders.sql` adds customer_sale_products, customer_sales_events, quote fields and three atomic RPCs. Both new tables use RLS with no browser grants. RPCs are security invoker, service_role only. `supabase/functions/customer-commerce` validates auth.getUser plus protected role/active membership before every action; owner mutation checks are also inside SQL. Legacy orders and financial fields are outside this workflow. Deploy customer-commerce with verify_jwt=false because its handler performs its own auth.getUser verification; never remove the handler authorization.
+
+`member-auth.js` retains the access token in memory and passes it only to the configured Supabase origin. Refreshing or closing the page requires login again. Cart-only storage is user-scoped sessionStorage; orders always reload from the backend. Expired sessions require signing in again.
+
+## Validation
+
+Run `node --test customer-app/tests/*.test.js onboarding/tests/*.test.mjs` from the repository root, and `npm --prefix customer-app run build`. Run `supabase/tests/customer-sales.sql` administratively for rollback-only database tests.
+
+Live acceptance: TEST-MEMBER-01 submitted a clearly synthetic delivery order for tea (40 THB), owner confirmed 35.50 THB delivery, customer saw 75.50 THB and unpaid status, then owner cancelled the test order. Product hide/reopen was verified against the customer catalog. No payment or stock change occurred. The cancelled test record is retained for audit. A second labelled QR-only test order was also cancelled without payment or receipt.
+
+Existing security advisor warnings on older functions' search_path and leaked password protection remain outside this change; new service-only tables intentionally have RLS with no client policies.
+
+Member onboarding and invitations: see ../onboarding/README.md. `activate.html` uses a one-time email link, removes its fragment and does not store credentials. Product image cutouts and overrides: product-image-edit-notes.md.
+
+## Backup payment reviewers
+Owner menu **ผู้ตรวจรับเงิน** assigns/revokes a confirmed existing DomiCha account by email. No reviewer is provisioned by default. The separate `payment-review.html` accepts only the exact owner or a current protected reviewer grant. Staff see only the pending confirmed payment queue, names/branch/amount and payment request availability; no shipping/billing address, bank settings, catalog editing, quote approval, worker keys, receipts archive links or membership controls. A franchisee who is also a reviewer retains their own customer actions. Own-order confirmation is denied. Revocation is checked on every request and serialized against receipt confirmation in SQL. Owner detail shows the confirmer and confirmation time; immutable receipts/events keep the actor UUID.
+
+The owner must arrange authorized access to actual bank transactions separately. This feature does not grant bank access, create users, or send invitations. Tests use rollback-only synthetic staff; no permanent grant or paid receipt is created.
+
+New staff without an account: owner **เชิญผู้ตรวจใหม่** creates a private one-time activation link (manual delivery, no automatic email). Only a newly reserved email or the same known unconfirmed invitation may generate an invite; confirmed/existing accounts never receive a recovery link. New accounts become Sales staff without a franchise membership; The service adapter verifies email confirmation through the existing Auth Admin API on every reviewer request. Grants can be revoked before activation; generating/resending a link cannot reactivate a revoked grant. Invitations have a 60-second generation limit and a bound attempt ID; tokens are returned only after staff registration succeeds and are never stored in the database/browser storage. The owner may regenerate an expired pending invite. A partial Auth creation failure can leave an unassigned account requiring owner review; the flow fails closed instead of overwriting existing accounts. `owner.html#reviewers` routes to this view after owner login; activation uses an allowlisted `next=payment-review` destination.
+
+Validation: 77 automated tests, build, deployed-file comparison, and rollback-only reviewer/invitation SQL suites passed. Layout preview was rendered from the actual owner view with no real account submission. No recipient was invited and no permanent reviewer grant was created by these tests.
+
+Reviewer menu fix: SQL RPCs use service-readable public profiles, invite reservations and grant rows. Auth identity/confirmation/banned/deleted status is checked through `auth.admin.getUserById` in `reviewer-accounts.mjs`, before granting existing accounts or allowing any reviewer payment action. No direct SELECT or new grants on auth.users are required. `customer-reviewer-service-role.sql` exercises list, invite claim/completion and revoke as the actual service_role, with rollback fixtures. Direct auth table/password column access remains false.
+
+## App icon identity
+Customer and owner pages now use the approved original-mascot v3 artwork, without the orange mascot keyline. Customer uses the cream shopping-bag variant; owner and reviewer pages use the orange crown variant. Versioned PNG assets are exported at 64, 180, 192 and 512 pixels. Favicons, Apple touch icons and separate customer/owner manifests are linked in HTML; manifests have distinct IDs and start URLs. Activation displays the owner variant for reviewer invitations. No service worker or offline financial-data cache was introduced. Build/manifest PNG-dimension checks and deployed byte comparisons passed; both live login pages were visually inspected with image loaded and manifest/touch-icon links verified. OS/browser installation itself was not performed.
+
+## Payment confirmation feedback
+Owner and reviewer forms share `payment-feedback.js`: visible validation errors, a blocking pending dialog, and a persistent success dialog with amount/order/receipt number. Client validation runs on every submit with no native-validation silent stop. In-flight submissions are blocked. The success dialog lives outside the rendered app root and survives queue/detail refresh. A failed refresh after a committed confirmation remains a success message and does not retry the payment. Invalid input retains form values. Backend confirmation returns the receipt number when its display lookup succeeds; that optional lookup can never turn a committed payment into an error. LINE/Drive are described as queued, not delivered.
+
+Validation: 84 automated tests passed; an isolated local browser fixture exercised missing-input and pending/success dialogs with exactly one mocked request and a synthetic TEST-ONLY receipt. No real payment confirmation was performed for this UI test. Build and deployed-module byte comparisons passed.
+
+Receipt branding: both browser receipt variants show the original DomiCha logo via versioned `assets/receipt-logo-v1.png` (256px source, 95/110px display). The Apps Script PDF template embeds the same PNG as a data URL, requiring no external image download during conversion. Worker source matched its prior saved version before editing. A private TEST-ONLY-no-payment PDF was generated and rendered locally; the embedded logo and Thai text displayed correctly. Existing archived PDFs are not rewritten. Related receipt/worker tests (18) and build passed; live frontend bytes matched the build.
+
+## Full receipt original and accounting copy
+Owner paid-order panel now offers original and accounting-copy buttons, rendered from the same immutable receipt ID/number/snapshot. The full A4 layout includes logo, seller/buyer/address, order reference, item quantities/unit prices/totals, shipping, payment method and blank payer/recipient/reviewer signature lines. No signatures, VAT or tax-invoice status are invented. The abbreviated customer view remains available.
+
+`receipt-document.js` and `receipt-document.css` are shared into the Apps Script source. New Drive archives contain original plus accounting copy in one PDF with a forced page break before the copy; existing archived PDFs are reused unchanged. A labelled synthetic example was generated by the real worker, downloaded and rendered: exactly two A4 pages, readable Thai, logo, labels, matching number/amount and no clipping. Related tests (20) and build passed; deployed frontend files matched the build. No paid order or receipt ledger row was created for this example.
+
+Customer abbreviated receipts also show separate quantity, unit-price and line-total columns from the immutable receipt snapshot. Related receipt tests (11), build and live-file comparison passed; the labelled browser example was visually checked.

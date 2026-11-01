@@ -1,0 +1,34 @@
+begin;
+do $$
+declare actor uuid:='0dc9a547-a00f-4c6a-92a3-18e64233290a';owner_id uuid:='1148e8d2-679c-4241-ba67-b522a2b50d8b';oid uuid;oid2 uuid;rid uuid;request uuid:=gen_random_uuid();p public.customer_sale_products;items jsonb;pr jsonb;received timestamptz:=now();claim jsonb;s public.customer_payment_settings;
+begin
+ select * into p from public.customer_sale_products where id='tea-red';items:=jsonb_build_array(jsonb_build_object('id',p.id,'quantity',1,'expected_price_satang',p.price_satang));
+ select * into s from public.customer_payment_settings where id=true;
+ perform public.save_customer_payment_settings(owner_id,s.version,true,'0999999999','TEST ACCOUNT','TEST SELLER','TEST ADDRESS','{}');
+ oid:=public.create_customer_sales_order_billing(actor,request,items,'TEST','0000000000','pickup','','PAYMENT TEST ROLLBACK','{"name":"TEST BUYER","address":"TEST BILLING ADDRESS"}');
+ begin perform public.prepare_customer_payment(actor,oid);raise exception 'TEST_FAILED_PENDING_QR';exception when others then if sqlerrm<>'ORDER_LOCKED' then raise;end if;end;
+ perform public.review_customer_sales_order(owner_id,oid,'confirm',0,0,true);
+ pr:=public.prepare_customer_payment(actor,oid);
+ if pr<>public.prepare_customer_payment(actor,oid) then raise exception 'TEST_FAILED_QR_IDEMPOTENCY';end if;
+ begin perform public.prepare_customer_payment(gen_random_uuid(),oid);raise exception 'TEST_FAILED_FOREIGN_QR';exception when others then if sqlerrm<>'ORDER_NOT_FOUND' then raise;end if;end;
+ begin perform public.confirm_customer_payment(actor,oid,1,p.price_satang,'TEST-BANK-REFERENCE',received,true);raise exception 'TEST_FAILED_MEMBER_CONFIRM';exception when others then if sqlerrm<>'PAYMENT_REVIEWER_REQUIRED' then raise;end if;end;
+ begin perform public.confirm_customer_payment(owner_id,oid,1,p.price_satang+1,'TEST-BANK-REFERENCE',received,true);raise exception 'TEST_FAILED_AMOUNT';exception when others then if sqlerrm<>'PAYMENT_AMOUNT_MISMATCH' then raise;end if;end;
+ begin perform public.confirm_customer_payment(owner_id,oid,1,p.price_satang,'TEST-BANK-REFERENCE',received,false);raise exception 'TEST_FAILED_UNCHECKED';exception when others then if sqlerrm<>'PAYMENT_EVIDENCE_REQUIRED' then raise;end if;end;
+ begin perform public.confirm_customer_payment(owner_id,oid,1,p.price_satang,'TEST-BANK-REFERENCE',now()+interval '1 day',true);raise exception 'TEST_FAILED_FUTURE';exception when others then if sqlerrm<>'INVALID_PAYMENT_TIME' then raise;end if;end;
+ rid:=public.confirm_customer_payment(owner_id,oid,1,p.price_satang,'TEST-BANK-REFERENCE',received,true);
+ if rid<>public.confirm_customer_payment(owner_id,oid,1,p.price_satang,'TEST-BANK-REFERENCE',received,true) then raise exception 'TEST_FAILED_PAYMENT_RETRY';end if;
+ if (select count(*) from public.customer_receipt_jobs where receipt_id=rid)<>2 then raise exception 'TEST_FAILED_JOBS';end if;
+ if not exists(select 1 from public.customer_receipts where id=rid and snapshot->>'buyer_name'='TEST BUYER' and snapshot->>'buyer_address'='TEST BILLING ADDRESS' and (snapshot->>'total_satang')::bigint=p.price_satang) then raise exception 'TEST_FAILED_SNAPSHOT';end if;
+ begin perform public.review_customer_sales_order(owner_id,oid,'cancel',2,0,false);raise exception 'TEST_FAILED_PAID_CANCEL';exception when others then if sqlerrm<>'ORDER_LOCKED' then raise;end if;end;
+ oid2:=public.create_customer_sales_order_billing(actor,gen_random_uuid(),items,'TEST','0000000000','pickup','','PAYMENT TEST ROLLBACK','{}');
+ perform public.review_customer_sales_order(owner_id,oid2,'confirm',0,0,true);perform public.prepare_customer_payment(actor,oid2);
+ begin perform public.confirm_customer_payment(owner_id,oid2,1,p.price_satang,'test bank reference',received,true);raise exception 'TEST_FAILED_BANK_REUSE';exception when unique_violation then null;end;
+ if not exists(select 1 from public.franchisee_orders where id=oid2 and payment_status='Pending' and receipt_number is null) then raise exception 'TEST_FAILED_PAYMENT_ATOMICITY';end if;
+ claim:=public.claim_customer_receipt_job(array['drive']);
+ if claim is null then raise exception 'TEST_FAILED_CLAIM';end if;
+ if public.finish_customer_receipt_job((claim->'job'->>'id')::uuid,gen_random_uuid(),true,'https://drive.google.com/file/d/TEST/view',null) then raise exception 'TEST_FAILED_LEASE';end if;
+ if not public.finish_customer_receipt_job((claim->'job'->>'id')::uuid,(claim->'job'->>'lease_id')::uuid,true,'https://drive.google.com/file/d/TEST/view',null) then raise exception 'TEST_FAILED_FINISH';end if;
+ if has_table_privilege('authenticated','public.customer_receipts','SELECT') or has_function_privilege('authenticated','public.confirm_customer_payment(uuid,uuid,integer,bigint,text,timestamptz,boolean)','EXECUTE') then raise exception 'TEST_FAILED_GRANTS';end if;
+end $$;
+select 'PASS: quote gate, foreign QR, owner-only receipt, exact amount, checkbox, time, idempotency, atomic receipt/jobs, duplicate reference, paid cancellation blocked, lease and grants; ROLLBACK' as result;
+rollback;

@@ -1,0 +1,25 @@
+{
+  "id": "/apps/customer",
+  "name": "DomiCha ลูกค้า",
+  "short_name": "DomiCha ลูกค้า",
+  "lang": "th",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#fff2de",
+  "theme_color": "#fff2de",
+  "icons": [
+    {
+      "src": "assets/app-icons/customer-v3-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/app-icons/customer-v3-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

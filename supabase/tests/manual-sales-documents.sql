@@ -1,0 +1,37 @@
+begin;
+set local role service_role;
+do $$
+declare owner_id uuid:='1148e8d2-679c-4241-ba67-b522a2b50d8b';member_id uuid:='0dc9a547-a00f-4c6a-92a3-18e64233290a';req uuid:=gen_random_uuid();d uuid;d2 uuid;d3 uuid;rid uuid;body jsonb;payment jsonb;n integer;
+begin
+ body:='{"buyer":{"name":"TEST MANUAL ROLLBACK","address":"TEST ADDRESS","phone":"","taxId":""},"branch":"TEST BRANCH","items":[{"name":"TEST PRODUCT","unit":"ถุง","quantity":2,"price_satang":4050}],"deliveryFee":3500,"stockMode":"none","note":"ROLLBACK ONLY"}';
+ payment:=jsonb_build_object('method','cash','amount',11600,'reference','','receivedAt',now(),'checked',true);
+ begin perform public.create_manual_sales_document(member_id,req,body);raise exception 'TEST_FAILED_MEMBER';exception when others then if sqlerrm<>'OWNER_REQUIRED' then raise;end if;end;
+ d:=public.create_manual_sales_document(owner_id,req,body);
+ if d<>public.create_manual_sales_document(owner_id,req,body) then raise exception 'TEST_FAILED_RETRY';end if;
+ if exists(select 1 from public.customer_receipts where manual_document_id=d) then raise exception 'TEST_FAILED_UNPAID_RECEIPT';end if;
+ if not exists(select 1 from public.manual_sales_documents where id=d and (snapshot->>'total_satang')::bigint=11600 and snapshot->>'stock_mode'='none' and status='Unpaid') then raise exception 'TEST_FAILED_COMPUTE';end if;
+ begin perform public.create_manual_sales_document(owner_id,req,body||'{"deliveryFee":0}');raise exception 'TEST_FAILED_CHANGED_REQUEST';exception when others then if sqlerrm<>'REQUEST_CONFLICT' then raise;end if;end;
+ begin perform public.receive_manual_sales_document(owner_id,d,0,payment||'{"checked":false}');raise exception 'TEST_FAILED_UNCHECKED';exception when others then if sqlerrm<>'PAYMENT_EVIDENCE_REQUIRED' then raise;end if;end;
+ begin perform public.receive_manual_sales_document(owner_id,d,0,payment||'{"amount":1}');raise exception 'TEST_FAILED_AMOUNT';exception when others then if sqlerrm<>'PAYMENT_AMOUNT_MISMATCH' then raise;end if;end;
+ begin perform public.receive_manual_sales_document(owner_id,d,99,payment);raise exception 'TEST_FAILED_VERSION';exception when others then if sqlerrm<>'VERSION_CONFLICT' then raise;end if;end;
+ rid:=public.receive_manual_sales_document(owner_id,d,0,payment);
+ if rid<>public.receive_manual_sales_document(owner_id,d,0,payment) then raise exception 'TEST_FAILED_RECEIPT_RETRY';end if;
+ if not exists(select 1 from public.customer_receipts where id=rid and order_id is null and manual_document_id=d and payment_method_code='cash' and bank_reference is null and snapshot->>'source'='manual' and snapshot->>'document_type'='ใบเสร็จรับเงิน') then raise exception 'TEST_FAILED_RECEIPT';end if;
+ if (select count(*) from public.customer_receipt_jobs where receipt_id=rid)<>2 then raise exception 'TEST_FAILED_OUTBOX';end if;
+ begin perform public.cancel_manual_sales_document(owner_id,d,1);raise exception 'TEST_FAILED_PAID_CANCEL';exception when others then if sqlerrm<>'ORDER_LOCKED' then raise;end if;end;
+ d2:=public.create_manual_sales_document(owner_id,gen_random_uuid(),body);
+ if (select snapshot->>'customer_id' from public.manual_sales_documents where id=d)<>(select snapshot->>'customer_id' from public.manual_sales_documents where id=d2) then raise exception 'TEST_FAILED_PARTY_PATH';end if;
+ payment:=payment||jsonb_build_object('method','transfer','reference','TEST-'||gen_random_uuid());
+ rid:=public.receive_manual_sales_document(owner_id,d2,0,payment);
+ d3:=public.create_manual_sales_document(owner_id,gen_random_uuid(),body);
+ begin perform public.receive_manual_sales_document(owner_id,d3,0,payment);raise exception 'TEST_FAILED_REFERENCE_REUSE';exception when unique_violation then null;end;
+ if exists(select 1 from public.customer_receipts where manual_document_id=d3) then raise exception 'TEST_FAILED_ATOMICITY';end if;
+ perform public.cancel_manual_sales_document(owner_id,d3,0);
+ begin perform public.receive_manual_sales_document(owner_id,d3,1,payment||'{"method":"cash"}');raise exception 'TEST_FAILED_CANCELLED';exception when others then if sqlerrm<>'ORDER_LOCKED' then raise;end if;end;
+ select count(*) into n from public.manual_sales_documents;
+ begin perform public.create_manual_sales_document(owner_id,gen_random_uuid(),body,payment||'{"checked":false}');raise exception 'TEST_FAILED_ATOMIC_CREATE';exception when others then if sqlerrm<>'PAYMENT_EVIDENCE_REQUIRED' then raise;end if;end;
+ if n<>(select count(*) from public.manual_sales_documents) then raise exception 'TEST_FAILED_PARTIAL_CREATE';end if;
+ if has_table_privilege('authenticated','public.manual_sales_documents','SELECT') or has_function_privilege('authenticated','public.create_manual_sales_document(uuid,uuid,jsonb,jsonb)','EXECUTE') then raise exception 'TEST_FAILED_GRANTS';end if;
+end $$;
+select 'PASS: service-role owner-only manual invoice/receipt, exact totals, no unpaid receipt, immutable requests, counted funds, idempotency, shared unique bank references, atomic outbox, cancellation and private grants; ROLLBACK' result;
+rollback;
