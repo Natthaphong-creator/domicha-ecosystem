@@ -35,3 +35,8 @@ Live acceptance: TEST-MEMBER-01 submitted a clearly synthetic delivery order for
 Existing security advisor warnings on older functions' search_path and leaked password protection remain outside this change; new service-only tables intentionally have RLS with no client policies.
 
 Member onboarding and invitations: see ../onboarding/README.md. `activate.html` uses a one-time email link, removes its fragment and does not store credentials. Product image cutouts and overrides: product-image-edit-notes.md.
+
+## Backup payment reviewers
+Owner menu **ผู้ตรวจรับเงิน** assigns/revokes a confirmed existing DomiCha account by email. No reviewer is provisioned by default. The separate `payment-review.html` accepts only the exact owner or a current protected reviewer grant. Staff see only the pending confirmed payment queue, names/branch/amount and payment request availability; no shipping/billing address, bank settings, catalog editing, quote approval, worker keys, receipts archive links or membership controls. A franchisee who is also a reviewer retains their own customer actions. Own-order confirmation is denied. Revocation is checked on every request and serialized against receipt confirmation in SQL. Owner detail shows the confirmer and confirmation time; immutable receipts/events keep the actor UUID.
+
+The owner must arrange authorized access to actual bank transactions separately. This feature does not grant bank access, create users, or send invitations. Tests use rollback-only synthetic staff; no permanent grant or paid receipt is created.

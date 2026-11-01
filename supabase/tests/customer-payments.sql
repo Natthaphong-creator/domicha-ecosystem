@@ -11,7 +11,7 @@ begin
  pr:=public.prepare_customer_payment(actor,oid);
  if pr<>public.prepare_customer_payment(actor,oid) then raise exception 'TEST_FAILED_QR_IDEMPOTENCY';end if;
  begin perform public.prepare_customer_payment(gen_random_uuid(),oid);raise exception 'TEST_FAILED_FOREIGN_QR';exception when others then if sqlerrm<>'ORDER_NOT_FOUND' then raise;end if;end;
- begin perform public.confirm_customer_payment(actor,oid,1,p.price_satang,'TEST-BANK-REFERENCE',received,true);raise exception 'TEST_FAILED_MEMBER_CONFIRM';exception when others then if sqlerrm<>'OWNER_REQUIRED' then raise;end if;end;
+ begin perform public.confirm_customer_payment(actor,oid,1,p.price_satang,'TEST-BANK-REFERENCE',received,true);raise exception 'TEST_FAILED_MEMBER_CONFIRM';exception when others then if sqlerrm<>'PAYMENT_REVIEWER_REQUIRED' then raise;end if;end;
  begin perform public.confirm_customer_payment(owner_id,oid,1,p.price_satang+1,'TEST-BANK-REFERENCE',received,true);raise exception 'TEST_FAILED_AMOUNT';exception when others then if sqlerrm<>'PAYMENT_AMOUNT_MISMATCH' then raise;end if;end;
  begin perform public.confirm_customer_payment(owner_id,oid,1,p.price_satang,'TEST-BANK-REFERENCE',received,false);raise exception 'TEST_FAILED_UNCHECKED';exception when others then if sqlerrm<>'PAYMENT_EVIDENCE_REQUIRED' then raise;end if;end;
  begin perform public.confirm_customer_payment(owner_id,oid,1,p.price_satang,'TEST-BANK-REFERENCE',now()+interval '1 day',true);raise exception 'TEST_FAILED_FUTURE';exception when others then if sqlerrm<>'INVALID_PAYMENT_TIME' then raise;end if;end;

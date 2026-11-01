@@ -1,7 +1,7 @@
 export const OWNER='1148e8d2-679c-4241-ba67-b522a2b50d8b';
 const origins=new Set(['https://domicha-customer-preview.netlify.app','http://127.0.0.1:4175','http://localhost:4175']);
 const uuid=v=>typeof v==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
-const errors={MEMBER_REQUIRED:'บัญชีสาขายังไม่พร้อมใช้งาน',OWNER_REQUIRED:'เฉพาะเจ้าของแบรนด์เท่านั้น',PRODUCT_UNAVAILABLE:'มีสินค้าที่หยุดขาย กรุณาตรวจตะกร้าใหม่',PRICE_CHANGED:'ราคาสินค้าเปลี่ยน กรุณาตรวจตะกร้าใหม่',VERSION_CONFLICT:'ข้อมูลเปลี่ยนแล้ว กรุณารีเฟรชก่อนทำรายการ',PRICE_REQUIRED:'สินค้านี้ยังไม่มีราคาขาย กรุณาตั้งราคาในคลังก่อน',STOCK_CHECK_REQUIRED:'กรุณาตรวจสต๊อกและยืนยันรายการก่อน',ORDER_LOCKED:'คำสั่งซื้อนี้ไม่อยู่ในสถานะที่แก้ไขได้',REQUEST_CONFLICT:'หมายเลขส่งรายการซ้ำกับข้อมูลเดิม กรุณาลองใหม่',ORDER_NOT_FOUND:'ไม่พบคำสั่งซื้อ',PAYMENT_NOT_READY:'แบรนด์ยังไม่เปิดรับชำระ กรุณารอการตั้งค่าบัญชี',PAYMENT_SETTINGS_REQUIRED:'กรอกข้อมูลบัญชีและผู้ขายให้ครบ',PAYMENT_REQUEST_REQUIRED:'กรุณาเปิด QR ของออเดอร์นี้ก่อนยืนยันรับเงิน',PAYMENT_EVIDENCE_REQUIRED:'กรอกเลขอ้างอิงและยืนยันว่าตรวจเงินเข้าแล้ว',PAYMENT_AMOUNT_MISMATCH:'ยอดรับเงินต้องตรงกับยอดที่ยืนยัน',PAYMENT_ALREADY_CONFIRMED:'รายการนี้ยืนยันรับเงินไปแล้ว ข้อมูลไม่ตรงกับครั้งก่อน',INVALID_PAYMENT_TIME:'ตรวจสอบวันเวลาที่เงินเข้า',BANK_REFERENCE_USED:'เลขอ้างอิงนี้ถูกใช้กับใบเสร็จอื่นแล้ว กรุณาตรวจรายการธนาคาร'};
+const errors={PAYMENT_REVIEWER_REQUIRED:'บัญชีนี้ไม่ได้รับสิทธิ์ตรวจรับชำระเงิน หรือถูกถอนสิทธิ์แล้ว',SELF_PAYMENT_REVIEW:'ไม่สามารถตรวจรับเงินคำสั่งซื้อของตนเองได้',REVIEWER_ACCOUNT_REQUIRED:'ไม่พบบัญชีที่ยืนยันอีเมลแล้ว กรุณาใช้บัญชีสมาชิก DomiCha ที่มีอยู่',INVALID_REVIEWER:'กรุณาตรวจอีเมลผู้ตรวจรับชำระ',MEMBER_REQUIRED:'บัญชีสาขายังไม่พร้อมใช้งาน',OWNER_REQUIRED:'เฉพาะเจ้าของแบรนด์เท่านั้น',PRODUCT_UNAVAILABLE:'มีสินค้าที่หยุดขาย กรุณาตรวจตะกร้าใหม่',PRICE_CHANGED:'ราคาสินค้าเปลี่ยน กรุณาตรวจตะกร้าใหม่',VERSION_CONFLICT:'ข้อมูลเปลี่ยนแล้ว กรุณารีเฟรชก่อนทำรายการ',PRICE_REQUIRED:'สินค้านี้ยังไม่มีราคาขาย กรุณาตั้งราคาในคลังก่อน',STOCK_CHECK_REQUIRED:'กรุณาตรวจสต๊อกและยืนยันรายการก่อน',ORDER_LOCKED:'คำสั่งซื้อนี้ไม่อยู่ในสถานะที่แก้ไขได้',REQUEST_CONFLICT:'หมายเลขส่งรายการซ้ำกับข้อมูลเดิม กรุณาลองใหม่',ORDER_NOT_FOUND:'ไม่พบคำสั่งซื้อ',PAYMENT_NOT_READY:'แบรนด์ยังไม่เปิดรับชำระ กรุณารอการตั้งค่าบัญชี',PAYMENT_SETTINGS_REQUIRED:'กรอกข้อมูลบัญชีและผู้ขายให้ครบ',PAYMENT_REQUEST_REQUIRED:'กรุณาเปิด QR ของออเดอร์นี้ก่อนยืนยันรับเงิน',PAYMENT_EVIDENCE_REQUIRED:'กรอกเลขอ้างอิงและยืนยันว่าตรวจเงินเข้าแล้ว',PAYMENT_AMOUNT_MISMATCH:'ยอดรับเงินต้องตรงกับยอดที่ยืนยัน',PAYMENT_ALREADY_CONFIRMED:'รายการนี้ยืนยันรับเงินไปแล้ว ข้อมูลไม่ตรงกับครั้งก่อน',INVALID_PAYMENT_TIME:'ตรวจสอบวันเวลาที่เงินเข้า',BANK_REFERENCE_USED:'เลขอ้างอิงนี้ถูกใช้กับใบเสร็จอื่นแล้ว กรุณาตรวจรายการธนาคาร'};
 export function makeHandler(db){return async req=>{
  const origin=req.headers.get('origin');const headers={'Content-Type':'application/json','Cache-Control':'no-store','Vary':'Origin',...(origins.has(origin)?{'Access-Control-Allow-Origin':origin,'Access-Control-Allow-Headers':'authorization, apikey, content-type','Access-Control-Allow-Methods':'POST, OPTIONS'}:{})};
  const reply=(data,status=200)=>new Response(JSON.stringify(data),{status,headers});
@@ -20,10 +20,28 @@ export function makeHandler(db){return async req=>{
   const token=req.headers.get('authorization')?.match(/^Bearer (.+)$/i)?.[1];
   const user=token?await db.getUser(token):null;if(!user?.id||user.is_anonymous)return reply({error:'กรุณาเข้าสู่ระบบใหม่'},401);
   const profile=await db.profile(user.id);const owner=user.id===OWNER&&profile?.role==='Admin';
-  if(!owner&&!(profile?.role==='Franchisee'&&await db.activeMember(user.id)))return reply({error:errors.MEMBER_REQUIRED},403);
+  const reviewer=Boolean(!owner&&db.isPaymentReviewer&&await db.isPaymentReviewer(user.id));
+  const memberActive=Boolean(profile?.role==='Franchisee'&&await db.activeMember(user.id));
+  if(!owner&&!reviewer&&!memberActive)return reply({error:errors.MEMBER_REQUIRED},403);
   if(Number(req.headers.get('content-length')||0)>40000)return reply({error:'ข้อมูลมากเกินไป'},413);
   const raw=await req.text();if(raw.length>40000)return reply({error:'ข้อมูลมากเกินไป'},413);const b=JSON.parse(raw);let data;
+  if(reviewer&&!memberActive&&!['payment-access','payment-queue','payment-review-detail','confirm-payment'].includes(b.action))return reply({error:errors.OWNER_REQUIRED},403);
   switch(b.action){
+   case 'payment-access':
+    if(!owner&&!reviewer)return reply({error:errors.PAYMENT_REVIEWER_REQUIRED},403);data={role:owner?'Owner':'PaymentReviewer'};break;
+   case 'payment-reviewers':
+    if(!owner)return reply({error:errors.OWNER_REQUIRED},403);data=await db.paymentReviewers(user.id);break;
+   case 'set-payment-reviewer':
+    if(!owner)return reply({error:errors.OWNER_REQUIRED},403);
+    if(typeof b.email!=='string'||b.email.length>254||!/^\S+@\S+\.\S+$/.test(b.email.trim())||typeof b.active!=='boolean')throw Error('INVALID_REVIEWER');
+    await db.setPaymentReviewer({p_actor:user.id,p_email:b.email.trim(),p_active:b.active});data={saved:true};break;
+   case 'payment-queue':{
+    if(!owner&&!reviewer)return reply({error:errors.PAYMENT_REVIEWER_REQUIRED},403);
+    const offset=b.offset??0;if(!Number.isInteger(offset)||offset<0||offset>100000)throw Error('INVALID_PAGE');
+    const rows=await db.paymentQueue(user.id,offset);data={orders:rows.slice(0,25),hasMore:rows.length>25};break;}
+   case 'payment-review-detail':
+    if(!owner&&!reviewer)return reply({error:errors.PAYMENT_REVIEWER_REQUIRED},403);
+    if(!uuid(b.id))throw Error('INVALID_ID');data=await db.paymentReviewDetail(user.id,b.id);if(!data)return reply({error:errors.ORDER_NOT_FOUND},404);break;
    case 'catalog':data=await db.catalog(owner);break;
    case 'orders':{
     const offset=b.offset??0;if(!Number.isInteger(offset)||offset<0||offset>100000)throw Error('INVALID_PAGE');
@@ -43,7 +61,7 @@ export function makeHandler(db){return async req=>{
    case 'payment-request':{
     if(!uuid(b.id))throw Error('INVALID_ID');const r=await db.preparePayment({p_actor:user.id,p_order:b.id});data={...r,payload:db.qrPayload(r.merchant.promptpay_id,r.amount_satang)};break;}
    case 'confirm-payment':
-    if(!owner)return reply({error:errors.OWNER_REQUIRED},403);
+    if(!owner&&!reviewer)return reply({error:errors.OWNER_REQUIRED},403);
     if(!uuid(b.id)||!Number.isInteger(b.version)||!Number.isSafeInteger(b.amount)||b.amount<=0||b.checked!==true||typeof b.reference!=='string'||typeof b.receivedAt!=='string'||!Number.isFinite(Date.parse(b.receivedAt)))throw Error('PAYMENT_EVIDENCE_REQUIRED');
     data={receiptId:await db.confirmPayment({p_actor:user.id,p_order:b.id,p_version:b.version,p_amount_satang:b.amount,p_reference:b.reference,p_received_at:b.receivedAt,p_checked:true})};break;
    case 'worker-configure':
