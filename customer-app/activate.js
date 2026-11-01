@@ -1,6 +1,6 @@
 import {createActivation} from './activation-auth.js';
 const form=document.querySelector('#activate'),button=form.querySelector('button'),status=document.querySelector('#status'),error=document.querySelector('#error');
-const fragment=location.hash;const reviewerInvite=new URLSearchParams(fragment.replace(/^#/,'' )).get('next')==='payment-review';if(reviewerInvite){document.querySelector('#sign-in').href='payment-review.html';document.querySelector('#sign-in').textContent='เข้าสู่ระบบผู้ตรวจรับชำระเงิน';}history.replaceState(null,'',location.pathname);
+const fragment=location.hash;const reviewerInvite=new URLSearchParams(fragment.replace(/^#/,'' )).get('next')==='payment-review';if(reviewerInvite){document.querySelector('.app-brand-icon').src='assets/app-icons/owner-v3-180.png';document.querySelector('link[rel=icon]').href='assets/app-icons/owner-v3-64.png';document.querySelector('#sign-in').href='payment-review.html';document.querySelector('#sign-in').textContent='เข้าสู่ระบบผู้ตรวจรับชำระเงิน';}history.replaceState(null,'',location.pathname);
 let activation;
 try{const response=await fetch('auth-config.json',{cache:'no-store'});if(!response.ok)throw Error();activation=createActivation(await response.json(),fragment);if(!activation.valid)throw Error();button.disabled=false;status.textContent='รหัสผ่านจะส่งไปยังระบบสมาชิกโดยตรง ไม่บันทึกลง Google Sheet';}
 catch{form.hidden=true;status.textContent='ไม่พบลิงก์คำเชิญที่ใช้งานได้ กรุณาเปิดลิงก์จากอีเมลที่ทีม DomiCha ส่งให้';}
