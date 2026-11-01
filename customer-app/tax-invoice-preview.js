@@ -11,15 +11,9 @@ export function previewVatTotals(amountSatang,rateBasisPoints,priceMode){
 export function renderTaxInvoicePreview(copy='original',priceMode='inclusive',method='QR พร้อมเพย์'){
  const t=previewVatTotals(23500,700,priceMode);
  const r={number:'DEMO-TAX-000001',issued_at:'2026-11-01T09:00:00Z',received_at:'2026-11-01T09:00:00Z',snapshot:{demo:true,seller:{seller_name:'บจก.โดมิพลัสกรุ๊ป',seller_address:'77/44 หมู่ 5 ต.เสม็ด อ.เมืองชลบุรี จ.ชลบุรี 20000',seller_tax_id:'0205567033352',seller_phone:'0988247849'},buyer_name:'บริษัท ลูกค้าตัวอย่าง จำกัด',buyer_address:'99/9 ถนนตัวอย่าง ตำบลตัวอย่าง อำเภอตัวอย่าง จังหวัดตัวอย่าง 20000',branch_name:'สาขาตัวอย่าง',order_number:'DEMO-ORDER-0001',items:[{name:'ชาแดงโดมิชา',quantity:2,unit:'ถุง',price_satang:4000,total_satang:8000},{name:'ผงอัญชันมะนาว',quantity:1,unit:'ถุง',price_satang:12000,total_satang:12000}],subtotal_satang:20000,delivery_satang:3500,total_satang:t.total,payment_method:method}};
- let html=renderFullReceipt(r,copy,'assets/receipt-logo-v1.png',date,money);
- html=html.replace('<h2>ใบเสร็จรับเงิน</h2>','<h2>ใบเสร็จรับเงิน / ใบกำกับภาษี</h2>')
- .replace('ตัวอย่างรูปแบบ · ไม่ใช่ใบเสร็จจริง · ไม่มีการรับเงินจริง','ตัวอย่างสำหรับเตรียมจด VAT · ใช้อ้างอิงภาษีไม่ได้ · ไม่มีการรับเงินจริง')
- .replace('เลขที่ใบเสร็จ<br>','เลขที่เอกสาร (ตัวอย่าง)<br>')
- .replace('<p>เลขประจำตัวผู้เสียภาษี 0205567033352</p>','<p>เลขประจำตัวผู้เสียภาษี 0205567033352</p><p>สำนักงานใหญ่ (00000)</p>')
- .replace('<p><b>ที่อยู่</b>','<p><b>เลขประจำตัวผู้เสียภาษีผู้ซื้อ</b> [เลข 13 หลักของผู้ซื้อ]</p><p><b>สถานประกอบการผู้ซื้อ</b> สำนักงานใหญ่ (00000)</p><p><b>ที่อยู่</b>')
- .replace('<th>ราคาต่อหน่วย</th>',`<th>ราคา/หน่วย${priceMode==='inclusive'?' (รวม VAT)':' (ก่อน VAT)'}</th>`)
- .replace('<div class="receipt-grand-total">',`<div><span>มูลค่าก่อน VAT</span><b>${money(t.base)}</b></div><div><span>VAT 7% (อัตราสมมติ)</span><b>${money(t.vat)}</b></div><div class="receipt-grand-total">`)
- .replace('เอกสารนี้เป็นใบเสร็จรับเงิน ไม่ใช่ใบกำกับภาษี','ตัวอย่างเท่านั้น · ยังไม่เปิดออกใบกำกับภาษีจริง · อัตราและฐานภาษีต้องยืนยันก่อนเปิดใช้');
+ r.snapshot.tax_preview={base:t.base,vat:t.vat,rate:7,price_mode:priceMode};
+ r.snapshot.seller.seller_branch='สำนักงานใหญ่ (00000)';r.snapshot.buyer_tax_id='[เลข 13 หลักของผู้ซื้อ]';r.snapshot.buyer_establishment='สำนักงานใหญ่ (00000)';
+ const html=renderFullReceipt(r,copy,'assets/receipt-logo-v1.png',date,money);
  return html;
 }
 export function mountTaxPreview(root){
