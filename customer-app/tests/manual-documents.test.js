@@ -29,3 +29,6 @@ test('cancelled invoice copies clearly show cancellation',async()=>{
  const html=renderFullReceipt({number:'TEST',issued_at:'2026-11-01T00:00:00Z',snapshot:{document_type:'ใบแจ้งหนี้',document_status:'Cancelled',seller:{seller_name:'TEST',seller_address:'TEST'},items:d.items.map(i=>({...i,total_satang:i.price_satang*i.quantity})),subtotal_satang:8100,delivery_satang:3500,total_satang:11600}},'original','logo.png',String,String);
  assert.match(html,/ยกเลิกแล้ว · ห้ามใช้อ้างอิงเรียกเก็บเงิน/);assert.ok(!html.includes('ผู้ตรวจสอบ: ยืนยันรับชำระแล้ว'));
 });
+test('VAT field defaults to uncharged and cannot activate tax collection before registration',()=>{
+ const d=manualDocumentBody(f,items);assert.equal(d.vatMode,'none');assert.throws(()=>manualDocumentBody({...f,vatMode:'vat7'},items),/ยังไม่เปิดคิด VAT/);const html=manualDocumentPreview(d,{seller_name:'TEST',seller_address:'TEST'});assert.match(html,/VAT \(ยังไม่คิด\)/);assert.match(html,/฿0.00/);assert.match(html,/฿116.00/);
+});

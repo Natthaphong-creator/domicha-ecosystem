@@ -42,7 +42,7 @@ export function makeHandler(db){return async req=>{
    case 'manual-detail':
     if(!owner)return reply({error:errors.OWNER_REQUIRED},403);if(!uuid(b.id))throw Error('INVALID_ID');data=await db.manualDetail(b.id);if(!data)return reply({error:errors.ORDER_NOT_FOUND},404);break;
    case 'manual-create':
-    if(!owner)return reply({error:errors.OWNER_REQUIRED},403);if(!uuid(b.requestId)||!b.document||typeof b.document!=='object'||Array.isArray(b.document)||b.document.stockMode!=='none')throw Error('INVALID_MANUAL_DOCUMENT');data={id:await db.manualCreate({p_actor:user.id,p_request:b.requestId,p_body:b.document,p_payment:b.payment??null})};break;
+    if(!owner)return reply({error:errors.OWNER_REQUIRED},403);if(!uuid(b.requestId)||!b.document||typeof b.document!=='object'||Array.isArray(b.document)||b.document.stockMode!=='none'||(b.document.vatMode!==undefined&&b.document.vatMode!=='none'))throw Error('INVALID_MANUAL_DOCUMENT');data={id:await db.manualCreate({p_actor:user.id,p_request:b.requestId,p_body:b.document,p_payment:b.payment??null})};break;
    case 'manual-receive':
     if(!owner)return reply({error:errors.OWNER_REQUIRED},403);if(!uuid(b.id)||!Number.isInteger(b.version)||!b.payment)throw Error('PAYMENT_EVIDENCE_REQUIRED');data={receiptId:await db.manualReceive({p_actor:user.id,p_id:b.id,p_version:b.version,p_payment:b.payment})};break;
    case 'manual-cancel':
