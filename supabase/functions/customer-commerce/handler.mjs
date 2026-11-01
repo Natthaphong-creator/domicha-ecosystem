@@ -32,7 +32,7 @@ export function makeHandler(db){return async req=>{
    case 'manual-package-save':
     if(!owner)return reply({error:errors.OWNER_REQUIRED},403);
     if(!Number.isInteger(b.id)||b.id<1||b.id>3||!Number.isInteger(b.version)||typeof b.name!=='string'||typeof b.description!=='string'||(b.price!==null&&(!Number.isSafeInteger(b.price)||b.price<1))||typeof b.active!=='boolean')throw Error('INVALID_PACKAGE');
-    await db.manualPackageSave({p_actor:user.id,p_id:b.id,p_version:b.version,p_name:b.name,p_description:b.description,p_price:b.price,p_active:b.active});data={saved:true};break;
+    await db.manualPackageSave({p_actor:user.id,p_id:b.id,p_version:b.version,p_name:b.name,p_description:b.description,p_price:b.price,p_active:b.active,p_contents:b.contents??null});data={saved:true};break;
    case 'manual-convert':
     if(!owner)return reply({error:errors.OWNER_REQUIRED},403);if(!uuid(b.id)||!Number.isInteger(b.version))throw Error('INVALID_ID');data={id:await db.manualConvert({p_actor:user.id,p_id:b.id,p_version:b.version})};break;
    case 'manual-options':

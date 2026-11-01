@@ -10,8 +10,8 @@ async function sha(secret:string){return Array.from(new Uint8Array(await crypto.
 const paymentFields='id,order_number,recipient_name,branch_id,grand_total,quote_state,order_status,payment_status,sales_revision,created_at';
 function paymentOrders(actor:string){let q=admin.from('franchisee_orders').select(paymentFields).eq('sales_channel','customer-v1').eq('quote_state','confirmed').eq('order_status','Confirmed').eq('payment_status','Pending').eq('stock_checked',true);if(actor!=='1148e8d2-679c-4241-ba67-b522a2b50d8b')q=q.neq('user_id',actor);return q;}
 const db={
- manualPackages:()=>check(admin.from('manual_franchise_packages').select('id,name,description,price_satang,active,version').order('id')),
- manualPackageSave:(p:any)=>check(admin.rpc('save_manual_franchise_package',p)),
+ manualPackages:()=>check(admin.from('manual_franchise_packages').select('id,name,description,price_satang,active,version,contents').order('id')),
+ manualPackageSave:(p:any)=>{const {p_contents,...base}=p;return check(admin.rpc(p_contents===null?'save_manual_franchise_package':'save_manual_franchise_package_details',p_contents===null?base:p));},
  manualConvert:(p:any)=>check(admin.rpc('convert_manual_quotation',p)),
  manualCustomers:(actor:string)=>check(admin.rpc('manual_document_customers',{p_actor:actor})),
  manualList:(offset:number)=>check(admin.from('manual_sales_documents').select('id,number,status,document_kind,version,created_at,snapshot->buyer_name,snapshot->branch_name,snapshot->total_satang').order('created_at',{ascending:false}).order('id',{ascending:false}).range(offset,offset+25)),

@@ -29,3 +29,5 @@
 .receipt-paper.short th,.receipt-paper.short td{padding:9px 4px;font-size:11px}.receipt-paper.short th:nth-child(n+2),.receipt-paper.short td:nth-child(n+2){text-align:right;white-space:nowrap}.receipt-paper.short td:first-child{overflow-wrap:anywhere}
 
 .manual-line{border:1px solid #edcfad;border-radius:12px;padding:14px;margin-bottom:12px;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:10px}.manual-line input{width:100%;min-width:0}.receipt-manual-source{font-size:11px;color:#72543c}@media(max-width:650px){.manual-line{grid-template-columns:1fr 1fr}}@media print{#manual-create,#manual-receive,#manual-new,#manual-refresh,#manual-notice,.page-title{display:none}#manual-content>.card{display:none}}
+
+@media print{#manual-content .receipt-paper.full{position:static!important}.owner-header{display:none!important}body:has(#manual-content) #app>main>:not(#manual-content){display:none!important}body:has(#manual-content) main{padding:0!important;margin:0!important}}

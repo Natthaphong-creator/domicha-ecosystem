@@ -38,3 +38,13 @@ cancellation and receipt confirmation to the owner.
 Validation: frontend/API authorization and money tests, database tests executed
 as service_role inside transactions ending in ROLLBACK, and an isolated browser
 fixture. No real payment was confirmed or test LINE sent during these checks.
+
+Package contents update: the user-supplied M/L/XL posters are transcribed in
+`data/franchise-package-contents.json`. Each package contains 34 equipment and
+39 ingredient descriptions plus its own counter/kiosk/signage inclusions.
+The latest L poster specifies a 1.6 m counter, replacing the guide's 1.8 m
+reference. One priced line remains on the financial page; unpriced contents
+appear in an annex on original and accounting copies. Template contents are
+editable by the owner and frozen server-side into each newly issued document.
+Older issued snapshots and archive PDFs are not rewritten. A rollback database
+test covers server-authored contents and unchanged quote/invoice/receipt copies.
