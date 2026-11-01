@@ -7,3 +7,12 @@ test('confirmation shows pending then success with receipt number and refreshes 
 test('refresh failure after commit keeps success and never retries the payment',async()=>{let sends=0;const seen=[];const r=await runPaymentConfirmation({getBody:()=>paymentConfirmationBody(order,fields),send:async()=>{sends++;return{receiptId:'saved'};},afterSaved:async()=>{throw Error('offline');},notify:x=>seen.push(x)});assert.equal(r.ok,true);assert.equal(sends,1);assert.ok(seen.slice(1).every(x=>x.kind==='success'));assert.match(seen.at(-1).message,/ไม่ต้องยืนยันรับเงินซ้ำ/);});
 test('server rejection is visibly an error and does not remove the order through refresh',async()=>{const seen=[];let refreshed=false;const r=await runPaymentConfirmation({getBody:()=>paymentConfirmationBody(order,fields),send:async()=>{throw Error('ยอดเงินไม่ตรง');},afterSaved:async()=>{refreshed=true;},notify:x=>seen.push(x)});assert.equal(r.ok,false);assert.equal(refreshed,false);assert.equal(seen.at(-1).kind,'error');assert.match(seen.at(-1).message,/ยอดเงินไม่ตรง/);});
 test('dialog escapes receipt/order/error text and does not claim LINE or Drive delivery already succeeded',()=>{const html=paymentFeedbackHtml({kind:'success',title:'สำเร็จ',message:'รอส่ง',receiptNumber:'<script>',orderNumber:'<img>',amount:4000});assert.ok(!html.includes('<script>'));assert.ok(html.includes('&lt;script&gt;'));assert.ok(html.includes('฿40.00'));assert.match(html,/data-close-payment-result/);});
+
+test('payment method must be chosen and cash needs counted funds without a fake bank reference',()=>{
+ for(const method of ['','card','__proto__'])assert.throws(()=>paymentConfirmationBody(order,{...fields,method}),/เลือกช่องทาง/);
+ const cash=paymentConfirmationBody(order,{...fields,method:'cash',reference:''});assert.equal(cash.method,'cash');assert.equal(cash.reference,'');
+ assert.throws(()=>paymentConfirmationBody(order,{...fields,method:'cash',checked:false}),/ตรวจนับเงินสด/);
+ assert.throws(()=>paymentConfirmationBody(order,{...fields,method:'cash',amount:'39.99'}),/ตรงกับยอด/);
+ for(const method of ['transfer','promptpay']){assert.equal(paymentConfirmationBody(order,{...fields,method}).method,method);assert.throws(()=>paymentConfirmationBody(order,{...fields,method,reference:''}),/เลขอ้างอิง/);}
+ assert.match(paymentFeedbackHtml({kind:'success',title:'TEST',method:'cash'}),/เงินสด/);
+});
